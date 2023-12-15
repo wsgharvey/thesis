@@ -150,6 +150,46 @@
 %% We use \citeeg{} to provide examples
 \usepackage[numbers,sort&compress]{natbib}
 \newcommand{\citeeg}[1]{\citep[e.g.,][]{#1}}
+% list citation in text
+\usepackage{bibentry}
+
+
+%things I've added: ------------------------------------------------------------------------
+% Optional math commands from https://github.com/goodfeli/dlbook_notation.
+\input{math_commands.tex}
+
+% \usepackage[colorlinks=true, linkcolor=black, citecolor=gray]{hyperref}  goes against GPS rules
+\usepackage{url}
+
+% my packages:
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts,amsmath,amssymb,amsthm}
+\usepackage{todonotes}
+\usepackage{subcaption}
+\usepackage{mathtools}
+\usepackage{ifthen}  % for variable-length appendix
+\usepackage{wrapfig}
+\usepackage{multirow}
+\usepackage{makecell}
+\newtheorem{theorem}{Theorem}[section] % numbered theorems
+%\DeclareMathOperator*{\argmin}{argmin} % argmin with no space, limits underneath in displays
+%\DeclareMathOperator*{\argmax}{argmax}
+\newcommand{\optimal}[1]{\ensuremath{{#1}^*}}
+% remove spacing around itemize -------------------------------------------
+\usepackage{enumitem}% http://ctan.org/pkg/enumitem
+\setlist[itemize]{noitemsep, topsep=0pt}
+% -------------------------------------------------------------------------
+% more of my packages
+
+% Attempt to make hyperref and algorithmic work together better:
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+\makeatletter
+\newcommand*{\rom}[1]{\expandafter\@slowromancap\romannumeral #1@}
+\makeatother
+% ------------------------------------------------------------------------------------------
+
+
+
 
 %% The titlesec package provides commands to vary how chapter and
 %% section titles are typeset.  The following uses more compact
@@ -232,8 +272,7 @@
   % odd in printed form.
   % https://www.grad.ubc.ca/current-students/dissertation-thesis-preparation/fonts-print
   \usepackage[bookmarks,bookmarksnumbered,%
-     pagebackref,linktocpage,%
-     colorlinks=true,%
+     pagebackref,linktocpage,
      linkcolor=black,%
      urlcolor=blue,%
      citecolor=black%
@@ -266,6 +305,8 @@
 \(\rightarrow\) pages #2%
 \fi}}
 
+% added cleveref after hyperref
+\usepackage[capitalise]{cleveref}
 
 %% The following uses most defaults, which causes hyperlinks to be
 %% surrounded by colourful boxes; the colours are only visible in
@@ -315,12 +356,11 @@
 %% Document meta-data: be sure to also change the \hypersetup information
 %%
 
-\title{On the Use of the \texttt{ubcdiss} Template}
+\title{Conditional generation and inference with deep generative models}
 %\subtitle{If you want a subtitle}
 
-\author{Johnny Canuck}
-\previousdegree{B. Basket Weaving, University of Illustrious Arts, 1991}
-\previousdegree{M. Silly Walks, Another University, 1994}
+\author{William Harvey}
+\previousdegree{MEng Engineering Science, University of Oxford, 2018}
 
 % What is this dissertation for?
 \degreetitle{Doctor of Philosophy}
@@ -329,30 +369,31 @@
 \campus{Vancouver}
 
 \faculty{The Faculty of Graduate and Postdoctoral Studies}
-\department{Basket Weaving}
-\submissionmonth{April}
-\submissionyear{2192}
+\department{Computer Science}
+\submissionmonth{May}
+\submissionyear{2024}
 
 % details of your examining committee
-\examiningcommittee{John Smith, Professor, Materials Engineering, \textsc{UBC}}{Supervisor}
-\examiningcommittee{Mary Maker, Professor, Materials Engineering, \textsc{UBC}}%
+\examiningcommittee{Frank Wood, Associate Professor, Computer Science, \textsc{UBC}}{Supervisor}
+\examiningcommittee{Leonid Sigal, Professor, Computer Science, \textsc{UBC}}%
     {Supervisory Committee Member}
-\examiningcommittee{Nebulous Name, Position, Department, Institution}{Supervisory Committee Member}
-\examiningcommittee{Magnus Monolith, Position, Other Department, Institution}{Additional Examiner}
+\examiningcommittee{Kwang Moo Yi, Assistant Professor, Computer Science, \textsc{UBC}}{Supervisory Committee Member}
+% \examiningcommittee{Magnus Monolith, Position, Other Department, Institution}{Additional Examiner}
 
-% details of your supervisory committee
-\supervisorycommittee{Ira Crater, Professor, Materials Engineering, \textsc{UBC}}%
-    {Supervisory Committee Member}
-\supervisorycommittee{Adeline Long, \textsc{CEO} of Aerial Machine
-    Transportation, Inc.}{Supervisory Committee Member}
+% % details of your supervisory committee
+% \supervisorycommittee{Frank Wood, Associate Professor, Computer Science, \textsc{UBC}}{Supervisor}
+% \supervisorycommittee{Leonid Sigal, Professor, Computer Science, \textsc{UBC}}%
+%     {Supervisory Committee Member}
+% \supervisorycommittee{Kwang Moo Yi, Assistant Professor, Computer Science, \textsc{UBC}}{Supervisory Committee Member}
 
 %% hyperref package provides support for embedding meta-data in .PDF
 %% files
 \hypersetup{
-  pdftitle={Change this title!  (DRAFT: \today)},
-  pdfauthor={Johnny Canuck},
-  pdfkeywords={Your keywords here}
+  pdftitle={Conditional generation and inference with deep generative models},
+  pdfauthor={William Harvey},
+  pdfkeywords={generative models, diffusion models}
 }
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -386,7 +427,7 @@
 \include{abstract}
 \cleardoublepage
 
-%    4. Lay Summary (Effective May 2017, mandatory - maximum 150 words)
+%    4. Lay Summary Effective May 2017, mandatory - maximum 150 words)
 \include{laysummary}
 \cleardoublepage
 
@@ -426,11 +467,19 @@
 
 \acresetall	% reset all acronyms used so far
 
+\DeclarePairedDelimiterX{\infdivx}[2]{(}{)}{%
+  #1\;\delimsize\|\;#2%
+}
+\newcommand{\kl}{\text{KL}\infdivx}
+
 %    1. Introduction
-\include{intro}
+\include{chapters/intro}
 
 %    2. Main body
 % Generally recommended to put each chapter into a separate file
+\include{chapters/cigcvae}
+% \include{chapters/nogs}
+% \include{chapters/fdm}
 %\include{relatedwork}
 %\include{model}
 %\include{impl}
@@ -443,7 +492,7 @@
 %    5. Bibliography
 \begin{singlespace}
 \raggedright
-\bibliographystyle{abbrvnat}
+\bibliographystyle{apalike}  %abbrvnat}
 \bibliography{biblio}
 \end{singlespace}
 
