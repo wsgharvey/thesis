@@ -3,7 +3,38 @@
 
 \chapter{Abstract}
 
-A fascinating and overarching challenge for humankind is to learn deep generative models of video and other things. Thousands have tried and failed to do so. But no more. The journey is over. This thesis solves it.
+
+
+% \paragraph{Option 1}
+% A fascinating and overarching challenge for humankind is to learn deep generative models of video and other things. Thousands have tried and failed to do so. But no more. The journey is over. This thesis solves it.
+
+% \paragraph{Option 2}
+% We are scared. Seriously scared. Generative AI is coming to eat us. To appease it, we assist it. We build models for it so that it will like us. If we are lucky, it will find them useful for applications like video generation and planning.
+
+% \paragraph{Option 3}
+
+A deep generative model (DGM) uses a neural network to parameterize a probability distribution. This thesis focuses on distributions over high-dimensional objects like images and video.
+%
+Much of this thesis builds on the interplay between \textit{conditional} DGMS, which draw samples conditioned on some information like a subset of the pixel values, and \textit{unconditional} DGMs, which draw samples unconditionally.
+%
+We begin by presenting a method, within the hierarchical variational auto-encoder DGM framework, which can cheaply convert an unconditional image DGM into a conditional image DGM suited to tasks like image inpainting. Our subsequent work builds on the diffusion model (DM) class of DGMs. We demonstrate that, when given relevant information, conditional image DMs often produce more realistic images than unconditional DMs. We use this insight to build an improved unconditional DM that incorporates a conditional DM to improve image quality. Finally, we tackle the video domain. To scale to videos with hundreds of frames or more, we break the problem down into a series of generations, each of which involve sampling a small number of frames condition on a small number of previously-sampled frames. We demonstrate that a single DM can be effective at a wide variety of such tasks, allowing fast exploration of different strategies and producing videos with greater realism and long-term coherence than prior work on this topic.
+
+% In the context of diffusion models, one class of deep generative model, we demonstrate a method that exploits the properties of 
+
+% Making hierachical VAEs conditional.
+% Making diffusion models work well on a wide range of conditioning tasks.
+% Exploiting the good performance of conditional diffusion models to improve unconditoinal diffusion models.
+% Optionally at the end: a use-case in Bayesian experimental design.
+
+% Background. VAEs. Hierarchical VAEs. Diffusion models.
+
+% Contribution. Hierarchical VAEs train slowly - but we present a way to get around this if you want a conditional hierarcahical VAE.
+
+% We present one of the first diffusion models capable of generating videos. We demonstrate that it can be trained to be flexibly conditioned on one of a large numbers of tasks at test time, which allows us to scale to producing hours-long videos.
+
+% Finally we demonstrate that conditional image generative models, when conditioned on relevant information, can produce more realistic images than unconditional generative models. We present a method that uses this finding to improve unconditional generative models for images.
+
+
 
 % Consider placing version information if you circulate multiple drafts
 %\vfill
