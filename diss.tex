@@ -182,6 +182,8 @@
 % more of my packages
 
 % Attempt to make hyperref and algorithmic work together better:
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
 \newcommand{\theHalgorithm}{\arabic{algorithm}}
 \makeatletter
 \newcommand*{\rom}[1]{\expandafter\@slowromancap\romannumeral #1@}
@@ -356,7 +358,7 @@
 %% Document meta-data: be sure to also change the \hypersetup information
 %%
 
-\title{Conditional generation and inference with deep generative models}
+\title{Flexibly Conditional Models for Visual Data}
 %\subtitle{If you want a subtitle}
 
 \author{William Harvey}
@@ -389,7 +391,7 @@
 %% hyperref package provides support for embedding meta-data in .PDF
 %% files
 \hypersetup{
-  pdftitle={Conditional generation and inference with deep generative models},
+  pdftitle={Flexibly Conditional Models for Visual Data},
   pdfauthor={William Harvey},
   pdfkeywords={generative models, diffusion models}
 }
@@ -453,12 +455,12 @@
 %   10. Lists of symbols, abbreviations or other (optional)
 
 %   11. Glossary (optional)
-\input{glossary}	% always input, since other macros may rely on it
+% \input{glossary}	% always input, since other macros may rely on it
 
 \textspacing		% begin one-half or double spacing
 
 %   12. Acknowledgements (optional)
-\include{ack}
+% \include{ack}
 
 %   13. Dedication (optional)
 
@@ -479,13 +481,14 @@
 % Generally recommended to put each chapter into a separate file
 \include{chapters/background}
 \include{chapters/cigcvae}
-% \include{chapters/nogs}
+% \include{chapters/2sdm}
 \include{chapters/fdm}
 %\include{relatedwork}
 %\include{model}
 %\include{impl}
 %\include{discussion}
 %\include{conclusions}
+\include{chapters/conclusions}
 
 %    3. Notes
 %    4. Footnotes

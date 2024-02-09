@@ -511,7 +511,7 @@ improvements from varying this number.
 \ourparagraph{Partial-supervision for CelebA-HQ} In \lref{fig:celebhq-time}, we
 plot the number of iterations until convergence on each CelebA-HQ classification
 task. On almost all tasks, the methods which involve partial supervision
-(\PSRAM{} and \PSNOGS{}) are faster than those which do not. \Cref{tab:results}
+(\PSRAM{} and \PSNOGS{}) are faster than those which do not. \Cref{tab:nogs-results}
 corroborates this finding, showing that \PSNOGS{} trains an average of
 $6.6\times$ faster on CelebA-HQ than \RAM{}, the fastest unsupervised method.
 Furthermore, the test accuracy for the partially supervised methods is
@@ -526,7 +526,7 @@ trains $20\%$ faster than \PSRAM{} on CelebA-HQ.
     dataset. Our methods are marked with {$^*$}. The first row corresponds to
     \RAM{} on CelebA-HQ and \RAMP{} on CUB.}
   \vspace{-.1cm}
-  \label{tab:results}
+  \label{tab:nogs-results}
   \centering
   \begin{tabular}{lllll}
     \toprule
@@ -558,7 +558,7 @@ appendix for details.
 throughout training.
 %
 As seen on CelebA-HQ, all methods with partial supervision train faster than any
-without; \cref{tab:results} show the number of iterations on CUB before
+without; \cref{tab:nogs-results} show the number of iterations on CUB before
 achieving a validation accuracy within 1\% of the highest. Of the methods with
 partial supervision, \HGS{} quickly saturates and achieves the lowest test
 accuracy of the methods we compare. \PSRAMP{} achieves slightly lower accuracy

@@ -1,5 +1,5 @@
 \chapter{Conditional Image Generation by Conditioning Variational Auto-Encoders}
-\label{ch:conditional_image_generation_by_conditioning_variational_auto-encoders}
+\label{ch:cigcvae}
 
 
 
@@ -11,7 +11,7 @@
   \caption{\textbf{Left column:} Images with most pixels masked out.
     \textbf{Rest:} Completions from our method.
   }
-  \label{fig:headline}
+  \label{fig:cigcvae-headline}
 \end{figure*}
 
 
@@ -75,12 +75,12 @@ covers the posterior well.
 % support~\citep{arora2017gans,arora2017generalization}.
 %
 This is supported empirically by results indicating that, not only is the visual
-quality of our image completions (see \cref{fig:headline}) close to the
+quality of our image completions (see \cref{fig:cigcvae-headline}) close to the
 state-of-the-art~\citep{zhao2021large}, but our coverage of the ``true''
 posterior over image completions is superior to that of any of our baselines.
 
 % the visual quality of image completions
-% produced by our method (see \cref{fig:headline}) is close to the
+% produced by our method (see \cref{fig:cigcvae-headline}) is close to the
 % state-of-the-art~\citep{zhao2021large}, and we show results indicating that our
 % coverage of the ``true'' posterior over image completions is superior to that of
 % any of our baselines.
@@ -97,61 +97,61 @@ mode-dropping behaviour associated with GANs. Finally, we showcase a possible
 application in Bayesian optimal experimental design that benefits from these
 capabilities.
 
-\section{Variational Auto-encoders}
-We describe VAEs in terms of three components. \textbf{(\rom{1})} A decoder with
-parameters $\theta\in\Theta$ maps from latent variables $\z{}$ to a distribution
-over data $\I{}$, which we call $\pmodel{}(\I | \z{}; \theta)$. \textbf{(\rom{2})}
-There is a prior over latent variables, $\pmodel{}(\z{};\theta)$. This may have
-learnable parameters, which we consider to be part of $\theta$. Together, the
-prior and decoder define a joint distribution, $\pmodel{}(\z{}, \I{}; \theta)$.
-Finally, \textbf{(\rom{3})} an encoder with parameters $\phi\in\Phi$ maps from
-data to an approximate posterior distribution over latent variables, $q(\z{}|\I{};
-\phi) \approx \pmodel{}(\z{}|\I{}; \theta)$. Ideally, $\theta$ would be learned to
-maximise the log likelihood $\log\pmodel{}(\I{}; \theta) = \log \int
-\pmodel{}(\z{}, \I{}; \theta) \mathrm{d}\z{}$, averaged over training examples. Since
-this is intractable, $\theta$ and $\phi$ are instead trained jointly to maximise
-an average of the evidence lower-bound (ELBO) over each training example $\I{}
-\sim \pdata{}(\cdot)$:
-\begin{align}
-  \EX_{\pdata{}(\I{})} \left[ \text{ELBO}(\theta, \phi, \I{}) \right] &= \EX_{\pdata(\I{})} \EX_{q(\z{}|\I{}; \phi)} \left[ \log\frac{\pmodel{}(\z{}; \theta)\pmodel{}(\I{}|\z{}; \theta)}{q(\z{}|\I{}; \phi)} \right] \label{eq:eelbo}\\
-                                                                      &= -\mathcal{H}\left[ \pdata(\I) \right] - \kl[\big] { \pdata{}(\I{})q(\z{}|\I{}; \phi) }{ \pmodel{}(\z{}, \I; \theta) }. \label{eq:elbo-kl-joints}
-\end{align}
-The data distribution's entropy, $\mathcal{H}\left[ \pdata(\I) \right]$, is
-typically a finite constant, and this is guaranteed in our experiments where
-$\I{}$ is an image with discrete pixel values. Maximising the above objective
-will therefore drive $\pmodel{}(\z{}, \I{}; \theta)$ towards
-$\pdata{}(\I{})q(\z{}|\I{}; \phi)$, and so the marginal $\pmodel{}(\I{}; \theta)$
-towards $\pdata{}(\I{})$. The KL divergence shown leads to mass-covering
-behaviour from $\pmodel{}(\z{}, \I{}; \theta)$~\citep{bishop2006pattern} so
-$\pmodel{}(\I{}; \theta)$ should assign probability broadly over the data
-distribution $\pdata{}(\I{})$.
-% This is important since, for the framing of
-% image completion as inference to be well-posed, any observed subsets of image
-% pixels should have non-zero probability under $\pmodel{}$.
-For notational simplicity in the rest of the paper, parameters $\theta$ and
-$\phi$ are not written when clear from the context.
+% \section{Variational Auto-encoders}
+% We describe VAEs in terms of three components. \textbf{(\rom{1})} A decoder with
+% parameters $\theta\in\Theta$ maps from latent variables $\z{}$ to a distribution
+% over data $\I{}$, which we call $\pmodel{}(\I | \z{}; \theta)$. \textbf{(\rom{2})}
+% There is a prior over latent variables, $\pmodel{}(\z{};\theta)$. This may have
+% learnable parameters, which we consider to be part of $\theta$. Together, the
+% prior and decoder define a joint distribution, $\pmodel{}(\z{}, \I{}; \theta)$.
+% Finally, \textbf{(\rom{3})} an encoder with parameters $\phi\in\Phi$ maps from
+% data to an approximate posterior distribution over latent variables, $q(\z{}|\I{};
+% \phi) \approx \pmodel{}(\z{}|\I{}; \theta)$. Ideally, $\theta$ would be learned to
+% maximise the log likelihood $\log\pmodel{}(\I{}; \theta) = \log \int
+% \pmodel{}(\z{}, \I{}; \theta) \mathrm{d}\z{}$, averaged over training examples. Since
+% this is intractable, $\theta$ and $\phi$ are instead trained jointly to maximise
+% an average of the evidence lower-bound (ELBO) over each training example $\I{}
+% \sim \pdata{}(\cdot)$:
+% \begin{align}
+%   \EX_{\pdata{}(\I{})} \left[ \text{ELBO}(\theta, \phi, \I{}) \right] &= \EX_{\pdata(\I{})} \EX_{q(\z{}|\I{}; \phi)} \left[ \log\frac{\pmodel{}(\z{}; \theta)\pmodel{}(\I{}|\z{}; \theta)}{q(\z{}|\I{}; \phi)} \right] \label{eq:eelbo}\\
+%                                                                       &= -\mathcal{H}\left[ \pdata(\I) \right] - \kl[\big] { \pdata{}(\I{})q(\z{}|\I{}; \phi) }{ \pmodel{}(\z{}, \I; \theta) }. \label{eq:elbo-kl-joints}
+% \end{align}
+% The data distribution's entropy, $\mathcal{H}\left[ \pdata(\I) \right]$, is
+% typically a finite constant, and this is guaranteed in our experiments where
+% $\I{}$ is an image with discrete pixel values. Maximising the above objective
+% will therefore drive $\pmodel{}(\z{}, \I{}; \theta)$ towards
+% $\pdata{}(\I{})q(\z{}|\I{}; \phi)$, and so the marginal $\pmodel{}(\I{}; \theta)$
+% towards $\pdata{}(\I{})$. The KL divergence shown leads to mass-covering
+% behaviour from $\pmodel{}(\z{}, \I{}; \theta)$~\citep{bishop2006pattern} so
+% $\pmodel{}(\I{}; \theta)$ should assign probability broadly over the data
+% distribution $\pdata{}(\I{})$.
+% % This is important since, for the framing of
+% % image completion as inference to be well-posed, any observed subsets of image
+% % pixels should have non-zero probability under $\pmodel{}$.
+% For notational simplicity in the rest of the paper, parameters $\theta$ and
+% $\phi$ are not written when clear from the context.
 
-Hierarchical
-VAEs~\citep{gregor2015draw,kingma2016improving,sonderby2016ladder,klushyn2019learning}
-partition the latent variables $\z{}$ in a way which has been found to improve the
-fidelity of the learned $\pmodel{}(\I{})$, especially for the image
-domain~\citep{vahdat2020nvae,child2020very}. In particular, they define $\z{}$ to
-consist of $L$ disjoint groups, $\z{}_1,\ldots,\z{}_L$. The prior for each $\z{}_l$ can
-depend on the previous groups through the factorisation
-\begin{equation}
-  \label{eq:hierarchical-prior}
-  \pmodel{}(\z{}) = \prod_{l=1}^L \pmodel{}(\z{}_l|\z{}_{<l}).
-\end{equation}
-where $\z{}_{<l}$ is the null set for $l=1$ and $\{\z{}_1,\ldots,\z{}_{l-1}\}$
-otherwise. \cref{fig:hierarchical-vae} shows the hierarchical VAE architecture
-we base this work on, in which the dependency of the prior for each $\z{}_l$ on
-$\z{}_{<l}$ is maintained via the decoder's hidden state $h_l$. The distribution
-produced by the encoder for each $\z{}_l$ also depends on the previous hidden
-state $h_{l-1}$ and so factorises as
-$q(\z{}|\I{}) = \prod_{l=1}^L q(\z{}_l|\z{}_{<l}, \I{})$. We will parameterise
-$\pmodel{}(\z{}_l|\z{}_{<l})$ and $q(\z{}_l|\z{}_{<l}, \I{})$ as diagonal
-Gaussian distributions, as is common for hierarchical
-VAEs~\citep{sonderby2016ladder,vahdat2020nvae,child2020very}.
+% Hierarchical
+% VAEs~\citep{gregor2015draw,kingma2016improving,sonderby2016ladder,klushyn2019learning}
+% partition the latent variables $\z{}$ in a way which has been found to improve the
+% fidelity of the learned $\pmodel{}(\I{})$, especially for the image
+% domain~\citep{vahdat2020nvae,child2020very}. In particular, they define $\z{}$ to
+% consist of $L$ disjoint groups, $\z{}_1,\ldots,\z{}_L$. The prior for each $\z{}_l$ can
+% depend on the previous groups through the factorisation
+% \begin{equation}
+%   \label{eq:hierarchical-prior}
+%   \pmodel{}(\z{}) = \prod_{l=1}^L \pmodel{}(\z{}_l|\z{}_{<l}).
+% \end{equation}
+% where $\z{}_{<l}$ is the null set for $l=1$ and $\{\z{}_1,\ldots,\z{}_{l-1}\}$
+% otherwise. \cref{fig:cigcvae-hierarchical-vae} shows the hierarchical VAE architecture
+% we base this work on, in which the dependency of the prior for each $\z{}_l$ on
+% $\z{}_{<l}$ is maintained via the decoder's hidden state $h_l$. The distribution
+% produced by the encoder for each $\z{}_l$ also depends on the previous hidden
+% state $h_{l-1}$ and so factorises as
+% $q(\z{}|\I{}) = \prod_{l=1}^L q(\z{}_l|\z{}_{<l}, \I{})$. We will parameterise
+% $\pmodel{}(\z{}_l|\z{}_{<l})$ and $q(\z{}_l|\z{}_{<l}, \I{})$ as diagonal
+% Gaussian distributions, as is common for hierarchical
+% VAEs~\citep{sonderby2016ladder,vahdat2020nvae,child2020very}.
 
 \begin{figure*}[t]
   \centering
@@ -159,19 +159,19 @@ VAEs~\citep{sonderby2016ladder,vahdat2020nvae,child2020very}.
     \centering
     \includegraphics[height=3.8cm]{figs/cigcvae/arch_small-standard.pdf}
     \caption{Estimating ELBO.}
-    \label{fig:hierarchical-vae}
+    \label{fig:cigcvae-hierarchical-vae}
   \end{subfigure}
   \begin{subfigure}[b]{.32\textwidth}
     \centering
     \includegraphics[height=3.8cm]{figs/cigcvae/arch_small-forward.pdf}
     \caption{Estimating $\mathcal{O}_\mathrm{for}$.}
-    \label{fig:forward-arch}
+    \label{fig:cigcvae-forward-arch}
   \end{subfigure}
   \begin{subfigure}[b]{.32\textwidth}
     \centering
     \includegraphics[height=3.8cm]{figs/cigcvae/arch_small-sampling.pdf}
     \caption{Sampling $\I{}\sim\pcomp{}(\cdot|\partI{})$.}
-    \label{fig:reverse-arch}
+    \label{fig:cigcvae-reverse-arch}
   \end{subfigure}
   \vspace{-1mm}
   \caption{A hierarchical VAE architecture with $L=2$ layers of latent
@@ -183,7 +183,7 @@ VAEs~\citep{sonderby2016ladder,vahdat2020nvae,child2020very}.
     shown in black; and the partial encoder is shown in blue. The computation
     graph needed to sample $\z{}$ in each case is drawn with dashed lines, and
     the remainder of the computation graph is drawn with solid lines.}
-  \label{fig:conditional-architectures}
+  \label{fig:cigcvae-conditional-architectures}
   \vspace{-2mm}
 \end{figure*}
 
@@ -209,7 +209,7 @@ to approximate $\pdata{}(\I{}|\partI{})$, we use the partial encoder to define
 \end{equation}
 with learnable parameters $\theta$ and $\partphi$. We can sample from
 $\pcomp{}(\I{}|\partI{})$ by sampling $\z{}\sim \partq{}(\cdot|\partI{})$ and then
-$\I{}\sim \pmodel{}(\cdot|\z{})$ as shown in \cref{fig:reverse-arch}. This defines
+$\I{}\sim \pmodel{}(\cdot|\z{})$ as shown in \cref{fig:cigcvae-reverse-arch}. This defines
 a conditional VAE architecture which, unique amongst related work with
 high-dimensional $\I{}$ and
 $\partI{}$~\citep{sohn2015learning,zheng2019pluralistic,ivanov2018variational,wan2021high},
@@ -262,14 +262,14 @@ likelihoods so $\pmodel{}(\tildeI{}|\z{})$ is tractable in either case. \Cref{eq
 lower-bounds $\log \pcomp{}(\tildeI{}|\partI{}) $ similarly to how the ELBO of
 an unconditional VAE lower-bounds $\log \pmodel{}(\I{})$. The major difference
 is that the prior, $\pmodel{}(\z{})$, is replaced by $\partq{}(\z{}|\partI{})$.
-This is reflected in \cref{fig:forward-arch} where each $\z{}_l$ is conditioned
+This is reflected in \cref{fig:cigcvae-forward-arch} where each $\z{}_l$ is conditioned
 on $\partI{}$ via the partial encoder.
 %
 Similar to standard estimators for an unconditional hierarchical VAE's ELBO,
 reduced-variance estimates of \cref{eq:forward-elbo} can be obtained by
 computing KL divergences between $q(\z{}_l|\z{}_{<l},\I{})$ and
 $\partq{}(\z{}_l|\z{}_{<l},\partI{})$ analytically for each layer $l$ (see
-\cref{supp:kl-estimates} for details).
+\cref{supp:cigcvae-kl-estimates} for details).
 
 We are particularly interested in the properties of the learned partial encoder.
 Recall the joint distribution $r(\z{}, \I{}, \partI{}; \phi) = \pdata{}(\I{},
@@ -353,11 +353,11 @@ However we find empirically that we can use unconditional VAE parameters trained
 on ImageNet~\citep{deng2009imagenet} with IPA on several other photo datasets.
 
 \begin{table*}
-  \small
+  \tiny
   \caption{Image completion results. Best performance is shown in \textbf{bold},
     and second best is \underline{underlined}. In the last row, $t$ denotes the
     ``temperature'' parameter \citep{child2020very}.}
-  \label{tab:results-completion}
+  \label{tab:cigcvae-results-completion}
   \centering
   \begin{tabular}{lccccccccc}
     \toprule
@@ -403,7 +403,7 @@ Given pretrained unconditional VAE parameters, IPA is faster to train than the
 best-performing baseline, CoModGAN. IPA takes 115 GPU-hours to train on
 CIFAR-10, and under 7 GPU-weeks on FFHQ-256. The CoModGAN models are trained for
 270 GPU-hours and 8 GPU-weeks respectively. We provide more training details in
-\cref{supp:exp-details}.
+\cref{supp:cigcvae-exp-details}.
 
 We report the FID~\citep{heusel2017gans} and P-IDS~\citep{zhao2021large} metrics
 between a set of sampled completions from each method and a reference set.
@@ -418,7 +418,7 @@ $\min_{k=1}^K(\text{LPIPS}(\I{}^{(k)} , \I))$, with each $\I{}^{(k)} \sim
 to zero if the ground truth is always within the support of
 $\pcomp(\I{}|\partI{})$. If not, the LPIPS-GT will remain high, penalising
 methods which miss modes of the posterior. We use $K=100$. We confirm in
-\cref{supp:additional-results} that the LPIPS-GT correlates with diversity
+\cref{supp:cigcvae-additional-results} that the LPIPS-GT correlates with diversity
 metrics used by related work~\citep{zhu2017toward,li2020multimodal}.
 
 
@@ -435,18 +435,18 @@ For evaluation, since the number of observed pixels in freeform masks varies
 considerably, we follow \citet{zhao2021large} and partition the mask
 distribution by conditioning the procedure to return a mask with the proportion
 of pixels observed within some range (0-20\%, 20-40\%, and so on) and report
-metrics for each range separately in \cref{fig:metrics} (or
-\cref{supp:additional-results} for ImageNet-64). To summarise the
-overall performance in \cref{tab:results-completion}, we sample masks from a
+metrics for each range separately in \cref{fig:cigcvae-metrics} (or
+\cref{supp:cigcvae-additional-results} for ImageNet-64). To summarise the
+overall performance in \cref{tab:cigcvae-results-completion}, we sample masks from a
 uniformly-weighted mixture distribution over these five partitions. In terms of
-the LPIPS-GT scores in \cref{tab:results-completion}, IPA outperforms the best
-baselines by roughly 20\%. \Cref{fig:metrics} shows that there is an improvement
+the LPIPS-GT scores in \cref{tab:cigcvae-results-completion}, IPA outperforms the best
+baselines by roughly 20\%. \Cref{fig:cigcvae-metrics} shows that there is an improvement
 for any proportion of observed pixels. This suggests that IPA produces reliably
 diverse samples with good coverage of $\pdata{}(\I{}|\partI{})$. In contrast, we
 believe that the GAN-based approaches occasionally miss modes of
 $\pdata{}(\I{}|\partI{})$ and can therefore fail to capture the ground-truth.
 This hypothesis is supported by samples from CoModGAN we display in
-\cref{supp:comodgan-failure}. In terms of sample fidelity, as measured by both
+\cref{supp:cigcvae-comodgan-failure}. In terms of sample fidelity, as measured by both
 FID and P-IDS, IPA outperforms all baselines on CIFAR-10 when over $40\%$ of the
 image is observed, and on ImageNet-64 when over $20\%$ is observed. IPA comes
 second to CoModGAN when less is observed and on FFHQ-256.
@@ -459,7 +459,7 @@ second to CoModGAN when less is observed and on FFHQ-256.
   \caption{Test metrics on CIFAR-10 and FFHQ-256, plotted as a function of
     the mask distribution. Error bars on LPIPS-GT show the standard error of our
     estimate for a single trained network.}
-  \label{fig:metrics}
+  \label{fig:cigcvae-metrics}
   \vspace{-.5cm}
 \end{figure*}
 
@@ -470,9 +470,9 @@ Edges2Handbags datasets~\citep{isola2016image}, where the task is to generate an
 image conditioned on the output of an edge detector applied to that image. We
 downsample the datasets to $64\times64$ so that we can use unconditional VAEs
 pretrained on ImageNet~\citep{deng2009imagenet} at this resolution by
-\citet{child2020very}. We show in \cref{fig:training} that IPA is useful for
+\citet{child2020very}. We show in \cref{fig:cigcvae-training} that IPA is useful for
 these tasks, and provide further discussion below. The images generated are
-diverse and photorealistic, as shown in \cref{supp:image-samples}.
+diverse and photorealistic, as shown in \cref{supp:cigcvae-image-samples}.
 
 \paragraph{Effectiveness of pretraining}
 We now seek to determine how important the pretrained unconditional VAE weights
@@ -484,7 +484,7 @@ $\partphi$.
 %
 With an infinite training budget, the end-to-end training of the from-scratch
 baselines is likely to lead them to outperform any IPA models. Nevertheless it
-is apparent from \cref{fig:training} that, in the more realistic situation of a
+is apparent from \cref{fig:cigcvae-training} that, in the more realistic situation of a
 finite training budget, using IPA can be beneficial. This is the case even for
 training budgets of up to a few GPU-weeks on the relatively small CIFAR-10
 dataset. In fact, even with only a couple of days of training, IPA on CIFAR-10
@@ -509,10 +509,10 @@ baseline in terms of ELBO for the first 30 hours of training, and in terms of
 FID until the from-scratch baseline is trained for several weeks.
 
 \paragraph{An alternative training objective}
-In \cref{tab:results-completion} and \cref{fig:metrics}, we report results for
+In \cref{tab:cigcvae-results-completion} and \cref{fig:cigcvae-metrics}, we report results for
 IPA-R, a variation of IPA with a different training objective corresponding to a
 mode-seeking KL divergence. IPA almost always outperforms IPA-R, but we
-nonetheless provide a full description of IPA-R in \cref{supp:ipa-r}.
+nonetheless provide a full description of IPA-R in \cref{supp:cigcvae-ipa-r}.
 
 \begin{figure*}[t]
   \vspace{-.1cm}
@@ -523,7 +523,7 @@ nonetheless provide a full description of IPA-R in \cref{supp:ipa-r}.
     pretraining on ImageNet, and when trained from scratch. Error bars show
     standard deviations computed with 3 runs. IPA makes training faster and
     lower-variance.}
-  \label{fig:training}
+  \label{fig:cigcvae-training}
   \vspace{-.3cm}
 \end{figure*}
 
@@ -584,7 +584,7 @@ location, $\coord{}_t$, to minimise it.
     step. We then show samples from IPA (or the dataset when $t=1$). The
     rightmost column shows the EIG overlaid on the pixel-space average of
     sampled images, with the optimal $\coord{}_t$ marked by a red cross.}
-  \label{fig:boed}
+  \label{fig:cigcvae-boed}
   \vspace{-.4cm}
 \end{figure}
 
@@ -637,7 +637,7 @@ severity of a given illness.
 %
 We envisage BOED being used to select scan locations for an x-ray without
 necessarily performing an automated diagnosis. However, to quantify the
-informativeness of the chosen locations, \cref{fig:boed} shows the results of
+informativeness of the chosen locations, \cref{fig:cigcvae-boed} shows the results of
 using $g$ to perform a diagnosis, or classification, based on the chosen scan
 locations.
 %
@@ -658,14 +658,14 @@ Our method (denoted EIG-IPA) narrowly but consistently outperforms EIG-CoModGAN.
 %
 We hypothesise that this is due to the aforementioned tendency of CoModGAN to
 sometimes collapse to a single mode of the posterior, and exhibit an example of
-this behaviour on the x-ray dataset in \cref{supp:image-samples}. In the BOED
+this behaviour on the x-ray dataset in \cref{supp:cigcvae-image-samples}. In the BOED
 context, such ``overconfident'' image completion could lead to salient scan
 locations being ignored. Nonetheless, both EIG-IPA and EIG-CoModGAN
 significantly outperform the other baselines, giving performance much closer to
 the upper bound of a CNN with access to the entire image. Another benefit of the
 ``EIG-'' approaches is that the choice of scan locations is highly
 interpretable; we can see why a particular location was chosen with
-visualisations similar to the right of \cref{fig:boed}. This shows the sampled
+visualisations similar to the right of \cref{fig:cigcvae-boed}. This shows the sampled
 images $\I{}^{(n)}$ and the estimated EIG for each $\coord{}_t$. In \cref{sec:cigcvae-supp-boed}, we
 show that we can further quantify the contribution of each $\I{}^{(n)}$ to the
 estimated EIG for each $\coord{}_t$.
@@ -735,7 +735,7 @@ sequence models~\citep{zheng2021tfill,wan2021high}, and then use a GAN for
 upsampling. In contrast, we use a VAE to model image completions at the full
 resolution. As well as ensuring diverse coverage of the posterior, using such a
 likelihood-based model enables applications such as out-of-distribution
-detection for inputs $\partI{}$, which we demonstrate in \cref{supp:ood}.
+detection for inputs $\partI{}$, which we demonstrate in \cref{supp:cigcvae-ood}.
 Another related approach is that of \citet{song2020score}, who present a
 stochastic differential equation-based image model. This can be used for image
 completion but sampling is slow.

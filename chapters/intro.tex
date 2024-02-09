@@ -1,17 +1,35 @@
 \chapter{Introduction}
 \label{ch:introduction}
 
+Deep generative models, popularly described as ``generative AI'', are increasingly finding use-cases in the real-world in chat-bots~\cite{wolf2020transformers}, text-to-image generators~\cite{}, video editors~\cite{}, real-time transcription systems~\cite{}, 3D modeling, protein design, weather forecasting~\citep{lam2022graphcast}, and more~\cite{}. In the context of creating human-like or animal-like intelligence, deep generative models can also be viewed as ``world models'', which describe how an agent's state and environment will change over time, and in response to its actions, and can allow for planning~\citep{ha2018world}. 
 
-This thesis will be structured as follows.
-\begin{itemize}
-    \item We briefly describe the problem background and related work.
-    \item We could start by motivating the problem with an application to planning/Bayesian experimental design~\citep{harvey2022near,harvey2021conditional}.
-    \item Then talk about ``Conditional Image Generation by Conditioning Variational Auto-Encoders''~\citep{harvey2021conditional}.
-    \item Then so dome background on diffusion models?
-    \item Then talk about ``Graphically structured diffusion models''~\citep{weilbach2023graphically}.
-    \item Then talk about how ``Visual Chain-of-Thought Diffusion Models''\citep{harvey2023visual} uses these insights to improve generative models in the image domain.
-    \item Then talk about ``Flexible diffusion modeling of long videos''~\citep{harvey2022flexible}.
-\end{itemize}
+Signature use-cases of generative AI rely on large models and expensive training runs, with the largest training runs costing over \$100 million~\cite{}. Given the cost of training these models, it is fortunate that a growing trend has been to re-use them by adapting them for different tasks~\citep{bommasani2021opportunities}. Techniques have been proposed to adapt open-source text-to-image models for image inpainting, video generation, and 3D model generators. In this way, the cost of training the base, or ``foundation'', model is shared across multiple applications. In this dissertation, we strive to go further down this route by designing models in which the final adaptation stage is unnecessary. That is, models which can be trained once and applied out-of-the-box to many different tasks. To do so we must not only train models over a broad range of tasks, but design them so that their performance is not significantly degraded versus being trained on a single task.
+
+Mention diffusion models being really good for this, and the dawn of them.
+
+% There is an increasing trend in the machine learning community towards% spending large amounts of compute on single, large, training runs~\citep{wolf2020transformers} to create what have been described as ``foundation models''~\citep{bommasani2021opportunities}. Even though they are trained on a single task, these models are often then released for the community to adapt and finetune towards diverse applications. Even when models are not released, such a process may take place in-house~\citep{openai2023gpt}. Broad applicability to downstream tasks is a key feature of these foundation models. We aim to create models that are naturally useful to many downstream tasks by \textit{training them over a broad range of tasks} instead of relying on downstream finetuning and modification. 
+
+% In particular, the models which attempt to make more flexible are deep generative models, or DGMS. Deep generative models are trained to parameterize a distribution over data. Use-cases for deep generative models include tools which synthesize images from text prompts~\citet{ramesh2022hierarchical,betker2023improving} and ``world models'', which model complex environments to allow for planning~\citet{ha2018world}. A conditional DGM is one which can be fed additional information as input (e.g. an image caption or the current world state), in which case it will produce the conditional distribution over data given this information (e.g. an image matching the caption, or a future world state reachable from the current state).
+
+% We introduce the notion of a \textit{flexibly conditional} DGMs. Viewing the data modelled by a DGM as a set - e.g. we may view an image as a set of pixels or a video as a set of frames - we define a flexible conditional DGM to be a DGM that can be conditioned on the values of any subset of the data. A flexibly conditional image DGM may therefore be one that can be conditioned on the value of any arbitrary set of pixel values. A flexibly conditional video DGM could be one that can be conditioned on the values of any arbitrary set of frames. We show that flexibly conditional DGMs can work surprisingly well. In the image domain, we present a flexibly conditional hierarchical variational auto-encoder which yielded, at its time of publication, state-of-the-art image inpainting.
+
+% In the video domain, we push the flexibility of these models even further. Modeling all frames of a long video jointly is not usually possible due to memory constraints. A standard approach to tackling this problem is to generate each frame conditioned on just a few previous frames, but this leads to issues with long-range dependencies. We take the flexible-conditioning framework further in this setting by presenting a model which can be trained to not only condition on an arbitrary subset of frames, but also to ``drop out'' or ``marginalize'' another arbitrary subset of frames. This lets us save memory, at both training and inference time, by neither generating nor conditioning on frames that are less relevant to those we wish to generate. The videos which we can generate with this can model long-range dependencies well where necessary, and additionally can be made hours-long while remaining temporally coherent.
+
+% We begin with background material on deep generative models in \cref{sec:background}. In \cref{ch:cigcvae} we describe, and present results from, our methodology for producing a flexibly conditional image model. In \cref{ch:fdm} we do the same for our proposed video modeling methodology. We conclude in \cref{ch:conclusion}.
+
+
+% Machine learning models are being made increasingly big. There are large training runs costing <insert estimated cost of LLM runs>. If they're so big, we better hope that they're useful for more than one task. Increasingly, this is the case. Large language models (cite GPT-3) are finding use-cases in tasks ranging from translation to grammar correction to ... . In the visual domain, ... is proving useful for many types of image edits: ..., ..., and ... . Even Stable Diffusion, an open-source model trained purely to perform image completion, has been finetune for new tasks ranging form image inpainting to ... to ... . This thesis can be seen as a continuation of  this direction of progress. We provide demonstrations of the abilities of diffusion models to be ``flexibly conditioned''.
+
+% This thesis will be structured as follows.
+% \begin{itemize}
+%     \item We briefly describe the problem background and related work.
+%     \item We could start by motivating the problem with an application to planning/Bayesian experimental design~\citep{harvey2022near,harvey2021conditional}.
+%     \item Then talk about ``Conditional Image Generation by Conditioning Variational Auto-Encoders''~\citep{harvey2021conditional}.
+%     \item Then so dome background on diffusion models?
+%     \item Then talk about ``Graphically structured diffusion models''~\citep{weilbach2023graphically}.
+%     \item Then talk about how ``Visual Chain-of-Thought Diffusion Models''\citep{harvey2023visual} uses these insights to improve generative models in the image domain.
+%     \item Then talk about ``Flexible diffusion modeling of long videos''~\citep{harvey2022flexible}.
+% \end{itemize}
 
 \endinput
 

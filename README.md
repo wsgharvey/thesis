@@ -1,3 +1,15 @@
+# plan
+
+Feedback:
+- Feedback from thesis proposal; CIGCVAE stuff was a bit pointless relative to ControlNet. Maybe more theoretically grounded? But that actually doesn't make a ton of sense. So de-emphasize it and just mentioned ControlNet as a more recent and better thing.
+- Questions about the metrics too but I think it turned out that we had enough.
+- They liked ``Flexible Video Diffusion Models''.
+- I told them I'd add another paper in there. An extension of the 2SDM stuff.
+
+
+Things to do:
+- extend the 2SDM stuff
+
 # `ubcdiss` &ndash; a dissertation template for LaTeX
 
 This distribution provides a community-maintained LaTeX template

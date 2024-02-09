@@ -5,7 +5,7 @@
 
 \begin{figure}[b]
     \includegraphics[width=\textwidth]{figs/2sdm/2SDM-main-fig.pdf}
-    \caption{Class-conditional ImageNet-256 samples from our method, 2SDM, and a diffusion model baseline, EDM~\citep{karras2022elucidating}, both trained for 12 GPU days. Samples within the same column are generated with the same random seed and class label. In most columns the samples from 2SDM are visibly better, agreeing with the FIDs reported in \cref{sec:experiments}.}
+    \caption{Class-conditional ImageNet-256 samples from our method, 2SDM, and a diffusion model baseline, EDM~\citep{karras2022elucidating}, both trained for 12 GPU days. Samples within the same column are generated with the same random seed and class label. In most columns the samples from 2SDM are visibly better, agreeing with the FIDs reported in \cref{sec:2sdm-experiments}.}
     \label{fig:latent-imagenet-samples}
 \end{figure}
 
@@ -18,7 +18,7 @@
 \end{figure}
 
 
-\label{sec:intro}
+\label{sec:2sdm-intro}
 Recent text-to-image diffusion generative models (DGMs) have exhibited stunning sample quality~\citep{saharia2022photorealistic} to the point that they are now being used to create art~\citep{oppenlaender2022creativity}. 
 %
 Further work has explored conditioning on scene layouts~\citep{zhang2023adding}, segmentation masks~\citep{zhang2023adding,hu2022self}, or the appearance of a particular object \citep{ma2023unified}. We broadly lump these methods together as ``conditional'' DGMs to contrast them with ``unconditional'' image DGMs which sample an image without dependence on text or any other information.
@@ -40,17 +40,17 @@ we condition on a lower dimensional feature like a class label or short text pro
 \footnotetext{We used the prompt ``Aerial photography of a patchwork of small green fields separated by brown dirt tracks between them. A large tarmac road passes through the scene from left to right.''}
 This gap in performance is problematic. Imagine you need to sample a dataset of synthetic aerial photos.\footnote{ This may be done to, e.g., later train state-of-the-art a classification system~\citep{azizi2023synthetic}.}. A researcher doing so would currently have to either (a) make up a scene description before generating each dataset image, and ensure these cover the entirety of the desired distribution, or (b) accept the inferior image quality gleaned by conditioning just on each image being ``an aerial photograph''.  \Cref{fig:stable-diffusion-example} shows that the difference in quality can be stark.
 
-We argue that a solution to this problem comes from revisiting the methodology of DALL-E 2, also known as unCLIP~\citep{ramesh2022hierarchical}. UnCLIP is a method for text-conditional image generation which we describe in detail in \cref{sec:background}. It was originally proposed as a way to ``invert'' a pretrained CLIP embedder and thereby map from text to image space but, perhaps due to improved text embeddings and a desire for methodological simplicity, we are not aware of future work building on the two-stage unCLIP approach~\citep{rombach2022high,chang2023muse,hoogeboom2023simple}. We hope to counter this trend, arguing that, while unCLIP may provide little benefit for ``strongly-conditional'' text-to-image generation (especially when the text prompt is long or heavily ``prompt-engineered''), its benefits are in fact much greater than previously acknowledged when applied to unconditional or ``lightly-conditional'' generation.
+We argue that a solution to this problem comes from revisiting the methodology of DALL-E 2, also known as unCLIP~\citep{ramesh2022hierarchical}. UnCLIP is a method for text-conditional image generation which we describe in detail in \cref{sec:2sdm-background}. It was originally proposed as a way to ``invert'' a pretrained CLIP embedder and thereby map from text to image space but, perhaps due to improved text embeddings and a desire for methodological simplicity, we are not aware of future work building on the two-stage unCLIP approach~\citep{rombach2022high,chang2023muse,hoogeboom2023simple}. We hope to counter this trend, arguing that, while unCLIP may provide little benefit for ``strongly-conditional'' text-to-image generation (especially when the text prompt is long or heavily ``prompt-engineered''), its benefits are in fact much greater than previously acknowledged when applied to unconditional or ``lightly-conditional'' generation.
 
-Our final approach, based on unCLIP, is depicted in \cref{fig:samples}. A first ``auxiliary DGM'' samples vectors within an embedding space, with any vector describing a particular set of semantic characteristics of an image. The second stage, a ``conditional image DGM'', takes such a vector as input and samples an image with these semantic characteristics. The vector embedding is informative, as evidenced by the fact that all images within each row on the right of \cref{fig:samples}, which are all conditioned on the same embedding, look very similar. The conditional image DGM therefore inherits all the previously-described advantages of strongly-conditional DGMs even though our overall generative model is unconditional (or, with the generalization in \cref{sec:method}, lightly-conditional). We call the resulting model a Two-Stage Diffusion Model (2SDM). 
+Our final approach, based on unCLIP, is depicted in \cref{fig:samples}. A first ``auxiliary DGM'' samples vectors within an embedding space, with any vector describing a particular set of semantic characteristics of an image. The second stage, a ``conditional image DGM'', takes such a vector as input and samples an image with these semantic characteristics. The vector embedding is informative, as evidenced by the fact that all images within each row on the right of \cref{fig:samples}, which are all conditioned on the same embedding, look very similar. The conditional image DGM therefore inherits all the previously-described advantages of strongly-conditional DGMs even though our overall generative model is unconditional (or, with the generalization in \cref{sec:2sdm-method}, lightly-conditional). We call the resulting model a Two-Stage Diffusion Model (2SDM). 
 
-\paragraph{Contributions} In \cref{sec:background,sec:cond-vs-uncond-dgms} we revisit unCLIP and then provide a novel explanation for why it is well-suited to the unconditional and lightly-conditional setting which was not explored by \citet{ramesh2022hierarchical}. We then demonstrate empirically that our lightly-conditional variant, 2SDM, yields large improvements on a variety of image datasets, tasks, and metrics in \cref{sec:experiments}.
+\paragraph{Contributions} In \cref{sec:2sdm-background,sec:2sdm-cond-vs-uncond-dgms} we revisit unCLIP and then provide a novel explanation for why it is well-suited to the unconditional and lightly-conditional setting which was not explored by \citet{ramesh2022hierarchical}. We then demonstrate empirically that our lightly-conditional variant, 2SDM, yields large improvements on a variety of image datasets, tasks, and metrics in \cref{sec:2sdm-experiments}.
 
 % Justify how we try to be probabilistally nice and not use CFG or anything?
 
 
 
-% We believe that the solution to this problem comes from revisiting DALL-E 2, also known as unCLIP~\citep{ramesh2022hierarchical}, a method for text-conditional image generation. It breaks the image generation process down into two stages. The first stage maps from the text prompt to a highly descriptive embedding of the image (specifically they learn to sample a ``CLIP image embedding'' which matches the ``CLIP text embedding'' of the prompt; see \cref{sec:background}). The second stage samples an image conditioned on it matching this highly descriptive embedding. 
+% We believe that the solution to this problem comes from revisiting DALL-E 2, also known as unCLIP~\citep{ramesh2022hierarchical}, a method for text-conditional image generation. It breaks the image generation process down into two stages. The first stage maps from the text prompt to a highly descriptive embedding of the image (specifically they learn to sample a ``CLIP image embedding'' which matches the ``CLIP text embedding'' of the prompt; see \cref{sec:2sdm-background}). The second stage samples an image conditioned on it matching this highly descriptive embedding. 
 % This was originally motivated as a way to ``invert'' a pretrained CLIP embedder in order to map from text to image space. 
 % %
 % Since its publication, perhaps due to improved text embeddings and a desire for methodological simplicity, we are not aware of future work using the two-stage unCLIP approach~\citep{rombach2022high,chang2023muse,hoogeboom2023simple}.
@@ -64,7 +64,7 @@ Our final approach, based on unCLIP, is depicted in \cref{fig:samples}. A first 
 % The first stage can therefore be viewed as sampling the semantics of the resulting image, while the second stage samples the precise spatial layout and pixel-level detail.
 
 
-% To close this gap, we revisit the text-conditional image generation methodology of DALL-E 2~\citep{ramesh2022hierarchical}. Their approach relies on a CLIP image embedder and text embedder pair, which are trained such that the embeddings of related pairs of images and text will have high cosine similarity (see \cref{sec:background} for a more complete description). DALL-E 2 takes as input a text prompt and then computes a CLIP text embedding of the prompt. It then uses a ``prior'' diffusion model to sample a CLIP image embedding that is both plausible and has high cosine similarity to the computed text embedding.
+% To close this gap, we revisit the text-conditional image generation methodology of DALL-E 2~\citep{ramesh2022hierarchical}. Their approach relies on a CLIP image embedder and text embedder pair, which are trained such that the embeddings of related pairs of images and text will have high cosine similarity (see \cref{sec:2sdm-background} for a more complete description). DALL-E 2 takes as input a text prompt and then computes a CLIP text embedding of the prompt. It then uses a ``prior'' diffusion model to sample a CLIP image embedding that is both plausible and has high cosine similarity to the computed text embedding.
 % Finally, they run a conditional image diffusion model which samples an image given this CLIP  image embedding, and output this image. The CLIP image embedding can be seen as a very detailed text description of the image; on the right of \cref{fig:samples} we show that there is very little semantic variation between different images sampled given the same CLIP image embedding. 
 
 
@@ -80,7 +80,7 @@ Our final approach, based on unCLIP, is depicted in \cref{fig:samples}. A first 
 % Finally we introduce a technique to train the embedder from scratch, without using a pretrained CLIP network, to directly optimize the performance of our system. When trained in this manner, we call the model 2SDM-2 (due to lack of imagination). With sufficient training time, 2SDM-2 outperforms 2SDM and sets state-of-the-art FID scores on a variety of datasets. \todo{describe 2SDM-2 in method}
 
 
-\section{Background} \label{sec:background}
+\section{Background} \label{sec:2sdm-background}
 \paragraph{Conditional DGMs}
 We provide a high-level overview of conditional DGMs that is sufficient to understand our contributions, referring to \citeauthor{karras2022elucidating} for a more complete description and derivation. A conditional image DGM~\citep{tashiro2021csdi} samples an image $\rvx$ given a conditioning input $\rvy$, where $\rvy$ can be, for example, a class label, a text description, or both of these in a tuple. We can recover an unconditional DGM by setting $\rvy$ to a null variable in the below. Given a dataset of $(\rvx,\rvy)$ pairs sampled from $\pdata(\cdot,\cdot)$, a conditional DGM $p_\theta(\rvx|\rvy)$ is fit to approximate $\pdata(\rvx|\rvy)$. It is parameterized by a neural network $\hat{\rvx}_\theta(\cdot)$ trained to optimize
 \begin{align}\label{eq:diffusion-loss}
@@ -106,7 +106,7 @@ UnCLIP~\citep{ramesh2022hierarchical} uses the following text-to-image procedure
 % Several existing image generative models leverage CLIP embeddings for better text-conditional generation~\citep{nichol2021glide,ramesh2022hierarchical}. 
 % We differ by suggesting that CLIP embeddings are not only useful for text-conditioning, but also as a general tool to improve the realism of generated images. We demonstrate this for unconditional and class-conditional generation.
 
-\section{Conditional vs. unconditional DGMs} \label{sec:cond-vs-uncond-dgms}
+\section{Conditional vs. unconditional DGMs} \label{sec:2sdm-cond-vs-uncond-dgms}
 \paragraph{What does it mean to say that conditional DGMs beat unconditional DGMs?} A standard procedure to evaluate unconditional DGMs is to start by sampling a set of $N$ images independently from the model: ${\rvx^{(1)},\ldots,\rvx^{(N)} \sim p_\theta(\cdot)}$. We can then compute the Fr\'echet Inception distance (FID)~\citep{heusel2017gans} between this set and the dataset. If the generative model matches the data distribution well, the FID will be low.
 %
 For conditional DGMs the standard procedure has one extra step: we first independently sample ${\rvy^{(1)},\ldots,\rvy^{(N)} \sim \pdata(\cdot)}$. We then sample each image given the corresponding $\rvy^{(i)}$ as ${\rvx^{(i)} \sim p_\theta(\cdot|\rvy^{(i)})}$. 
@@ -138,7 +138,7 @@ We see that, given a small training budget, it is best to condition on little in
 Recall that unCLIP leverages a CLIP-conditional generative model even when the original task calls for only a text-conditional image generative model. In light of this section, it makes sense that this should provide a benefit as long as the combination of text and CLIP embedding contains ``more'' information than the text prompt alone, which will always be the case. However, the disparity is even larger if we compare the CLIP-conditional generative model with an unconditional generative model  (i.e. one conditioned on zero bits of information). The unCLIP approach can therefore be expected to provide larger benefits for unconditional (or lightly-conditional) generation than for the text-conditional setting in which it was developed.
 
 
-\section{Method} \label{sec:method}
+\section{Method} \label{sec:2sdm-2sdm-method}
 % We have established that conditioning on CLIP embeddings improves DGMs. We now point out that this fact can be seen as a significant reason for unCLIP's success; it
 We now formally introduce 2SDM, a variant of unCLIP for the unconditional setting. Recall that, for unconditional generation, the user does not wish to specify any input to condition on and, for the lightly-conditional setting, any such input is low-dimensional. We will denote any input $\rva$ (letting $\rva$ be a null variable in the unconditional setting) and from now on always use $\rvy := e_i(\rvx)$ to refer to a CLIP embedding. To make this deterministic encoding compatible with a probabilistic generative modeling perspective, we consider a joint distribution $\pdata(\rvx, \rvy, \rva)=\pdata(\rvx, \rva)\delta_{e_i(\rvx)}(\rvy)$, where $\pdata(\rvx, \rva)$ is described by a dataset and $\delta_{e_i(\rvx)}(\rvy)$ is a Dirac conditional distribution enforcing that $\rvy$ is the CLIP embedding of $\rvx$. From now on all distributions denoted with $\pdata$ should be understood as marginals and/or conditionals of this joint distribution, including our target distribution $\pdata(\rvx|\rva)$. 2SDM approximates this target distribution as
 %
@@ -181,7 +181,7 @@ where $\rvy \oplus \rva$ is the concatenation of $\rvy$ and $\rva$ to form a sin
 
 
 
-\section{Experiments} \label{sec:experiments}
+\section{Experiments} \label{sec:2sdm-experiments}
 
 
 \begin{table}[t]
@@ -207,7 +207,7 @@ where $\rvy \oplus \rva$ is the concatenation of $\rvy$ and $\rva$ to form a sin
 \multirow{2}{*}{\shortstack[l]{Class-cond. latent \\ ImageNet-256}} & 2SDM & $\mathbf{52.1}$ & $\mathbf{0.590}$ & $0.603$ & $\mathbf{24.3}$ & $\mathbf{7.36}$ \\
  & EDM & $40.4$ & $0.532$ & $\mathbf{0.610}$ & $34.2$ & $9.59$ \\
 \end{tabular}
-\label{tab:many-metrics}
+\label{tab:2sdm-many-metrics}
 \end{table}
 
 \paragraph{Experimental setup and results overview}
@@ -219,7 +219,7 @@ For the first three of our listed settings, \cref{fig:fid_vs_training} reports t
 %\vspace{-.4cm}
 \centering
 \caption{A comparison of FID with the state-of-the-art (SOTA) in bold. EDM (single seed) is our re-computation of the EDM's reported results using a single seed instead of taking the best of three.}
-\label{tab:sota}
+\label{tab:2sdm-sota}
 \begin{tabular}{lccc}
 \midrule
 Dataset         & AFHQ-64 & FFHQ-64 \\
@@ -237,13 +237,13 @@ EDM-G++~\citep{kim2022refining}               & $-$    & $\mathbf{1.77}$  \\
 \end{wraptable}
 outperforms 4 GPU days of finetuning on AFHQ and so recommend training 2SDM from scratch when sufficient compute is available.
 
-\Cref{fig:fid-vs-ncomp} also compares against ``2SDM + oracle'', which is a supposed upper bound on 2SDM's performance given by sampling a CLIP image embedding from an oracle (in practice, the dataset) and then using 2SDM's conditional image model to sample an image conditioned on it. It therefore describes the performance that 2SDM would achieve with a perfect auxiliary model. On AFHQ-64, 2SDM with an oracle achieves a FID $56\%$ lower than EDM. Without an oracle, 2SDM still achieves a FID $48\%$ lower than 2SDM. We therefore say that 2SDM yields an improvement $87\%$ as large as can be gleaned by using a purely conditional DGM. Similarly for FFHQ, 2SDM obtains an improvement $81\%$ as large as is possible with a purely conditional DGM.\footnote{See \cref{tab:results-breakdown} for the FIDs used in these calculations.} We can therefore say that our cheaply-trained auxiliary model is good enough to allow us to capture the majority of the benefits of conditional generation for the unconditional generation task. Intriguingly,
+\Cref{fig:fid-vs-ncomp} also compares against ``2SDM + oracle'', which is a supposed upper bound on 2SDM's performance given by sampling a CLIP image embedding from an oracle (in practice, the dataset) and then using 2SDM's conditional image model to sample an image conditioned on it. It therefore describes the performance that 2SDM would achieve with a perfect auxiliary model. On AFHQ-64, 2SDM with an oracle achieves a FID $56\%$ lower than EDM. Without an oracle, 2SDM still achieves a FID $48\%$ lower than 2SDM. We therefore say that 2SDM yields an improvement $87\%$ as large as can be gleaned by using a purely conditional DGM. Similarly for FFHQ, 2SDM obtains an improvement $81\%$ as large as is possible with a purely conditional DGM.\footnote{See \cref{tab:2sdm-results-breakdown} for the FIDs used in these calculations.} We can therefore say that our cheaply-trained auxiliary model is good enough to allow us to capture the majority of the benefits of conditional generation for the unconditional generation task. Intriguingly,
  on ImageNet-64, 2SDM achieves better FID \textit{without} an oracle. This suggests that imperfections in the distribution
 learned by the auxiliary model improve the visual quality of the generated images. We observed this trend consistently on ImageNet, and believe that characterizing exactly when and why it occurs is an intriguing direction for future work.
 
 Finally, \cref{fig:fid_vs_training} also compares against ``Class-cond'', which is an ablation of 2SDM in which we replace the CLIP embedding $\rvy$ with a single discrete label obtained by K-means clustering of the CLIP embedding (as on the right of \cref{fig:fid-vs-ncomp}). For unconditional generation tasks, we can then replace our auxiliary model with a simple categorical distribution modeling $\pdata(\rvy|\rva)=\pdata(\rvy)$ similarly to \citet{hu2022self}, simplifying the generative procedure. We see that this baseline is outperformed by 2SDM, justifying our choice to use a continuous $\mathbf{y}$.
 
-We report our final FIDs on AFHQ and FFHQ alongside the state-of-the-art in \cref{tab:sota}. Despite our limited training budget, our results on AFHQ beat the state-of-the-art and our results on FFHQ come second to EDM-G++~\citep{kim2022refining}, a potentially orthogonal approach to improving EDM.
+We report our final FIDs on AFHQ and FFHQ alongside the state-of-the-art in \cref{tab:2sdm-sota}. Despite our limited training budget, our results on AFHQ beat the state-of-the-art and our results on FFHQ come second to EDM-G++~\citep{kim2022refining}, a potentially orthogonal approach to improving EDM.
 
 % \paragraph{2SDM closes the gap between conditional and unconditional DGMs}
 % Looking at the final FID scores for models trained from scratch in \cref{fig:fid_vs_training}, 2SDM yields almost as large an improvement as using a purely conditional DGM (i.e. 2SDM with oracle). Concretely, on AFHQ-64, 2SDM with an oracle achieves a FID $56\%$ lower than EDM. Without an oracle, 2SDM still achieves a FID $48\%$ lower than 2SDM. We therefore say that 2SDM yields an improvement $87\%$ as large as can be gleaned by using a purely conditional DGM. Similarly for FFHQ, 2SDM obtains an improvement $81\%$ as large as is possible with a purely conditional DGM.
@@ -254,16 +254,16 @@ We report our final FIDs on AFHQ and FFHQ alongside the state-of-the-art in \cre
 
 \paragraph{Latent diffusion on ImageNet-256}
 % 2SDM bears some similarities to a latent diffusion model~\citet{rombach2022high}: its auxiliary model learns a distribution over learned embeddings, similarly to the diffusion component of a latent diffusion model. 
-We combine 2SDM and the latent diffusion modeling framework~\citep{rombach2022high} on the ImageNet-256 dataset as follows. We take the pretrained Stable Diffusion VAE encoder and decoder released by \citet{rombach2022high}. We feed a $256\times256\times3$ dataset image through the VAE encoder to create $64\times64\times4$ tensors, which we use as the training targets $\rvx$ for our conditional image model. The training targets for the CLIP embeddings $\rvy$ are created by embedding the $256\times256\times3$ images with the standard CLIP image embedder. We use the ImageNet class labels as additional inputs $\rva$. At test time, we take $\rva$ as an input; we then sample $\rvy$ given $\rva$ from our auxiliary model; we then sample $\rvx$ given $\rvy$ and $\rva$ from our conditional image model; we finally use the Stable Diffusion VAE decoder to produce an image given $\rvx$. Samples from this version of 2SDM, as well as our EDM baseline operating in the same latent space, are shown in \cref{fig:latent-imagenet-samples}. While the compute used for each (12 GPU days) is far from that of the state-of-the-art for this dataset, the samples from 2SDM are noticeably better, supporting the FID scores in \cref{tab:many-metrics}.
+We combine 2SDM and the latent diffusion modeling framework~\citep{rombach2022high} on the ImageNet-256 dataset as follows. We take the pretrained Stable Diffusion VAE encoder and decoder released by \citet{rombach2022high}. We feed a $256\times256\times3$ dataset image through the VAE encoder to create $64\times64\times4$ tensors, which we use as the training targets $\rvx$ for our conditional image model. The training targets for the CLIP embeddings $\rvy$ are created by embedding the $256\times256\times3$ images with the standard CLIP image embedder. We use the ImageNet class labels as additional inputs $\rva$. At test time, we take $\rva$ as an input; we then sample $\rvy$ given $\rva$ from our auxiliary model; we then sample $\rvx$ given $\rvy$ and $\rva$ from our conditional image model; we finally use the Stable Diffusion VAE decoder to produce an image given $\rvx$. Samples from this version of 2SDM, as well as our EDM baseline operating in the same latent space, are shown in \cref{fig:latent-imagenet-samples}. While the compute used for each (12 GPU days) is far from that of the state-of-the-art for this dataset, the samples from 2SDM are noticeably better, supporting the FID scores in \cref{tab:2sdm-many-metrics}.
 
 \paragraph{Diverse metrics}
-In \cref{tab:many-metrics} we show a comparison of 2SDM and EDM on a variety of metrics. The Inception Score~\citep{salimans2016improved,barratt2018note} measures the diversity of the output from an image classifier when run on sampled images. The Precision and Recall metrics~\citep{kynkaanniemi2019improved} estimate, roughly speaking, the proportion of generated images that lie on the data manifold (Precision) and the proportion of dataset images that can be found within the manifold of generated images (Recall). The FID approximates the distance between the distribution of embeddings of dataset images and that of embeddings of generated images. The sFID is similar but uses an embedding with more spatial information. 2SDM outperforms EDM on 22 of the 25 metric-dataset combinations, and is outperformed on only 2.
+In \cref{tab:2sdm-many-metrics} we show a comparison of 2SDM and EDM on a variety of metrics. The Inception Score~\citep{salimans2016improved,barratt2018note} measures the diversity of the output from an image classifier when run on sampled images. The Precision and Recall metrics~\citep{kynkaanniemi2019improved} estimate, roughly speaking, the proportion of generated images that lie on the data manifold (Precision) and the proportion of dataset images that can be found within the manifold of generated images (Recall). The FID approximates the distance between the distribution of embeddings of dataset images and that of embeddings of generated images. The sFID is similar but uses an embedding with more spatial information. 2SDM outperforms EDM on 22 of the 25 metric-dataset combinations, and is outperformed on only 2.
 %2SDM always performs better in terms of inception score, precision, and FID.
 
 \paragraph{Comparison of relative improvements between tasks}
 In terms of FID, and for the networks trained from scratch and matched for training compute, the percentage improvement of 2SDM over EDM is $48.2\%$ on AFHQ-64; $26.0\%$ on FFHQ-64; $31.5\%$ on class-conditional ImageNet-64; $40.2\%$ on unconditional ImageNet-64; and $28.9\%$ on class-conditional ImageNet-256. While these are all substantial improvements, we point out two comparisons in particular. 
 
-First, the gain from using 2SDM on unconditional ImageNet-64 ($40.2\%$) is greater than that on class-conditional modeling of the same dataset ($31.5\%$). This supports our argument that two-stage diffusion techniques like 2SDM can have even greater impact in unconditional (or lightly-conditional) generation than in the text-conditional (or strongly-conditional) setting in which they were originally introduced with unCLIP~\citep{ramesh2022hierarchical}.  Noting that the class label already contains some of the information stored in a CLIP embedding, this finding also fits with our discussion of the effects of conditioning in \cref{sec:cond-vs-uncond-dgms}. The performance of an image model conditioned on just a class label (EDM on class-cond. ImageNet) should therefore be somewhere in between that of an unconditional image model (EDM on uncond. ImageNet) and that of a CLIP-conditional image model (2SDM, assuming the auxiliary model is good), leading to this finding.
+First, the gain from using 2SDM on unconditional ImageNet-64 ($40.2\%$) is greater than that on class-conditional modeling of the same dataset ($31.5\%$). This supports our argument that two-stage diffusion techniques like 2SDM can have even greater impact in unconditional (or lightly-conditional) generation than in the text-conditional (or strongly-conditional) setting in which they were originally introduced with unCLIP~\citep{ramesh2022hierarchical}.  Noting that the class label already contains some of the information stored in a CLIP embedding, this finding also fits with our discussion of the effects of conditioning in \cref{sec:2sdm-2sdm-cond-vs-uncond-dgms}. The performance of an image model conditioned on just a class label (EDM on class-cond. ImageNet) should therefore be somewhere in between that of an unconditional image model (EDM on uncond. ImageNet) and that of a CLIP-conditional image model (2SDM, assuming the auxiliary model is good), leading to this finding.
 
 Second, the $28.9\%$ improvement in performance for the latent diffusion model on ImageNet-256 is only slightly less than the $31.5\%$ improvement for pixel-space diffusion on class-conditional ImageNet-64. This confirms that 2SDM can be readily combined with the widely used latent diffusion framework.
 %the utility of conditioning on a CLIP ``latent'' embedding holds up even though they already operate in another type of latent space. 
@@ -271,7 +271,7 @@ Second, the $28.9\%$ improvement in performance for the latent diffusion model o
 
 
 \paragraph{Inference speed}
-Sampling from 2SDM does impose a small additional cost relative to EDM, since we must begin by sampling from the auxiliary model. In all experiments, when we use 40 diffusion steps, sampling from our auxiliary model takes 8.8s with batch size 256. This corresponds to 35ms per batch item. Our conditional image model and our EDM baseline use identical architecture (other than the projection of $\rvy$) and we could not detect a difference between their sampling timeswhich were 862ms per batch item on our ImageNet architecture and 789ms per batch item on our AFHQ and FFHQ architecture. This means that the increase in time due to using 2SDM instead of EDM is less than $4\%$. Furthermore, we can negate this increase by using two less sampling steps for the conditional image model. \Cref{tab:fid-and-time} in the appendix shows that this lets us make 2SDM faster than EDM with almost no effect on sample quality.
+Sampling from 2SDM does impose a small additional cost relative to EDM, since we must begin by sampling from the auxiliary model. In all experiments, when we use 40 diffusion steps, sampling from our auxiliary model takes 8.8s with batch size 256. This corresponds to 35ms per batch item. Our conditional image model and our EDM baseline use identical architecture (other than the projection of $\rvy$) and we could not detect a difference between their sampling timeswhich were 862ms per batch item on our ImageNet architecture and 789ms per batch item on our AFHQ and FFHQ architecture. This means that the increase in time due to using 2SDM instead of EDM is less than $4\%$. Furthermore, we can negate this increase by using two less sampling steps for the conditional image model. \Cref{tab:2sdm-fid-and-time} in the appendix shows that this lets us make 2SDM faster than EDM with almost no effect on sample quality.
 
 \paragraph{Overfitting analysis}
 \begin{wrapfigure}[18]{r}{0.5\textwidth}
@@ -315,7 +315,7 @@ We summarize these results in \cref{fig:overfit-2SDM-nearest-neighbours} by samp
 who show improved performance in various approximate inference settings by modeling problem-specific auxiliary variables (like $\rvy$) in addition to the variables of interest ($\rvx$) and observed variables ($\rva$). We apply these techniques to the image domain and incorporate pretrained CLIP embedders to obtain auxiliary variables. 
 
 \textbf{Latent diffusion}~
-2SDM also relates to methods which perform diffusion in a learned latent space~\citep{rombach2022high}: our auxiliary model $p_\phi(\rvy|\rva)$ is analogous to a ``prior'' in a latent space and our conditional image model $p_\theta(\rvx|\rva,\rvy)$ to a ``decoder'' Such methods typically use a near-deterministic decoder and so their latent variables must summarize all information about the image. Our conditional DGM decoder, on the other hand, is a DGM that will function reasonably however little information is stored in $\rvy$. This means that 2SDM provides an additional degree of freedom in terms of what to store. Furthermore, as we showed in \cref{sec:experiments}, 2SDM can be fruitfully combined with latent diffusion.
+2SDM also relates to methods which perform diffusion in a learned latent space~\citep{rombach2022high}: our auxiliary model $p_\phi(\rvy|\rva)$ is analogous to a ``prior'' in a latent space and our conditional image model $p_\theta(\rvx|\rva,\rvy)$ to a ``decoder'' Such methods typically use a near-deterministic decoder and so their latent variables must summarize all information about the image. Our conditional DGM decoder, on the other hand, is a DGM that will function reasonably however little information is stored in $\rvy$. This means that 2SDM provides an additional degree of freedom in terms of what to store. Furthermore, as we showed in \cref{sec:2sdm-experiments}, 2SDM can be fruitfully combined with latent diffusion.
 
 \textbf{Self-supervised representations}~
 \citet{bao2022conditional,hu2022self} both use self-supervised learning to obtain auxiliary variables and then training a diffusion model $p(\rvx|\rva)$. However, they do not model $\rva$ and therefore are not able to sample $\rvx$ without an oracle that can provide $\rva$. Their success when given an oracle, however, provides reason to believe that our approach is likely to yield benefits even if the embedder that produces $\rva$ is obtained through self-supervised learning and without access to additional (or multi-modal) data as our CLIP embedder was trained with.
@@ -369,11 +369,11 @@ We release source code at \url{https://anonymous.4open.science/r/2sdm}. We will 
 
 % \section{Additional results}
 
-% \Cref{tab:results-breakdown} shows a breakdown of 2SDM's improvement over EDM by comparing how much it is improved when we do or do not have an oracle from which to sample CLIP embeddings.
+% \Cref{tab:2sdm-results-breakdown} shows a breakdown of 2SDM's improvement over EDM by comparing how much it is improved when we do or do not have an oracle from which to sample CLIP embeddings.
 
-% In \cref{tab:many-metrics-overfit}, we present our full suite of metrics evaluated on Overfit-2SDM as well as on 2SDM and our EDM baseline. Overfit-2SDM achieves extremely good scores on all metrics on AFHQ, where it was able to overfit excessively, illustrating that these metrics can be ``gamed'' by overfitting. On FFHQ, which is a larger dataset and which it appears to overfit to less, Overfit-2SDM does not achieve the best performance on any metric.
+% In \cref{tab:2sdm-many-metrics-overfit}, we present our full suite of metrics evaluated on Overfit-2SDM as well as on 2SDM and our EDM baseline. Overfit-2SDM achieves extremely good scores on all metrics on AFHQ, where it was able to overfit excessively, illustrating that these metrics can be ``gamed'' by overfitting. On FFHQ, which is a larger dataset and which it appears to overfit to less, Overfit-2SDM does not achieve the best performance on any metric.
 
-% \Cref{tab:fid-and-time} compares sampling times for EDM, 2SDM, and a version of 2SDM that uses 2 fewer diffusion steps when sampling from the conditional image model. While 2SDM is slightly more expensive to sample from than EDM, taking 2 less sampling steps makes it cheaper with very little impact on sample quality.
+% \Cref{tab:2sdm-fid-and-time} compares sampling times for EDM, 2SDM, and a version of 2SDM that uses 2 fewer diffusion steps when sampling from the conditional image model. While 2SDM is slightly more expensive to sample from than EDM, taking 2 less sampling steps makes it cheaper with very little impact on sample quality.
 
 % \begin{table}[h]
 % \centering
@@ -395,13 +395,13 @@ We release source code at \url{https://anonymous.4open.science/r/2sdm}. We will 
 % %\begin{tabular}{@{}l@{}}$\%$ improvement \\ captured by 2SDM\end{tabular} & $86.6\%$ & $81.3\%$ & - \\
 % $\frac{\text{Improv. w/ 2SDM}}{\text{Improv. w/ oracle}}$ & $86.6\%$ & $81.3\%$ & $123\%$ \\
 % \end{tabular}
-% \label{tab:results-breakdown}
+% \label{tab:2sdm-results-breakdown}
 % \end{table}
 
 
 % \begin{table}[h]
 % \centering
-% \caption{Comparison of Overfit-2SDM (O-2SDM) with 2SDM and EDM, following \cref{tab:many-metrics}}
+% \caption{Comparison of Overfit-2SDM (O-2SDM) with 2SDM and EDM, following \cref{tab:2sdm-many-metrics}}
 % \begin{tabular}{rcccccc}
 % \hline
 % \multirow{2}{*}{} & \multicolumn{3}{c}{AFHQ} & \multicolumn{3}{c}{FFHQ} \\
@@ -412,7 +412,7 @@ We release source code at \url{https://anonymous.4open.science/r/2sdm}. We will 
 % FID $\downarrow$                      & $1.56$            & $\mathbf{1.16}$               & $2.04$           & $\mathbf{2.32}$            & $3.33$               & $2.46$          \\
 % sFID $\downarrow$                     & $13.7$            & $\mathbf{10.6}$               & $13.7$           & $4.98$            & $5.37$               & $\mathbf{4.90}$          \\ \hline
 % \end{tabular}
-% \label{tab:many-metrics-overfit}
+% \label{tab:2sdm-many-metrics-overfit}
 % \end{table}
 
 
@@ -426,7 +426,7 @@ We release source code at \url{https://anonymous.4open.science/r/2sdm}. We will 
 %     FID on AFHQ (trained from scratch)         & $2.04$   & $1.56$ & $1.58$                   \\
 %     FID on FFHQ (init. from pretrained EDM)         & $2.46$   & $2.32$ & $2.32$                   \\
 %     \end{tabular}
-%     \label{tab:fid-and-time}
+%     \label{tab:2sdm-fid-and-time}
 % \end{table}
 
 % \newpage
@@ -471,7 +471,7 @@ We release source code at \url{https://anonymous.4open.science/r/2sdm}. We will 
 % %As we describe in the appendix, the resulting model is similar to a VAE with a deterministic encoder~\cite{silvestri2022deterministic}, a DGM prior, and a DGM decoder.
 % For reasons that will soon become clear, we call the resulting model ``Overfit-2SDM.''
 
-% Overfit-2SDM achieves a striking FID score of $1.16$ on AFHQ, outperforming both 2SDM and the previous state-of-the-art by a wide margin. We also improve upon 2SDM and EDM in terms of all other metrics listed in \cref{tab:many-metrics}, pointing to a weakness of the current evaluation metrics for deep generative models. The issue is clear in the nearest neighbour plots of \cref{fig:overfit-2SDM-nearest-neighbours}. Samples from Overfit-2SDM are near-perfect reconstructions of the AFHQ training images. It is able to memorize them so well by simply mapping each to a distinct location in the 512-dimensional embedding space, as we show with interpolation plots in the appendix. To summarize the results of such nearest neighbours-analysis over many sampled images, \cref{fig:overfit-2SDM-nearest-neighbours} displays the distribution over LPIPS distances to nearest neighbours in the training set for 500 sampled images. As a ``target'', we plot in black a histogram of the distribution of such distances for training set images themselves. Assuming that the training set is sampled i.i.d.\ 
+% Overfit-2SDM achieves a striking FID score of $1.16$ on AFHQ, outperforming both 2SDM and the previous state-of-the-art by a wide margin. We also improve upon 2SDM and EDM in terms of all other metrics listed in \cref{tab:2sdm-many-metrics}, pointing to a weakness of the current evaluation metrics for deep generative models. The issue is clear in the nearest neighbour plots of \cref{fig:overfit-2SDM-nearest-neighbours}. Samples from Overfit-2SDM are near-perfect reconstructions of the AFHQ training images. It is able to memorize them so well by simply mapping each to a distinct location in the 512-dimensional embedding space, as we show with interpolation plots in the appendix. To summarize the results of such nearest neighbours-analysis over many sampled images, \cref{fig:overfit-2SDM-nearest-neighbours} displays the distribution over LPIPS distances to nearest neighbours in the training set for 500 sampled images. As a ``target'', we plot in black a histogram of the distribution of such distances for training set images themselves. Assuming that the training set is sampled i.i.d.\ 
 % from a data-generating distribution $\pdata{}(\rvx)$, we can interpret this as the distribution of distances to training set images for samples from $\pdata(\rvx)$. Then, given that a perfectly well-fit generative model should produce samples from $\pdata(\rvx)$, the disparity between this distribution and the distribution for samples from each method gives us a way of evaluating each method. We see that the histograms match well for EDM and 2SDM, suggesting that neither is 
 % overfitting severely. For Overfit-2SDM on AFHQ, however, the sampled images are usually much closer to their nearest neighbours than expected, demonstrating overfitting.
 
@@ -556,7 +556,7 @@ We release source code at \url{https://anonymous.4open.science/r/2sdm}. We will 
 
 % We show interpolation between images sampled by Overfit-2SDM in \cref{fig:overfit-2SDM-interpolation}. This confirms that overfit occurs in the model of the CLIP embedding rather than in the model of images given the CLIP embedding, since the path between images is smooth when moving from left to right (varying the noise applied in the image diffusion model) but jumps between concentrated peaks when moving from top to bottom (varying the noise used to sample the CLIP embedding).
 
-% \section{Nearest neighbours} \label{sec:nearest-neighbours}
+% \section{Nearest neighbours} \label{sec:2sdm-nearest-neighbours}
 % In \cref{fig:clip-nearest-neighbours,fig:lpips-nearest-neighbours,fig:pixel-nearest-neighbours} we show the nearest neighbours for samples from various methods, computed in CLIP, LPIPS, and pixel space respectively. The nearest neighbours are more visually close when computed in CLIP or LPIPS space but, in all cases, the results are qualitatively similar. Overfit-2SDM overfits significantly, while EDM and 2SDM do not exhibit such noticeable overfitting.
 
 
