@@ -1,9 +1,6 @@
 \chapter{Flexible Diffusion Modeling of Long Videos}
 \label{ch:fdm}
 
-
-\section{Introduction}\label{sec:intro}
-
 Generative modeling of photo-realistic videos is at the frontier of what is possible with deep learning on currently-available hardware. Although related work has demonstrated modeling of short photo-realistic videos (e.g. 30 frames~\citep{weissenborn2019scaling}, 48 frames~\cite{clark2019adversarial} or 64 frames~\citep{ho2022video}), generating longer videos that are both coherent and photo-realistic remains an open challenge. A major difficulty is scaling: photorealistic image generative models~\citep{child2020very,dhariwal2021diffusion} are already close to the memory and processing limits of modern hardware.  A long video is at very least a concatenation of many photorealistic frames, implying resource requirements, long-range coherence notwithstanding, that scale with frame count. 
 
 Attempting to model such long-range coherence makes the problem harder still, especially because in general every frame can have statistical dependencies on other frames arbitrarily far back in the video.

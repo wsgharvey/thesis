@@ -1,4 +1,4 @@
-\chapter{Supporting Materials for Image Completion via Inference in Deep Generative Models}
+\chapter{Supporting Materials for Conditional Image Generation by Conditioning Variational Auto-Encoders}
 
 \section{Notation}
 We provide \cref{tab:cigcvae-notation} for reference as a concise list of definitions
@@ -13,239 +13,236 @@ introduced in the text
     \toprule
     Symbol    & Definition   \\
     \midrule
-    $\z{}$                                   & VAE's latent variables. \\
-    $\I{}$                                & Data we learn a generative model of. \\
-    $\partI{}$                            & Data on which our generative model is conditioned. \\
-    $\tildeI{}$                           & The part of $\I{}$ which the conditional VAE models, defined as all pixels not in $\partI{}$ for image completion, or simply $\tildeI := \I{}$ for other conditional generation tasks. \\
+    $\rvz$                                   & VAE's latent variables. \\
+    $\rvx$                                & Data we learn a generative model of. \\
+    $\rvy$                            & Data on which our generative model is conditioned. \\
+    $\tildeI{}$                           & The part of $\rvx$ which the conditional VAE models, defined as all pixels not in $\rvy$ for image completion, or simply $\tildeI := \rvx$ for other conditional generation tasks. \\
     $\theta$                              & Parameters for VAE's prior and decoder. \\
     $\phi$                                & Parameters for VAE's encoder. \\
-    $\pdata{}(\I{}, \partI{})$            & Distribution from which we assume training/test instances are i.i.d.~samples. \\
-    $\pmodel{}(\z{})$                        & Learned prior of VAE. Implicitly parameterised by $\theta$ when not otherwise specified. \\
-    $\pmodel{}(\I{}|\z{})$                   & Distribution output by VAE's decoder given $\z{}$. Implicitly parameterised by $\theta$ when not otherwise specified. \\
-    $q(\z{}|\I{})$                           & Distribution output by VAE's encoder given $\I{}$. Implicitly parameterised by $\phi$ when not otherwise specified. \\
-    $\pmodel{}(\z{}, \I{}, \partI{})$        & Joint distribution defined as $\pmodel{}(\z{})\pmodel{}(\I{}|\z{})\pdata{}(\partI{}|\I{})$. \\
-    $r(\z{},\I{}, \partI{})$                 & Joint distribution defined as $\pdata{}(\I{}, \partI{})q(\z{}|\I{})$. \\
-    $\partphi$                            & Partial encoder parameters. \\
-    $\partq{}(\z{}|\partI{})$                 & Distribution output by partial encoder. Implicitly parameterised by $\partphi$. \\
-    $\pcomp{}(\I{}|\partI{})$             & Distribution over from which images are sampled given a conditioning input. Defined as $\int \pmodel{}(\I{}|\z{})\partq{}(\z{}|\partI{}) \mathrm{d}\z{}$. \\
-    $\unp{}(\z{}, \I{}, \partI{})$           & Distribution with parameters $\optimal{\theta}$ and $\optimal{\phi}$ that are optimal as defined in \cref{proof:joint-training}. Defined equivalently as $\pmodel{}(\z{}, \I{}, \partI{}; \optimal{\theta})$ or $\pdata{}(\I{}, \partI{}) q(\z{}|\I{}; \optimal{\phi})$.  \\
+    $\pdata (\rvx, \rvy)$            & Distribution from which we assume training/test instances are i.i.d.~samples. \\
+    $p_\theta(\rvz)$                        & Learned prior of VAE. \\
+    $p_\theta(\rvx|\rvz)$                   & Distribution output by VAE's decoder given $\rvz$. \\
+    $q_\phi(\rvz|\rvx)$                           & Distribution output by VAE's encoder given $\rvx$. \\
+    $p_\theta(\rvz, \rvx, \rvy)$        & Joint distribution defined as $p_\theta(\rvz)p_\theta(\rvx|\rvz)\pdata (\rvy|\rvx)$. \\
+    $q_\phi(\rvz,\rvx, \rvy)$                 & Joint distribution defined as $\pdata (\rvx, \rvy)q_\phi(\rvz|\rvx)$. \\
+    $\psi$                            & Partial encoder parameters. \\
+    $p_\psi(\rvz|\rvy)$                 & Distribution output by partial encoder. \\
+    $p_{\theta,\psi}(\rvx|\rvy)$             & Distribution over from which images are sampled given a conditioning input. Defined as $\int p_\theta(\rvx|\rvz)p_\psi(\rvz|\rvy) \mathrm{d}\rvz$. \\
+    $\unp{}(\rvz, \rvx, \rvy)$           & Distribution with parameters $\optimal{\theta}$ and $\optimal{\phi}$ that are optimal as defined in \cref{proof:joint-training}. Defined equivalently as $p_{\optimal{\theta}}(\rvz, \rvx, \rvy)$ or $q_{\optimal{\phi}}(\rvz,\rvx,\rvy)$.  \\
     \midrule
     \multicolumn{2}{l}{Symbols for Bayesian optimal experimental design:} \\
     $\coord{}_t$                                 & The location scanned at time $t$. \\
     $v$                                   & Variable we wish to infer. \\
-    $\partI{}_{\coord{}_1,\ldots,\coord{}_t}$             & Image in which all pixel values are missing except for those observed by scans at locations $\coord{}_1,\ldots,\coord{}_t$. \\
-    $f_{\coord{}_1,\ldots,\coord{}_t}$                    & Function mapping from an image $\I{}$ to $\partI{}_{\coord{}_1,\ldots,\coord{}_t}$. \\
-    $g(v|\partI{})$                       & Classification distribution for $v$ given partially observed image $\partI{}$. \\
+    $\rvy_{\coord{}_1,\ldots,\coord{}_t}$             & Image in which all pixel values are missing except for those observed by scans at locations $\coord{}_1,\ldots,\coord{}_t$. \\
+    $f_{\coord{}_1,\ldots,\coord{}_t}$                    & Function mapping from an image $\rvx$ to $\rvy_{\coord{}_1,\ldots,\coord{}_t}$. \\
+    $g(v|\rvy)$                       & Classification distribution for $v$ given partially observed image $\rvy$. \\
     \bottomrule
   \end{tabular}
   \vspace{-1em}
 \end{table*}
 
 
-\section{Expanded derivations}
-\subsection{Expanded derivation of \cref{eq:elbo-kl-joints}}
-Here we expand on the steps to show that the expectation of the ELBO in
-\cref{eq:eelbo} is equivalent to the lower bound on the negative entropy of
-$\pdata{}(\I{})$ in \cref{eq:elbo-kl-joints}.
-\begin{align}
-  \EX_{\pdata{}(\I{})} \left[ \text{ELBO}(\theta, \phi, \I{}) \right] &= \EX_{\pdata(\I{})} \EX_{q(\z{}|\I{}; \phi)} \left[ \log\frac{\pmodel{}(\z{}; \theta)\pmodel{}(\I{}|\z{}; \theta)}{q(\z{}|\I{}; \phi)} \right] \label{eq:eelbo-repeat}\\
-                                                                      &= \EX_{\pdata(\I{})q(\z{}|\I{}; \phi)} \left[ \log\frac{\pmodel{}(\z{}, \I{}; \theta)}{q(\z{}|\I{}; \phi)} \right] \\
-                                                                      &= \EX_{\pdata(\I{})q(\z{}|\I{}; \phi)} \left[ \log\pdata{}(\I{}) + \log\frac{\pmodel{}(\z{}, \I{}; \theta)}{\pdata{}(\I{})q(\z{}|\I{}; \phi)} \right] \\
-                                                                      &= \EX_{\pdata(\I{})} \left[ \log\pdata(\I{}) \right] + \EX_{\pdata(\I{})q(\z{}|\I{}; \phi)} \left[ \log\frac{\pmodel{}(\z{}, \I{}; \theta)}{\pdata{}(\I{})q(\z{}|\I{}; \phi)} \right] \\
-                                                                      &= -\mathcal{H}\left[ \pdata(\I) \right] - \kl[\big] { \pdata{}(\I{})q(\z{}|\I{}; \phi) }{ \pmodel{}(\z{}, \I; \theta) } \label{eq:elbo-kl-joints-repeat}
-\end{align}
-as written in \cref{eq:elbo-kl-joints}.
-
-\subsection{Expanded derivation of \cref{eq:forward-elbo}} \label{supp:cigcvae-forward-elbo-bound-deriv}
+\section{Expanded derivation of \cref{eq:forward-elbo}} \label{supp:cigcvae-forward-elbo-bound-deriv}
 Here we prove \cref{eq:forward-elbo}, which states that IPA's training
-objective is a lower bound on $\EX_{\pdata{}(\I{}, \partI{})} \left[ \log
-  \pcomp{}(\tildeI{}|\partI{}) \right]$.
+objective is a lower bound on $\EX_{\pdata (\rvx, \rvy)} \left[ \log
+  p_{\theta,\psi}(\tildeI{}|\rvy) \right]$.
 \begin{align}
-  \mathcal{O}_\mathrm{for}(\theta, \phi, \partphi{}) &= \EX_{\pdata{}(\I{}, \partI{})} \EX_{q(\z{}|\I{})} \left[ \log \frac{\pmodel{}(\tildeI{}|\z{})\partq{}(\z{}|\partI{})}{q(\z{}|\I{})} \right] \\
-                                                   &\leq \EX_{\pdata{}(\I{}, \partI{})} \left[ \log \EX_{q(\z{}|\I{})} \left[ \frac{\pmodel{}(\tildeI{}|\z{})\partq{}(\z{}|\partI{})}{q(\z{}|\I{})} \right]  \right] \\
-                                                   &= \EX_{\pdata{}(\I{}, \partI{})} \left[ \log \EX_{\partq{}(\z{}|\partI{})} \left[ \pmodel{}(\tildeI{}|\z{}) \right]  \right] \\
-                                                   &= \EX_{\pdata{}(\I{}, \partI{})} \left[ \log \pcomp{}(\tildeI{}|\partI{}) \right],
+  \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ) &= \EX_{\pdata (\rvx, \rvy)} \EX_{q_\phi(\rvz|\rvx)} \left[ \log \frac{p_\theta(\tildeI{}|\rvz)p_\psi(\rvz|\rvy)}{q_\phi(\rvz|\rvx)} \right] \\
+                                                   &\leq \EX_{\pdata (\rvx, \rvy)} \left[ \log \EX_{q_\phi(\rvz|\rvx)} \left[ \frac{p_\theta(\tildeI{}|\rvz)p_\psi(\rvz|\rvy)}{q_\phi(\rvz|\rvx)} \right]  \right] \\
+                                                   &= \EX_{\pdata (\rvx, \rvy)} \left[ \log \EX_{p_\psi(\rvz|\rvy)} \left[ p_\theta(\tildeI{}|\rvz) \right]  \right] \\
+                                                   &= \EX_{\pdata (\rvx, \rvy)} \left[ \log p_{\theta,\psi}(\tildeI{}|\rvy) \right],
 \end{align}
-where the final step follows from the definition of $\pcomp{}$ in
+where the final step follows from the definition of $p_{\theta,\psi}$ in
 \cref{eq:marginal-image-posterior}.
 
-
-% \section{Proofs} \label{supp:cigcvae-proofs}
 
 \section{Proof and discussion of Theorem~\ref{theorem:forward-kl}} \label{proof:forward-kl}
 \subsection{Proof}
 \textbf{Statement.}
 \textit{
-  For any set $\Partphi$ of
-  permissible values of $\partphi{}$, and for any $\theta\in\Theta$ and
+  For any set $\Psi$ of
+  permissible values of $\psi $, and for any $\theta\in\Theta$ and
   $\phi\in\Phi$,
   \begin{equation}
-    \argmax_{\partphi{} \in \Partphi} \mathcal{O}_\mathrm{for}(\theta, \phi, \partphi{}) = \argmin_{\partphi{} \in \Partphi} \EX_{\pdata{}(\partI{})} \left[ \kl[\big]{ r(\z{}|\partI{}) }{ \partq{}(\z{}|\partI{}) } \right]. \tag{\ref{eq:forward-theorem}}
+    \argmax_{\psi  \in \Psi} \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ) = \argmin_{\psi  \in \Psi} \EX_{\pdata (\rvy)} \left[ \kl[\big]{ q_\phi(\rvz|\rvy) }{ p_\psi(\rvz|\rvy) } \right]. \tag{\ref{eq:forward-theorem}}
   \end{equation}
 }
 
 \textbf{Proof.} We can decompose $\mathcal{O}_\mathrm{for}$ as follows.
 Starting by multiplying both sides of the fraction by the intractable
-conditional distribution $r(\z{}|\partI{})$,
+conditional distribution $q_\phi(\rvz|\rvy)$,
 \begin{align}
-  \mathcal{O}_\mathrm{for}(\theta, \phi, \partphi{}) &= \EX_{r(\z{},\I{},\partI{})} \left[ \log \frac{\pmodel{}(\tildeI{}|\z{})\partq{}(\z{}|\partI{})r(\z{}|\partI{})}{q(\z{}|\I{})r(\z{}|\partI{})} \right]\\
-                                                   &= \EX_{r(\z{},\I{},\partI{})} \left[ \log \frac{\pmodel{}(\tildeI{}|\z{})r(\z{}|\partI{})}{q(\z{}|\I{})} \right] - \EX_{r(\z{},\partI{})} \left[ \log\frac{r(\z{}|\partI{})}{\partq{}(\z{}|\partI{})} \right] \\
-                                                   &= C(\theta, \phi) - \EX_{\pdata{}(\partI{})} \left[ \kl[\big]{ r(\z{}|\partI{}) }{ \partq{}(\z{}|\partI{}) } \right]   \label{eq:constant-and-forward-kl}
+  \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ) &= \EX_{q_\phi(\rvz,\rvx,\rvy)} \left[ \log \frac{p_\theta(\tildeI{}|\rvz)p_\psi(\rvz|\rvy)q_\phi(\rvz|\rvy)}{q_\phi(\rvz|\rvx)q_\phi(\rvz|\rvy)} \right]\\
+                                                   &= \EX_{q_\phi(\rvz,\rvx,\rvy)} \left[ \log \frac{p_\theta(\tildeI{}|\rvz)q_\phi(\rvz|\rvy)}{q_\phi(\rvz|\rvx)} \right] - \EX_{q_\phi(\rvz,\rvy)} \left[ \log\frac{q_\phi(\rvz|\rvy)}{p_\psi(\rvz|\rvy)} \right] \\
+                                                   &= C(\theta, \phi) - \EX_{\pdata (\rvy)} \left[ \kl[\big]{ q_\phi(\rvz|\rvy) }{ p_\psi(\rvz|\rvy) } \right]   \label{eq:constant-and-forward-kl}
 \end{align}
 where $C(\theta, \phi)$ is a grouping of terms which do not depend on the
-partial encoder's parameters $\partphi{}$. Any values of $\partphi{}$ which
-maximise $\mathcal{O}_\mathrm{for}(\theta, \phi, \partphi{})$ will therefore also
-minimise $\EX_{\pdata{}(\partI{})} \left[ \kl[\big]{ r(\z{}|\partI{}) }{
-    \partq{}(\z{}|\partI{}) } \right]$ for the same values of $\theta$ and $\phi$,
+partial encoder's parameters $\psi $. Any values of $\psi$ which
+maximise $\mathcal{O}_\mathrm{for}(\theta, \phi, \psi)$ will therefore also
+minimise $\EX_{\pdata (\rvy)} \left[ \kl[\big]{ q_\phi(\rvz|\rvy) }{p_\psi(\rvz|\rvy) } \right]$ for the same values of $\theta$ and $\phi$,
 which proves the theorem.
 
 \subsection{Bound on $\tildeI{}$-space divergence}
 The mass-covering KL divergence in \Cref{theorem:forward-kl} indicates that
-samples $\z{}\sim \partq{}(\cdot|\partI{})$ will be diverse (when $r(\z{}|\partI{})$ is
+samples $\rvz\sim p_\psi(\cdot|\rvy)$ will be diverse (when $q_\phi(\rvz|\rvy)$ is
 diverse/uncertain). One would expect that samples of $\tildeI{}$ conditioned on these
-diverse samples of $\z{}$ will also be diverse. Here we make a more formal argument
-by showing that minimising $\mathcal{O}_\mathrm{for}$ corresponds to miminising
+diverse samples of $\rvz$ will also be diverse. Here we make a more formal argument
+by showing that minimising $\mathcal{O}_\mathrm{for}$ corresponds to minimising
 an upper-bound on an expected mass-covering KL divergence in $\tildeI{}$-space.
 Starting from the result in \cref{supp:cigcvae-forward-elbo-bound-deriv},
 \begin{align}
-  \mathcal{O}_\mathrm{for}(\theta, \phi, \partphi{}) &\leq \EX_{\pdata{}(\I{},\partI{})} \left[ \log \pcomp{}(\tildeI{}|\partI{}) \right] \\
-                                                     &= \EX_{\pdata{}(\I{},\partI{})} \left[ \log \pdata{}(\tildeI{}|\partI{}) \right] - \EX_{\pdata{}(\partI{})}\left[ \kl{\pdata{}(\tildeI{}|\partI{})}{\pcomp{}(\tildeI{}|\partI{})} \right].
+  \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ) &\leq \EX_{\pdata (\rvx,\rvy)} \left[ \log p_{\theta,\psi}(\tildeI{}|\rvy) \right] \\
+                                                     &= \EX_{\pdata (\rvx,\rvy)} \left[ \log \pdata (\tildeI{}|\rvy) \right] - \EX_{\pdata (\rvy)}\left[ \kl{\pdata (\tildeI{}|\rvy)}{p_{\theta,\psi}(\tildeI{}|\rvy)} \right].
 \end{align}
 Rearranging this gives
 \begin{align}
-  \EX_{\pdata{}(\partI{})}\left[ \kl{\pdata{}(\tildeI{}|\partI{})}{\pcomp{}(\tildeI{}|\partI{})} \right]  \leq \EX_{\pdata{}(\I{},\partI{})} \left[ \log \pdata{}(\tildeI{}|\partI{}) \right] - \mathcal{O}_\mathrm{for}(\theta, \phi, \partphi{}).
+  \EX_{\pdata (\rvy)}\left[ \kl{\pdata (\tildeI{}|\rvy)}{p_{\theta,\psi}(\tildeI{}|\rvy)} \right]  \leq \EX_{\pdata (\rvx,\rvy)} \left[ \log \pdata (\tildeI{}|\rvy) \right] - \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ).
 \end{align}
 Maximising $\mathcal{O}_\mathrm{for}$ therefore minimises an upper-bound on an
 expected mass-covering KL divergence in $\tildeI{}$-space, providing a further suggestion that
-$\tildeI{}\sim\pcomp{}(\cdot|\partI{})$ will be diverse.
+$\tildeI{}\sim p_{\theta,\psi}(\cdot|\rvy)$ will be diverse.
 
+\section{Simplifications with optimal parameters}
+
+In this section we introduce a lemma and notation that will be useful in later proofs.
+
+\begin{theorem} \label{theorem:optimal-distributions-equal}
+    Assume that we have a sufficiently expressive
+  encoder and decoder that there exist parameters $\optimal{\theta}\in\Theta$
+  and $\optimal{\phi}\in\Phi$ which make the unconditional VAE objective
+  (\cref{eq:vae-objective}) equal to its upper bound of $-\mathcal{H}\left[ \pdata(\rvx)
+  \right]$. Then,
+\begin{equation} \label{eq:optimal-distributions-equal}
+  p_{\optimal{\theta}}(\rvx,\rvy,\rvz) = q_{\optimal{\phi}}(\rvx,\rvy,\rvz)
+\end{equation}
+\end{theorem}
+
+\textbf{Proof.} Recall the definitions of $p$ and $q$ in \cref{eq:pmodel,eq:r}, which are $p_{\optimal{\theta}}(\rvx,\rvy,\rvz) = p_{\optimal{\theta}}(\rvx|\rvz)p_{\optimal{\theta}}(\rvz)\pdata(\rvy|\rvx)$ and $q_{\optimal{\phi}}(\rvx,\rvy,\rvz) = \pdata(\rvx,\rvy)q_{\optimal{\phi}}(\rvz|\rvx)$. Both contain a factor of $\pdata(\rvy|\rvx)$, so we can prove \cref{theorem:optimal-distributions-equal} by proving the simplified equality $p_{\optimal{\theta}}(\rvx,\rvz) = \pdata(\rvx) q_{\optimal{\phi}}(\rvz|\rvx)$. We can do so represent the unconditional ELBO similar to the conditional ELBO in \cref{eq:elbo-kl-joints}, e.g. by substituting $\rvy = \varnothing$ into \cref{eq:elbo-kl-joints}, giving
+\begin{equation}
+    \EX_{\pdata(\rvx)} \left[ \gL(\rvx,\optimal{\theta},\optimal{\phi}) \right] =  - \gH \left[ \pdata(\rvx) \right] 
+    - \kl{ \pdata(\rvx)q_{\optimal{\phi}}(\rvz|\rvx) 
+    }{
+    p_{\optimal{\theta}}(\rvx,\rvz) 
+    }.
+\end{equation}
+Given our assumption that the objective is made equal to $- \gH \left[ \pdata(\rvx) \right]$ with parameters $\theta$ and $\phi$, the KL divergence must be zero. This implies that $p_{\optimal{\theta}}(\rvx,\rvz) = \pdata(\rvx)q_{\optimal{\phi}}(\rvz|\rvx) $, proving the theorem.
+
+For convenience we now define $\unp(\rvx,\rvy,\rvz)$ to be equal to both sides of \cref{eq:optimal-distributions-equal}. That is, $\unp(\rvx,\rvy,\rvz) = p_{\optimal{\theta}}(\rvx,\rvy,\rvz) = q_{\optimal{\phi}}(\rvx,\rvy,\rvz)$. We note that we can also write the joint
+distribution $\optimal{p}(\rvz, \rvx, \tildeI{}, \rvy) = \pdata (\rvx,
+\rvy) q_\phi(\rvz|\rvx; \optimal{\phi})p(\tildeI{}|\rvx,\rvy)$, where
+$p(\tildeI{}|\rvx,\rvy)=\delta_{g(\rvx,\rvy)}(\tildeI{})$ is the Dirac
+distribution mapping $\rvx$ and $\rvy$ deterministically to
+$\tildeI{}=g(\rvx,\rvy)$.
 
 \section{Proof and discussion of Theorem~\ref{theorem:joint-training}}  \label{proof:joint-training}
+
 \subsection{Proof}
 
 \textbf{Statement.} \textit{Assume that we have a sufficiently expressive
   encoder and decoder that there exist parameters $\optimal{\theta}\in\Theta$
   and $\optimal{\phi}\in\Phi$ which make the unconditional VAE objective
-  (\cref{eq:eelbo}) equal to its upper bound of $-\mathcal{H}\left[ \pdata(\I)
+  (\cref{eq:vae-objective}) equal to its upper bound of $-\mathcal{H}\left[ \pdata(\rvx)
   \right]$. Assume also that the mutual information ${\mutinf{} :=
-  \EX_{\pmodel{}(\tildeI{}, \partI{}, \z{}; \theta^*)} \left[ \log
-    \frac{\pmodel{}(\tildeI{},\partI{}|\z{}; \theta^*) }{ \pmodel{}(\tildeI{}|\z{};
-      \theta^*)\pmodel{}(\partI{}|\z{}; \theta^*) } \right] =
-  \EX_{\pmodel{}(\tildeI{}, \partI{}, \z{}; \theta^*)} \left[ \log
-    \frac{\pmodel{}(\tildeI{}|\z{}, \partI{}; \theta^*) }{ \pmodel{}(\tildeI{}|\z{};
-      \theta^*) } \right]}$ is zero (meaning that $\tildeI{}$ and $\partI{}$ are
-  conditionally independent given $\z{}$) and $\tildeI{}$ is defined such that there
-  exists a mapping from $(\tildeI{},\partI{})$ to $\I{}$. Then, given a
-  sufficiently expressive partial encoder $\partq{}(\z{}|\partI{}; \partphi)$, }
+  \EX_{p_{\theta^*}(\tildeI{}, \rvy, \rvz)} \left[ \log
+    \frac{p_{\theta^*}(\tildeI{},\rvy|\rvz) }{ p_{\theta^*}(\tildeI{}|\rvz)p_{\theta^*}(\rvy|\rvz) } \right] =
+  \EX_{p_{\theta^*}(\tildeI{}, \rvy, \rvz)} \left[ \log
+    \frac{p_{\theta^*}(\tildeI{}|\rvz, \rvy) }{ p_{\theta^*}(\tildeI{}|\rvz) } \right]}$ is zero (meaning that $\tildeI{}$ and $\rvy$ are
+  conditionally independent given $\rvz$) and $\tildeI{}$ is defined such that there
+  exists a mapping from $(\tildeI{},\rvy)$ to $\rvx$. Then, given a
+  sufficiently expressive partial encoder $p_\psi(\rvz|\rvy; \psi)$, }
 \begin{equation} \tag{\ref{eq:joint-training}}
-  \max_{\partphi{}} \mathcal{O}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \partphi{}) = \max_{\theta, \phi, \partphi{}} \mathcal{O}_\mathrm{for}(\theta, \phi, \partphi{}).
+  \max_{\psi } \mathcal{O}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \psi ) = \max_{\theta, \phi, \psi } \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ).
 \end{equation}
 
-\textbf{Proof.} We have used, and will continue to use, $\pmodel{}(\cdot)$ and
-$q(\cdot)$ to refer to joint distributions parameterised by $\theta$ and $\phi$
-respectively. Since $\optimal{\theta}$ and $\optimal{\phi}$ are defined as the
-maximisers of the unconditional ELBO in \cref{eq:elbo-kl-joints}, and given our
-assumption of sufficient expressivity, we have $\pmodel{}(\z{}, \I{};
-\optimal{\theta}) = \pdata{}(\I{}) q(\z{}|\I{}; \optimal{\phi})$. We can therefore
-introduce notation for the equal joint distributions: $\optimal{p}(\z{}, \I{},
-\partI{}) = \pmodel{}(\z{}, \I{}, \partI{}; \optimal{\theta}) = \pdata{}(\I{},
-\partI{}) q(\z{}|\I{}; \optimal{\phi})$. We note that we can also write the joint
-distribution $\optimal{p}(\z{}, \I{}, \tildeI{}, \partI{}) = \pdata{}(\I{},
-\partI{}) q(\z{}|\I{}; \optimal{\phi})p(\tildeI{}|\I{},\partI{})$, where
-$p(\tildeI{}|\I{},\partI{})=\delta_{g(\I{},\partI{})}(\tildeI{})$ is the Dirac
-distribution mapping $\I{}$ and $\partI{}$ deterministically to
-$\tildeI{}=g(\I{},\partI{})$.
-%
-Recalling that we define $\tildeI{}$ as either equal to $\I{}$ or as the
-dimensions of $\I{}$ not observed in $\partI{}$, such a deterministic $g$ will
-always exist.
-
-% We note that defining this
-% joint distribution also implicitly defines $\optimal{p}(\z{}, \tildeI{}, \partI{})$
-% as a marginal (over any elements of $\I{}$ not in $\tildeI{}$).
-
+\textbf{Proof.} 
+% We have used, and will continue to use, $p_\theta(\cdot)$ and
+% $q_\phi(\cdot)$ to refer to joint distributions parameterised by $\theta$ and $\phi$
+% respectively. Since $\optimal{\theta}$ and $\optimal{\phi}$ are defined as the
+% maximisers of the unconditional ELBO in \cref{eq:elbo-kl-joints}, and given our
+% assumption of sufficient expressivity, we have $p_{\optimal{\theta}}(\rvz, \rvx) = \pdata(\rvx) q_{\optimal{\phi}}(\rvz|\rvx)$. We can therefore
+% introduce notation for the equal joint distributions: $\optimal{p}(\rvz, \rvx,
+% \rvy) = p_\theta(\rvz, \rvx, \rvy; \optimal{\theta}) = \pdata (\rvx,
+% \rvy) q_\phi(\rvz|\rvx; \optimal{\phi})$. 
+% %
+% Recalling that we define $\tildeI{}$ as either equal to $\rvx$ or as the
+% dimensions of $\rvx$ not observed in $\rvy$, such a deterministic $g$ will
+% always exist.
 We consider the decomposition of $\mathcal{O}_\mathrm{for}$ shown in
 \cref{eq:constant-and-forward-kl} and remind the reader that, given a
-sufficiently expressive partial encoder, the maximisation over $\partphi$ will
+sufficiently expressive partial encoder, the maximisation over $\psi$ will
 always make the KL divergence zero. That is,
 \begin{equation}
-  \max_{\partphi{}} \mathcal{O}_\mathrm{for}(\theta, \phi, \partphi{}) = C(\theta, \phi) = \EX_{r(\z{},\I{},\partI{})} \left[ \log \frac{\pmodel{}(\tildeI{}|\z{})r(\z{}|\partI{})}{q(\z{}|\I{})} \right] \label{eq:forward-max-phi}
+  \max_{\psi } \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ) = C(\theta, \phi) = \EX_{q_\phi(\rvz,\rvx,\rvy)} \left[ \log \frac{p_\theta(\tildeI{}|\rvz)q_\phi(\rvz|\rvy)}{q_\phi(\rvz|\rvx)} \right] \label{eq:forward-max-phi}
 \end{equation}
 for any $\theta$ and $\phi$. Using $\optimal{\theta}$ and $\optimal{\phi}$, and
-therefore using $\unp{}$ in place of $\pmodel{}$, $r$ and $q$, we can expand the
+therefore using $\unp{}$ in place of $p_\theta$, $r$ and $q$, we can expand the
 left-hand side of \cref{eq:joint-training}.
 \begin{align}
-  \max_{\partphi{}} \mathcal{O}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \partphi{}) &= \EX_{\unp{}(\z{},\I{},\partI{})} \left[ \log \frac{\unp{}(\tildeI{}|\z{})\unp{}(\z{}|\partI{})}{\unp(\z{}|\I{})} \right] \\
-                                                                                           &= \EX_{\unp{}(\z{},\I{},\partI{})} \left[ \log \frac{\unp{}(\tildeI{}|\z{},\partI{})\unp{}(\z{}|\partI{})}{\unp(\z{}|\I{})} \right] - \EX_{\unp{}(\z{},\tildeI{},\partI{})} \left[ \log\frac{\unp{}(\tildeI{}|\z{},\partI{})}{\unp{}(\tildeI{}|\z{})} \right] \\
-                                                                                           &= \EX_{\unp{}(\z{},\I{},\partI{})} \left[ \log \frac{\unp{}(\tildeI{}|\z{},\partI{})\unp{}(\z{}|\partI{})}{\unp(\z{}|\I{})} \right] - \mutinf{}\\
-                                                                                           &= \EX_{\unp{}(\z{},\I{},\partI{})} \left[ \log \frac{\unp{}(\z{},\tildeI{}|\partI{})}{\unp(\z{}|\I{})} \right] - \mutinf{}\\
-                                                                                           &= \EX_{\unp{}(\z{},\I{},\partI{})} \left[ \log \frac{\unp{}(\z{}|\tildeI{},\partI{})\unp{}(\tildeI{}|\partI{})}{\unp(\z{}|\I{})} \right] - \mutinf{}. \label{eq:pre-mapping}
+  \max_{\psi } \mathcal{O}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \psi ) &= \EX_{\unp{}(\rvz,\rvx,\rvy)} \left[ \log \frac{\unp{}(\tildeI{}|\rvz)\unp{}(\rvz|\rvy)}{\unp(\rvz|\rvx)} \right] \\
+                                                                                           &= \EX_{\unp{}(\rvz,\rvx,\rvy)} \left[ \log \frac{\unp{}(\tildeI{}|\rvz,\rvy)\unp{}(\rvz|\rvy)}{\unp(\rvz|\rvx)} \right] - \EX_{\unp{}(\rvz,\tildeI{},\rvy)} \left[ \log\frac{\unp{}(\tildeI{}|\rvz,\rvy)}{\unp{}(\tildeI{}|\rvz)} \right] \\
+                                                                                           &= \EX_{\unp{}(\rvz,\rvx,\rvy)} \left[ \log \frac{\unp{}(\tildeI{}|\rvz,\rvy)\unp{}(\rvz|\rvy)}{\unp(\rvz|\rvx)} \right] - \mutinf{}\\
+                                                                                           &= \EX_{\unp{}(\rvz,\rvx,\rvy)} \left[ \log \frac{\unp{}(\rvz,\tildeI{}|\rvy)}{\unp(\rvz|\rvx)} \right] - \mutinf{}\\
+                                                                                           &= \EX_{\unp{}(\rvz,\rvx,\rvy)} \left[ \log \frac{\unp{}(\rvz|\tildeI{},\rvy)\unp{}(\tildeI{}|\rvy)}{\unp(\rvz|\rvx)} \right] - \mutinf{}. \label{eq:pre-mapping}
 \end{align}
-% Here, we note that we can make the factorisation $\optimal{p}(\z{}, \I{},
-% \tildeI{}, \partI{}) = \pdata{}(\I{}, \partI{}) q(\z{}|\I{};
-% \optimal{\phi})\delta(\tildeI{}|\I{},\partI{})$, where
-% $\delta(\tildeI{}|\I{},\partI{})$ is the Dirac distribution mapping $\I{}$ and
-% $\partI{}$ deterministically to $\tildeI{}$, which we have previously made
-% implicit. 
-The factorisation $\optimal{p}(\z{}, \I{}, \tildeI{}, \partI{}) = \pdata{}(\I{},
-\partI{}) q(\z{}|\I{}; \optimal{\phi})\delta(\tildeI{}|\I{},\partI{})$ implies that
-we can express $\unp{}(\z{}|\tildeI{},\partI{})$ with a marginalisation:
-$\unp{}(\z{}|\tildeI{},\partI{})=\int \unp{}(\z{}|\I{})
-\unp{}(\I{}|\tildeI{},\partI{}) \mathrm{d}\I{}$. Since we have assumed that
-there is a deterministic function $f$ mapping $(\tildeI{},\partI{})$ to $\I{}$,
-$\unp{}(\I{}|\tildeI{},\partI{})$ is a Dirac distribution and the
-marginalisation becomes $\unp{}(\z{}|\tildeI{},\partI{}) = \int \unp{}(\z{}|\I{})
-\delta(\I{}|\tildeI{},\partI{}) \mathrm{d}\I{} =
-\unp{}(\z{}|\I{}=f(\tildeI{},\partI{}))$. We therefore proceed, rewriting
-$\unp{}(\z{}|\tildeI{},\partI{})$ as $\unp{}(\z{}|\I{})$:
+The factorisation $\optimal{p}(\rvz, \rvx, \tildeI{}, \rvy) = \pdata (\rvx,
+\rvy) q_\phi(\rvz|\rvx; \optimal{\phi})\delta(\tildeI{}|\rvx,\rvy)$ implies that
+we can express $\unp{}(\rvz|\tildeI{},\rvy)$ with a marginalisation:
+$\unp{}(\rvz|\tildeI{},\rvy)=\int \unp{}(\rvz|\rvx)
+\unp{}(\rvx|\tildeI{},\rvy) \mathrm{d}\rvx$. Since we have assumed that
+there is a deterministic function $f$ mapping $(\tildeI{},\rvy)$ to $\rvx$,
+$\unp{}(\rvx|\tildeI{},\rvy)$ is a Dirac distribution and the
+marginalisation becomes $\unp{}(\rvz|\tildeI{},\rvy) = \int \unp{}(\rvz|\rvx)
+\delta(\rvx|\tildeI{},\rvy) \mathrm{d}\rvx =
+\unp{}(\rvz|\rvx=f(\tildeI{},\rvy))$. We therefore proceed, rewriting
+$\unp{}(\rvz|\tildeI{},\rvy)$ as $\unp{}(\rvz|\rvx)$:
 \begin{align}
-  \max_{\partphi{}} \mathcal{O}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \partphi{}) &= \EX_{\unp{}(\z{},\I{},\partI{})} \left[ \log \frac{\unp{}(\z{}|\I{})\unp{}(\tildeI{}|\partI{})}{\unp(\z{}|\I{})} \right] - \mutinf{} \label{eq:post-mapping}\\
-                                                                                           &= \EX_{\unp{}(\I{},\partI{})} \left[ \log \unp{} (\tildeI{}|\partI{}) \right] - \mutinf{}\\
-                                                                                           &= \EX_{\pdata{}(\I{},\partI{})} \left[ \log \pdata{} (\tildeI{}|\partI{}) \right] - \mutinf{}. \label{eq:max-partphi-bound}
+  \max_{\psi } \mathcal{O}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \psi ) &= \EX_{\unp{}(\rvz,\rvx,\rvy)} \left[ \log \frac{\unp{}(\rvz|\rvx)\unp{}(\tildeI{}|\rvy)}{\unp(\rvz|\rvx)} \right] - \mutinf{} \label{eq:post-mapping}\\
+                                                                                           &= \EX_{\unp{}(\rvx,\rvy)} \left[ \log \unp{} (\tildeI{}|\rvy) \right] - \mutinf{}\\
+                                                                                           &= \EX_{\pdata (\rvx,\rvy)} \left[ \log \pdata  (\tildeI{}|\rvy) \right] - \mutinf{}. \label{eq:max-partphi-bound}
 \end{align}
 Now that we have this expansion of the left-hand side of
 \cref{eq:joint-training}, we can derive a related upper-bound on the right-hand
-side as follows. For any $\theta$, any $\phi$, and any $\partphi$, we have
+side as follows. For any $\theta$, any $\phi$, and any $\psi$, we have
 from \cref{supp:cigcvae-forward-elbo-bound-deriv}:
 \begin{align}
-  \mathcal{O}_\mathrm{for}(\theta, \phi, \partphi{}) &\leq \EX_{\pdata{}(\I{},\partI{})} \left[ \log \pcomp{}(\tildeI{}|\partI{}) \right] \\
-                                                     &= \EX_{\pdata{}(\I{},\partI{})} \left[ \log \pdata{}(\tildeI{}|\partI{}) \right] - \EX_{\pdata{}(\partI{})}\left[ \kl{\pdata{}(\tildeI{}|\partI{})}{\pcomp{}(\tildeI{}|\partI{})} \right] \\
-                                                     &\leq \EX_{\pdata{}(\I{},\partI{})} \left[ \log \pdata{}(\tildeI{}|\partI{}) \right].
+  \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ) &\leq \EX_{\pdata (\rvx,\rvy)} \left[ \log p_{\theta,\psi}(\tildeI{}|\rvy) \right] \\
+                                                     &= \EX_{\pdata (\rvx,\rvy)} \left[ \log \pdata (\tildeI{}|\rvy) \right] - \EX_{\pdata (\rvy)}\left[ \kl{\pdata (\tildeI{}|\rvy)}{p_{\theta,\psi}(\tildeI{}|\rvy)} \right] \\
+                                                     &\leq \EX_{\pdata (\rvx,\rvy)} \left[ \log \pdata (\tildeI{}|\rvy) \right].
 \end{align}
 This bound must also hold for the maximum over $\theta$, $\phi$, and
-$\partphi$, and so is an upper-bound on the right-hand side of \cref{eq:joint-training}:
+$\psi$, and so is an upper-bound on the right-hand side of \cref{eq:joint-training}:
 \begin{align}
-  \max_{\theta, \phi, \partphi{}} \mathcal{O}_\mathrm{for}(\theta, \phi, \partphi{}) &\leq \EX_{\pdata{}(\I{},\partI{})} \left[ \log \pdata{}(\tildeI{}|\partI{}) \right]. \label{eq:max-all-bound}
+  \max_{\theta, \phi, \psi } \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ) &\leq \EX_{\pdata (\rvx,\rvy)} \left[ \log \pdata (\tildeI{}|\rvy) \right]. \label{eq:max-all-bound}
 \end{align}
 
 By relating \cref{eq:max-partphi-bound} and \cref{eq:max-all-bound}, we have:
 \begin{align}
-  \max_{\theta, \phi, \partphi{}} \mathcal{O}_\mathrm{for}(\theta, \phi, \partphi{}) &\leq  \max_{\partphi{}} \mathcal{O}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \partphi{}) + \mutinf{}. \label{eq:bound-1}
+  \max_{\theta, \phi, \psi } \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ) &\leq  \max_{\psi } \mathcal{O}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \psi ) + \mutinf{}. \label{eq:bound-1}
 \end{align}
 We then point out that we can also obtain an inequality in the other direction: since
 the right-hand side of \cref{eq:joint-training} is a maximisation of the left-hand side over $\theta$ and
 $\phi$, it must be greater than or equal to the left-hand side:
 \begin{align}
-  \max_{\partphi{}} \mathcal{O}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \partphi{}) &\leq  \max_{\theta, \phi, \partphi{}} \mathcal{O}_\mathrm{for}(\theta, \phi, \partphi{})  . \label{eq:bound-2}
+  \max_{\psi } \mathcal{O}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \psi ) &\leq  \max_{\theta, \phi, \psi } \mathcal{O}_\mathrm{for}(\theta, \phi, \psi )  . \label{eq:bound-2}
 \end{align}
 Combining \cref{eq:bound-1} and \cref{eq:bound-2}, we have:
 \begin{align}
-  0 \leq \max_{\theta, \phi, \partphi{}} \mathcal{O}_\mathrm{for}(\theta, \phi, \partphi{}) - \max_{\partphi{}} \mathcal{O}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \partphi{}) \leq \mutinf{}. \label{eq:two-bounds}
+  0 \leq \max_{\theta, \phi, \psi } \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ) - \max_{\psi } \mathcal{O}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \psi ) \leq \mutinf{}. \label{eq:two-bounds}
 \end{align}
 We now have bounds in both directions on the difference between the right- and
 left-hand sides. To conclude the proof, we repeat the assumption that
 $\mutinf{}=0$. The upper- and lower- bounds of \cref{eq:two-bounds} are
-therefore both zero, so we have the final result that ${\max_{\partphi{}}
-\mathcal{O}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \partphi{}) =
-\max_{\theta, \phi, \partphi{}} \mathcal{O}_\mathrm{for}(\theta, \phi,
-\partphi{})}$.
+therefore both zero, so we have the final result that ${\max_{\psi }
+\mathcal{O}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \psi ) =
+\max_{\theta, \phi, \psi } \mathcal{O}_\mathrm{for}(\theta, \phi,
+\psi )}$.
 
 \subsection{Discussion of the assumption that $\mutinf{}=0$}
 The above proof of \cref{theorem:joint-training} relies on the assumption that
-$\mutinf{} = \EX_{\unp{}(\tildeI{}, \partI{}, \z{})} \left[ \log
-  \frac{\unp{}(\tildeI{}|\z{}, \partI{}) }{ \unp{}(\tildeI{}|\z{}) } \right] = 0$.
-That is, under the joint distribution $p^*(\z{},\I{},\partI{})$, $\tildeI{}$ and
-$\partI{}$ should be conditionally independent given $\z{}$. We now argue that this
+$\mutinf{} = \EX_{\unp{}(\tildeI{}, \rvy, \rvz)} \left[ \log
+  \frac{\unp{}(\tildeI{}|\rvz, \rvy) }{ \unp{}(\tildeI{}|\rvz) } \right] = 0$.
+That is, under the joint distribution $p_{\theta^*,\phi^*}(\rvz,\rvx,\rvy)$, $\tildeI{}$ and
+$\rvy$ should be conditionally independent given $\rvz$. We now argue that this
 is true for image completion, and ``close to'' satisfied \textcolor{black}{when
   $\mathbf{y}$ consists of high-level image features. This means that
   \cref{theorem:joint-training} is informative for inpainting, our
@@ -254,51 +251,15 @@ is true for image completion, and ``close to'' satisfied \textcolor{black}{when
   colourisation.}
 
 \paragraph{Image completion}
-In the VAE architecture we use, the likelihood $\pmodel{}(\I{}|\z{})$ is pixel-wise
-independent. In other words, if we write $\I{}$ as a set of pixels
-$\{\I{}_1,\ldots,\I{}_N\}$, we can factorise $\pmodel{}(\I{}|\z{})$ as
-$\prod_{i=1}^N\pmodel{}(\I{}_i|\z{})$. This means that the conditional mutual
-information between any two disjoint subsets of $\I{}$ (conditioned on $\z{}$) will
+In the VAE architecture we use, the likelihood $p_\theta(\rvx|\rvz)$ is pixel-wise
+independent. In other words, if we write $\rvx$ as a set of pixels
+$\{\rvx_1,\ldots,\rvx_N\}$, we can factorise $p_\theta(\rvx|\rvz)$ as
+$\prod_{i=1}^Np_\theta(\rvx_i|\rvz)$. This means that the conditional mutual
+information between any two disjoint subsets of $\rvx$ (conditioned on $\rvz$) will
 be zero. Given our definition of $\tildeI{}$ for image completion as the the set
 of purely unobserved pixels, we have by construction that $\tildeI{}$ and
-$\partI{}$ are disjoint. Therefore, the assumption that $\mutinf{}=0$ is
+$\rvy$ are disjoint. Therefore, the assumption that $\mutinf{}=0$ is
 satisfied for image completion.
-
-% In our exposition, $\I{}$ and $\partI{}$ are not disjoint (since we
-% defined $\I{}$ to be the set of all image pixels including those in $\partI{}$),
-% and so the conditional mutual information between them need not be zero.
-% However, we could alternatively have used an objective which only optimised a
-% lower-bound on the likelihood of unobserved pixels. Denoting the unobserved
-% pixels $\I{}\setminus\partI{}$, this lower-bound is an alteration of that in
-% \cref{eq:forward-elbo}:
-% \begin{align}
-%   \label{eq:forward-elbo-sub}
-%   \mathcal{O}^\text{sub}_\mathrm{for}(\theta, \phi, \partphi{}) &= \EX_{\pdata{}(\I{}, \partI{})} \EX_{q(\z{}|\I{})} \left[ \log \frac{\pmodel{}(\I{}\setminus\partI{}|\z{})\partq{}(\z{}|\partI{})}{q(\z{}|\I{})} \right] &\leq \EX_{\pdata{}(\I{}, \partI{})} \left[ \log \pcomp{}(\I{}\setminus\partI{}|\partI{}) \right].
-% \end{align}
-% Note that training IPA with this objective is equivalent to training IPA with
-% $\mathcal{O}_\mathrm{for}$. This is because both the term that has changed,
-% $\pmodel(\I{}|\z{})$, and its replacement $\pmodel{}(\I{}\setminus\partI{}|\z{})$,
-% are independent of $\partphi$. The gradients with respect to $\partphi$ are
-% therefore exactly the same for $\mathcal{O}_\mathrm{for}$ and
-% $\mathcal{O}^\text{sub}_\mathrm{for}$. Since IPA only optimises $\partphi$, it
-% will therefore be identical for either objective.
-
-% For the new objective $\mathcal{O}_\mathrm{for}$, we can derive an analogy to
-% \cref{eq:two-bounds}.
-% \begin{align}
-%   0 \leq \max_{\theta, \phi, \partphi{}} \mathcal{O}^\text{sub}_\mathrm{for}(\theta, \phi, \partphi{}) - \max_{\partphi{}} \mathcal{O}^\text{sub}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \partphi{}) \leq \mutinfsub{}
-% \end{align}
-% where $\mutinfsub := \EX_{\pmodel{}(\I{}, \partI{}, \z{}; \theta^*)} \left[\log
-%   \frac{\unp{}(\I{}\setminus\partI{}|\z{}, \partI{}) }{ \unp{}(\I{}|\z{}) } \right]$.
-% The derivation of this is almost identical to that of \cref{eq:two-bounds}, if
-% $\mathcal{O}_\mathrm{for}$ is replaced with
-% $\mathcal{O}^\text{sub}_\mathrm{for}$, and $\mutinf$ is replaced with
-% $\mutinfsub$. Since $\I{}\setminus\partI{}$ and $\partI{}$ are disjoint subsets
-% of image pixels, we have that $\mutinfsub{}=0$ and so the upper and lower bounds
-% are the same, leading to the equality:
-% \begin{align}
-%   \max_{\theta, \phi, \partphi{}} \mathcal{O}^\text{sub}_\mathrm{for}(\theta, \phi, \partphi{}) = \max_{\partphi{}} \mathcal{O}^\text{sub}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \partphi{}).
-% \end{align}
 
 
 \paragraph{When $\mutinf{}$ is non-zero.}
@@ -306,78 +267,69 @@ When $\mutinf{}$ is non-zero, we can still use it as an upper-bound on the
 difference between the left- and right-hand side of \cref{eq:joint-training}
 using \cref{eq:two-bounds}.
 %
-Moreover, we posit that $\mutinf{}$ will typically be small when $\partI{}$
+Moreover, we posit that $\mutinf{}$ will typically be small when $\rvy$
 represents high-level features (e.g.~the edges in Edges2Photos or a class label)
 and we have a pixel-wise independent likelihood. This is because any high-level
 structure cannot be modelled by the pixel-wise independent likelihood
-$\unp{}(\tildeI{}|\z{})$ and so must be captured by $\z{}$. Intuitively, high-level
-features $\partI{}$ are unlikely to be informative about any pixel-level
-variations if all image structure spanning multiple pixels ($\z{}$) is already
+$\unp{}(\tildeI{}|\rvz)$ and so must be captured by $\rvz$. Intuitively, high-level
+features $\rvy$ are unlikely to be informative about any pixel-level
+variations if all image structure spanning multiple pixels ($\rvz$) is already
 known. This is equivalent to saying that $\mutinf{}$, the mutual information
-between $\tildeI{}$ and $\partI{}$ conditioned on $\z{}$, is likely to be small.
+between $\tildeI{}$ and $\rvy$ conditioned on $\rvz$, is likely to be small.
 
 \section{An alternative training objective}
 \label{supp:cigcvae-ipa-r}
 In this section, we describe an alternative objective previously used by
 \citet{ma2018eddi}. We find experimentally that its performance is typically
 worse than $\mathcal{O}_\mathrm{for}$, but it has the advantage of only
-requiring data $\partI{} \sim \pdata{}(\cdot)$ during training, and not $\I{}$.
+requiring data $\rvy \sim \pdata (\cdot)$ during training, and not $\rvx$.
 This may allow training in settings such as
 outpainting~\citep{sabini2018painting}. The objective can be interpreted as a
-lower bound on $\log \pmodel{}(\partI{})$:
+lower bound on $\log p_\theta(\rvy)$:
 \begin{align} \label{eq:reverse-obj}
-  \mathcal{O}_\text{rev}(\theta, \phi, \partphi{}) &= \EX_{\pdata{}(\partI{})}\EX_{\partq{}(\z{}|\partI{})} \left[ \log\frac{\pmodel{}(\z{},\partI{})}{\partq{}(\z{}|\partI{})} \right] \leq \EX_{\pdata{}(\partI{})} \left[ \log \pmodel(\partI{}) \right].
+  \mathcal{O}_\text{rev}(\theta, \phi, \psi ) &= \EX_{\pdata (\rvy)}\EX_{p_\psi(\rvz|\rvy)} \left[ \log\frac{p_\theta(\rvz,\rvy)}{p_\psi(\rvz|\rvy)} \right] \leq \EX_{\pdata (\rvy)} \left[ \log p_\theta(\rvy) \right].
 \end{align}
 Computing this objective requires a computation graph similar to that shown in
 \cref{fig:cigcvae-reverse-arch}. Note one caveat with this objective is that using it
-involves computing and differentiating $\pmodel{}(\z{},\partI{})$, which requires a
-tractable likelihood $\pdata{}(\partI{}|\I{})$ (based on the definition of
-$\pmodel{}$ in \cref{tab:cigcvae-notation}). This is possible in image completion, but
+involves computing and differentiating $p_\theta(\rvz,\rvy)$, which requires a
+tractable likelihood $\pdata (\rvy|\rvx)$ (based on the definition of
+$p_\theta$ in \cref{tab:cigcvae-notation}). This is possible in image completion, but
 not in the general case of conditional generation.
 
-The following theorem says that learning $\partphi{}$ to maximise this objective
+The following theorem says that learning $\psi $ to maximise this objective
 is equivalent to minimising another KL divergence.
-\begin{theorem} \label{theorem:reverse-kl} For any set $\Partphi$ of
-  permissible values of $\partphi{}$, and for any $\theta\in\Theta$ and
+\begin{theorem} \label{theorem:reverse-kl} For any set $\Psi$ of
+  permissible values of $\psi $, and for any $\theta\in\Theta$ and
   $\phi\in\Phi$,
   \begin{equation}
-    \argmax_{\partphi{} \in \Partphi} \mathcal{O}_\text{rev}(\theta, \phi, \partphi{}) = \argmin_{\partphi{} \in \Partphi} \EX_{\pdata{}(\partI{})} \left[ \kl[\big] { \partq{}(\z{}|\partI{}; \partphi) }{ \pmodel{}(\z{}|\partI{}; \theta) } \right].
+    \argmax_{\psi  \in \Psi} \mathcal{O}_\text{rev}(\theta, \phi, \psi ) = \argmin_{\psi  \in \Psi} \EX_{\pdata (\rvy)} \left[ \kl[\big] { p_\psi(\rvz|\rvy; \psi) }{ p_\theta(\rvz|\rvy; \theta) } \right].
   \end{equation}
 \end{theorem}
 
-% \subsection{Proof of Theorem~\ref{theorem:reverse-kl}} \label{proof:reverse-kl}
 
-% \textbf{Statement.} \textit{
-%   For any set $\Partphi$ of
-%   permissible values of $\partphi{}$, and for any $\theta\in\Theta$ and
-%   $\phi\in\Phi$,
-%   \begin{equation}
-%     \argmax_{\partphi{} \in \Partphi} \mathcal{O}_\text{rev}(\theta, \phi, \partphi{}) = \argmin_{\partphi{} \in \Partphi} \EX_{\pdata{}(\partI{})} \left[ \kl[\big] { \partq{}(\z{}|\partI{}) }{ \pmodel{}(\z{}|\partI{}) } \right].
-%   \end{equation}
-% }
 \textbf{Proof.}
 We show this by decomposing the objective:
 \begin{align} \label{eq:reverse-obj-supp}
-  \mathcal{O}_\text{rev}(\theta, \phi, \partphi{}) &= \EX_{\pdata{}(\partI{})\partq{}(\z{}|\partI{})} \left[ \log\frac{\pmodel{}(\z{},\partI{})}{\partq{}(\z{}|\partI{})} \right] \\
-                                                   &= \EX_{\pdata{}(\partI{})\partq{}(\z{}|\partI{})}\Big[ \log \pmodel{}(\partI{}) - \log\frac{\partq{}(\z{}|\partI{})}{\pmodel{}(\z{}|\partI{})} \Big] \\
-  &= \EX_{\pdata{}(\partI{})}\Big[ \log \pmodel{}(\partI{}) - \kl[\big] { \partq{}(\z{}|\partI{}) }{ \pmodel{}(\z{}|\partI{}) } \Big] \\
-                                                   &= D(\theta) - \EX_{\pdata{}(\partI{})}\Big[ \kl[\big] { \partq{}(\z{}|\partI{}) }{ \pmodel{}(\z{}|\partI{}) } \Big]
+  \mathcal{O}_\text{rev}(\theta, \phi, \psi ) &= \EX_{\pdata (\rvy)p_\psi(\rvz|\rvy)} \left[ \log\frac{p_\theta(\rvz,\rvy)}{p_\psi(\rvz|\rvy)} \right] \\
+                                                   &= \EX_{\pdata (\rvy)p_\psi(\rvz|\rvy)}\Big[ \log p_\theta(\rvy) - \log\frac{p_\psi(\rvz|\rvy)}{p_\theta(\rvz|\rvy)} \Big] \\
+  &= \EX_{\pdata (\rvy)}\Big[ \log p_\theta(\rvy) - \kl[\big] { p_\psi(\rvz|\rvy) }{ p_\theta(\rvz|\rvy) } \Big] \\
+                                                   &= D(\theta) - \EX_{\pdata (\rvy)}\Big[ \kl[\big] { p_\psi(\rvz|\rvy) }{ p_\theta(\rvz|\rvy) } \Big]
 \end{align}
-where $D(\theta)$ is not dependent on $\partphi$. Therefore, for any $\theta$
-and $\phi$, any values of $\partphi\in\Partphi$ which maximise
-$\mathcal{O}_\text{rev}(\theta, \phi, \partphi{})$ will also minimise
-$\EX_{\pdata{}(\partI{})}\Big[ \kl[\big] { \partq{}(\z{}|\partI{}) }{
-  \pmodel{}(\z{}|\partI{}) } \Big]$, proving the theorem.
+where $D(\theta)$ is not dependent on $\psi$. Therefore, for any $\theta$
+and $\phi$, any values of $\psi\in\Psi$ which maximise
+$\mathcal{O}_\text{rev}(\theta, \phi, \psi )$ will also minimise
+$\EX_{\pdata (\rvy)}\Big[ \kl[\big] { p_\psi(\rvz|\rvy) }{
+  p_\theta(\rvz|\rvy) } \Big]$, proving the theorem.
 
 
 \Cref{theorem:reverse-kl} implies that maximising $\mathcal{O}_{\text{rev}}$
-will minimise a ``reverse'' KL divergence, causing $\partq{}(\z{}|\partI{})$ to
+will minimise a ``reverse'' KL divergence, causing $p_\psi(\rvz|\rvy)$ to
 exhibit mode-seeking behaviour. We denote the method of training with this
 objective IPA-R (inference in a pretrained artifact with the reverse KL).
                                                      %
 As with IPA, we use pretrained $\theta$ and $\phi$ when training IPA-R, which we
 justify in the following paragraph. With IPA-R, we also use the pretrained
-encoder parameters $\phi$ as an initialisation for $\partphi{}$, which makes
+encoder parameters $\phi$ as an initialisation for $\psi $, which makes
 training more stable.
 
 % \paragraph{Using pretrained weights with $\mathcal{O}_\text{rev}$}
@@ -388,35 +340,35 @@ has a property analogous to that described by \cref{theorem:joint-training}.
   \label{theorem:joint-training-rev}
   Assume we have a sufficiently expressive encoder and decoder such that there
   exists parameters $\optimal{\theta}\in\Theta$ and $\optimal{\phi}\in\Phi$
-  which make the unconditional VAE objective (\cref{eq:eelbo}) equal to its
-  upper bound of $-\mathcal{H}\left[ \pdata(\I) \right]$. Then, given a
-  sufficiently expressive partial encoder $\partq{}(\z{}|\partI{}; \partphi)$,
+  which make the unconditional VAE objective equal to its
+  upper bound of $-\mathcal{H}\left[ \pdata(\rvx) \right]$. Then, given a
+  sufficiently expressive partial encoder $p_\psi(\rvz|\rvy; \psi)$,
   \begin{equation*}
-    \max_{\partphi{}} \mathcal{O}_\text{rev}(\optimal{\theta}, \optimal{\phi}, \partphi{}) = \max_{\theta, \phi, \partphi{}} \mathcal{O}_\text{rev}(\theta, \phi, \partphi{}).
+    \max_{\psi } \mathcal{O}_\text{rev}(\optimal{\theta}, \optimal{\phi}, \psi ) = \max_{\theta, \phi, \psi } \mathcal{O}_\text{rev}(\theta, \phi, \psi ).
   \end{equation*}
 \end{theorem}
 
 \textbf{Proof.} We will prove \cref{theorem:joint-training-rev} by showing that
 both the quantity on the left-hand side and the quantity on the right-hand side
-are equal to the negative of the entropy of $\pdata{}(\I{})$. We begin with the
+are equal to the negative of the entropy of $\pdata (\rvx)$. We begin with the
 left-hand side,
 \begin{align}
-  \max_{\partphi{}} \mathcal{O}_\text{rev}(\optimal{\theta}, \optimal{\phi}, \partphi{}) &= \max_{\partphi{}} \EX_{\pdata{}(\partI{})\partq{}(\z{}|\partI{})} \left[ \log\frac{\unp{}(\z{},\partI{})}{\partq{}(\z{}|\partI{})} \right].
+  \max_{\psi } \mathcal{O}_\text{rev}(\optimal{\theta}, \optimal{\phi}, \psi ) &= \max_{\psi } \EX_{\pdata (\rvy)p_\psi(\rvz|\rvy)} \left[ \log\frac{\unp{}(\rvz,\rvy)}{p_\psi(\rvz|\rvy)} \right].
 \end{align}
-This is a variational lower-bound which is made tight by setting $\partphi{}$
-such that $\partq{}(\z{}|\partI{}) = \unp{}(\z{}|\partI{})$:
+This is a variational lower-bound which is made tight by setting $\psi $
+such that $p_\psi(\rvz|\rvy) = \unp{}(\rvz|\rvy)$:
 \begin{align}
-  \max_{\partphi{}} \mathcal{O}_\text{rev}(\optimal{\theta}, \optimal{\phi}, \partphi{}) &= \EX_{\pdata{}(\partI{})} \left[ \log \unp(\partI{}) \right] = - \mathcal{H} \left[ \pdata{}(\partI{}) \right]. \label{eq:final-lhs-a}
+  \max_{\psi } \mathcal{O}_\text{rev}(\optimal{\theta}, \optimal{\phi}, \psi ) &= \EX_{\pdata (\rvy)} \left[ \log \unp(\rvy) \right] = - \mathcal{H} \left[ \pdata (\rvy) \right]. \label{eq:final-lhs-a}
 \end{align}
 Now we consider the right-hand side.
 \begin{align}
-  \max_{\theta, \phi, \partphi{}} \mathcal{O}_\text{rev}(\theta, \phi, \partphi{}) &= \max_{\theta, \phi, \partphi{}} \EX_{\pdata{}(\partI{})\partq{}(\z{}|\partI{})} \left[ \log\frac{\pmodel{}(\z{},\partI{})}{\partq{}(\z{}|\partI{})} \right]
+  \max_{\theta, \phi, \psi } \mathcal{O}_\text{rev}(\theta, \phi, \psi ) &= \max_{\theta, \phi, \psi } \EX_{\pdata (\rvy)p_\psi(\rvz|\rvy)} \left[ \log\frac{p_\theta(\rvz,\rvy)}{p_\psi(\rvz|\rvy)} \right]
 \end{align}
-This is another variational lower-bound made tight by setting $\partphi{}$
-such that $\partq{}(\z{}|\partI{}) = \pmodel{}(\z{}|\partI{})$:
+This is another variational lower-bound made tight by setting $\psi $
+such that $p_\psi(\rvz|\rvy) = p_\theta(\rvz|\rvy)$:
 \begin{align}
-  \max_{\theta, \phi, \partphi{}} \mathcal{O}_\text{rev}(\theta, \phi, \partphi{}) &= \max_{\theta, \phi} \EX_{\pdata{}(\partI{})} \left[ \log \pmodel{}(\partI{}) \right] \\
-                                                                                   &= - \mathcal{H} \left[ \pdata{}(\partI{}) \right].
+  \max_{\theta, \phi, \psi } \mathcal{O}_\text{rev}(\theta, \phi, \psi ) &= \max_{\theta, \phi} \EX_{\pdata (\rvy)} \left[ \log p_\theta(\rvy) \right] \\
+                                                                                   &= - \mathcal{H} \left[ \pdata (\rvy) \right].
 \end{align}
 The right-hand side is therefore equivalent to the left-hand-side as shown in
 \cref{eq:final-lhs-a}, proving the theorem.
@@ -431,40 +383,40 @@ hierarchical VAEs. First note that each can be written as the sum of a
 likelihood and KL divergence term. For the unconditional VAE objective,
 $\mathcal{O}_\mathrm{for}$ and $\mathcal{O}_\text{rev}$ respectively:
 \begin{align}
-  \EX_{\pdata{}(\I{})} \left[ \text{ELBO}(\theta, \phi, \I{}) \right] &= \EX_{\pdata{}(\I{})}\left[ \EX_{q(\z{}|\I{})} \left[ \log\pmodel{}(\I{}|\z{})  \right] - \kl[\big]{q(\z{}|\I{})}{\pmodel{}(\z{})}  \right], \\
-  \mathcal{O}_\mathrm{for}(\theta, \phi, \partphi{}) &= \EX_{\pdata{}(\I{}, \partI{})} \left[ \EX_{q(\z{}|\I{})} \left[ \log \pmodel{}(\tildeI{}|\z{}) \right] - \kl{q(\z{}|\I{})}{\partq{}(\z{}|\partI{})} \right], \\
-  \mathcal{O}_\text{rev}(\theta, \phi, \partphi{}) &= \EX_{\pdata{}(\partI{})}\EX_{\partq{}(\z{}|\partI{})} \left[ \log\pmodel{}(\partI{}|\z{}) - \kl{\partq{}(\z{}|\partI{})}{\pmodel{}(\z{})} \right].
+  \EX_{\pdata (\rvx)} \left[ \text{ELBO}(\theta, \phi, \rvx) \right] &= \EX_{\pdata (\rvx)}\left[ \EX_{q_\phi(\rvz|\rvx)} \left[ \log p_\theta(\rvx|\rvz)  \right] - \kl[\big]{q_\phi(\rvz|\rvx)}{p_\theta(\rvz)}  \right], \\
+  \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ) &= \EX_{\pdata (\rvx, \rvy)} \left[ \EX_{q_\phi(\rvz|\rvx)} \left[ \log p_\theta(\tildeI{}|\rvz) \right] - \kl{q_\phi(\rvz|\rvx)}{p_\psi(\rvz|\rvy)} \right], \\
+  \mathcal{O}_\text{rev}(\theta, \phi, \psi ) &= \EX_{\pdata (\rvy)}\EX_{p_\psi(\rvz|\rvy)} \left[ \log p_\theta(\rvy|\rvz) - \kl{p_\psi(\rvz|\rvy)}{p_\theta(\rvz)} \right].
 \end{align}
-In a non-hierarchical VAE with Gaussian $\pmodel{}(\z{})$ and $q(\z{}|\I{})$, it is
+In a non-hierarchical VAE with Gaussian $p_\theta(\rvz)$ and $q_\phi(\rvz|\rvx)$, it is
 common to compute the KL divergence term analytically in order to reduce the
-variance of the estimate. In hierarchical VAEs where both $\pmodel{}(\z{})$ and
-$q(\z{}|\I{})$ consists of multiple Gaussian distributions with non-linear
+variance of the estimate. In hierarchical VAEs where both $p_\theta(\rvz)$ and
+$q_\phi(\rvz|\rvx)$ consists of multiple Gaussian distributions with non-linear
 dependencies, it is not possible to compute the KL divergence analytically.
 However, we can still make use of analytic estimates of the KL divergence at
 each layer. For the unconditional VAE objective, an estimator can be derived as
 follows:
 \begin{align}
-  \kl[\big]{q(\z{}|\I{})}{\pmodel{}(\z{})} &= \EX_{q(\z{}|\I{})} \left[ \log \frac{q(\z{}|\I{})}{\pmodel{}(\z{})} \right] \\
-                                     &= \EX_{q(\z{}|\I{})} \left[ \log \frac{\prod_{l=1}^L q(\z{}_l|\z{}_{<l}, \I{})}{\prod_{l=1}^L \pmodel{}(\z{}_l|\z{}_{<l})} \right] \\
-                                     &= \EX_{q(\z{}|\I{})} \left[ \sum_{l=1}^L \log \frac{q(\z{}_l|\z{}_{<l}, \I{})}{\pmodel{}(\z{}_l|\z{}_{<l})} \right] \\
-                                     &= \EX_{q(\z{}|\I{})} \left[ \sum_{l=1}^L \log \frac{q(\z{}_l|\z{}_{<l}, \I{})}{\pmodel{}(\z{}_l|\z{}_{<l})} \right] \\
-                                     &= \sum_{l=1}^L \EX_{q(\z{}_{\leq l}|\I{})} \left[ \log \frac{q(\z{}_l|\z{}_{<l}, \I{})}{\pmodel{}(\z{}_l|\z{}_{<l})} \right] \\
-                                     &= \sum_{l=1}^L \EX_{q(\z{}_{<l}|\I{})} \left[ \kl[\big]{q(\z{}_l|\z{}_{<l}, \I{})}{\pmodel{}(\z{}_l|\z{}_{<l})} \right].
+  \kl[\big]{q_\phi(\rvz|\rvx)}{p_\theta(\rvz)} &= \EX_{q_\phi(\rvz|\rvx)} \left[ \log \frac{q_\phi(\rvz|\rvx)}{p_\theta(\rvz)} \right] \\
+                                     &= \EX_{q_\phi(\rvz|\rvx)} \left[ \log \frac{\prod_{l=1}^L q_\phi(\rvz_l|\rvz_{<l}, \rvx)}{\prod_{l=1}^L p_\theta(\rvz_l|\rvz_{<l})} \right] \\
+                                     &= \EX_{q_\phi(\rvz|\rvx)} \left[ \sum_{l=1}^L \log \frac{q_\phi(\rvz_l|\rvz_{<l}, \rvx)}{p_\theta(\rvz_l|\rvz_{<l})} \right] \\
+                                     &= \EX_{q_\phi(\rvz|\rvx)} \left[ \sum_{l=1}^L \log \frac{q_\phi(\rvz_l|\rvz_{<l}, \rvx)}{p_\theta(\rvz_l|\rvz_{<l})} \right] \\
+                                     &= \sum_{l=1}^L \EX_{q_\phi(\rvz_{\leq l}|\rvx)} \left[ \log \frac{q_\phi(\rvz_l|\rvz_{<l}, \rvx)}{p_\theta(\rvz_l|\rvz_{<l})} \right] \\
+                                     &= \sum_{l=1}^L \EX_{q_\phi(\rvz_{<l}|\rvx)} \left[ \kl[\big]{q_\phi(\rvz_l|\rvz_{<l}, \rvx)}{p_\theta(\rvz_l|\rvz_{<l})} \right].
 \end{align}
 This is used by \citet{vahdat2020nvae,child2020very} to estimate the KL
-divergence term for an unconditional hierarchical VAE, by sampling $\z{}\sim
-q(\cdot|\I{})$ and then computing the resulting KL divergence for each layer $l$
-conditioned on $\z{}_{<l}$. Similar derivations suggest the following estimates for
+divergence term for an unconditional hierarchical VAE, by sampling $\rvz\sim
+q_\phi(\cdot|\rvx)$ and then computing the resulting KL divergence for each layer $l$
+conditioned on $\rvz_{<l}$. Similar derivations suggest the following estimates for
 the KL divergences in $\mathcal{O}_\mathrm{for}$ and $\mathcal{O}_\text{rev}$:
 \begin{align}
-  \kl[\big]{q(\z{}|\I{})}{\partq{}(\z{}|\partI{})} &= \sum_{l=1}^L \EX_{q(\z{}_{<l}|\I{})} \left[ \kl[\big]{q(\z{}_l|\z{}_{<l}, \I{})}{\partq{}(\z{}_l|\z{}_{<l}, \partI{})} \right], \\
-  \kl[\big]{\partq{}(\z{}|\partI{})}{\pmodel{}(\z{})} &= \sum_{l=1}^L \EX_{\partq{}(\z{}_{<l}|\partI{})} \left[ \kl[\big]{\partq{}(\z{}_l|\z{}_{<l}, \partI{})}{\pmodel{}(\z{}_l|\z{}_{<l})} \right].
+  \kl[\big]{q_\phi(\rvz|\rvx)}{p_\psi(\rvz|\rvy)} &= \sum_{l=1}^L \EX_{q_\phi(\rvz_{<l}|\rvx)} \left[ \kl[\big]{q_\phi(\rvz_l|\rvz_{<l}, \rvx)}{p_\psi(\rvz_l|\rvz_{<l}, \rvy)} \right], \\
+  \kl[\big]{p_\psi(\rvz|\rvy)}{p_\theta(\rvz)} &= \sum_{l=1}^L \EX_{p_\psi(\rvz_{<l}|\rvy)} \left[ \kl[\big]{p_\psi(\rvz_l|\rvz_{<l}, \rvy)}{p_\theta(\rvz_l|\rvz_{<l})} \right].
 \end{align}
-We compute unbiased estimates of the KL divergence terms by simply sampling $\z{}$
-(from $q(\cdot|\I{})$ for $\mathcal{O}_\mathrm{for}$ or
-$\partq{}(\cdot|\partI{})$ for $\mathcal{O}_\text{rev}$) and analytically
+We compute unbiased estimates of the KL divergence terms by simply sampling $\rvz$
+(from $q_\phi(\cdot|\rvx)$ for $\mathcal{O}_\mathrm{for}$ or
+$p_\psi(\cdot|\rvy)$ for $\mathcal{O}_\text{rev}$) and analytically
 computing the resulting KL divergence for each layer $l$ conditioned on
-$\z{}_{<l}$.
+$\rvz_{<l}$.
 
 
 \section{Experimental details} \label{supp:cigcvae-exp-details}
@@ -565,13 +517,6 @@ partially observed images as for training IPA (see \cref{sec:cigcvae-experiments
 \citet{zhao2021large}\footnote{\url{https://github.com/zsyzzsoft/co-mod-gan}}.
 See \cref{tab:cigcvae-exp-details} for our hyperparameters, based on those used by
 \citet{zhao2021large}.
-% For the ImageNet-64 experiment, we used a batch size of 32.
-% All other hyperparameters were chosen according to CoModGAN's reported
-% hyperparameters. The networks for CIFAR-10, ImageNet-64 and FFHQ-256 had
-% 82,097,684, 98,881,049, and 108,041,635 parameters respectively. They were
-% trained for 25 million iterations. Training took 134 hours on 2 GPUs for
-% CIFAR-10, 138 hours on 4 GPUs for Imagenet-64, and 333 hours on 4 GPUs for
-% FFHQ-256. All the GPUs used were Tesla V100s.
 
 \paragraph{PIC} We adapted the official implementation of
 \citet{zheng2019pluralistic}\footnote{\url{https://github.com/lyndonzheng/Pluralistic-Inpainting}},
@@ -581,15 +526,6 @@ images. Therefore, in order to test it on ImageNet-64 and CIFAR-10, we resized
 these images to $256 \times 256$ (via bilinear interpolation) before feeding
 them into the PIC model. We then down-sampled the inpainted images back to the
 original size of $32 \times 32$ for evaluation.
-
-% We used the same architecture, hyperparameters and objective functions as their
-% implementation. The networks for all CIFAR-10, FFHQ-256 and ImageNet-64 had
-% 9,128,390 parameters. They were trained using Adam
-% optimiser~\citep{kingma2015adam} with a batch size of 20, a learning rate of
-% $10^{-5}$ and $\beta_1, \beta_2$ parameters of 0 and 0.999 respectively. The
-% models were trained for 600, 800 and 34 epochs (corresponding to 9M, 1.8M, and
-% 2.2M iterations) respectively for FFHQ-256, CIFAR-10 and ImageNet-64. It
-% approximately took 430 hours to train each of these models on a Tesla V100 GPU.
 
 \paragraph{ANP} Our ANP network architecture was based on that of
 \citet{kim2019attentive}\footnote{Our implementation of ANP is based on
@@ -607,7 +543,7 @@ set in neural process literature) to reduce the computational cost. Finally, the
 target set at training time was half of the unobserved pixels. For CIFAR-10, on
 the other hand, no modfication was done to the image resolution or observation
 masks i.e.~images were fed in at $32 \times 32$ resolution, the context sets
-were the set of all observed pixels in masked images $\partI$, and the target
+were the set of all observed pixels in masked images $\rvy$, and the target
 sets consisted of all unobserved pixels.
 
 \paragraph{CE} We use the architecture reported by
@@ -652,10 +588,10 @@ expensive. We do, however, report qualitative results in
 \subsection{Metrics} \label{supp:cigcvae-metrics}
 \paragraph{FID for completed images}
 We use the FID score~\citep{heusel2017gans} to quantify the distance between
-$\pdata{}(\I{})$ and $\int \pcomp{}(\I{}|\partI{}) \pdata{}(\partI{})
-\mathrm{d}\partI{}$, the distribution resulting from sampling a dataset image,
+$\pdata (\rvx)$ and $\int p_{\theta,\psi}(\rvx|\rvy) \pdata (\rvy)
+\mathrm{d}\rvy$, the distribution resulting from sampling a dataset image,
 masking out some pixels, and replacing them by performing inpainting. This
-should be zero if $\pcomp{}(\I{}|\partI{}) = \pdata{}(\I{}|\partI{})$. Since
+should be zero if $p_{\theta,\psi}(\rvx|\rvy) = \pdata (\rvx|\rvy)$. Since
 this metric does not explicitly consider multiple completions of the same
 observation, we view it as a measure of image quality more than diversity.
 % \Cref{fig:cigcvae-metrics} shows FID scores for completions by each method with various
@@ -676,24 +612,24 @@ values are better, indicating that the data is less separable.
 \paragraph{LPIPS diversity score}
 This metric for diversity was proposed by \citet{zhu2017toward}, involving
 calculating the LPIPS distance between pairs of images sampled from
-$\pcomp{}(\cdot|\partI{})$ for the same $\partI{}$. We report it here for
+$p_{\theta,\psi}(\cdot|\rvy)$ for the same $\rvy$. We report it here for
 completeness but it is not a good measure of the ``fit'' between
-$\pcomp{}(\I{}|\partI{})$ and $\pdata{}(\I{}|\partI{})$ since it can always be
-maximised by making $\pcomp{}(\I{}|\partI{})$ as diverse as possible, without
-reference to the ``true'' posterior $\pdata{}(\I{}|\partI{})$.
+$p_{\theta,\psi}(\rvx|\rvy)$ and $\pdata (\rvx|\rvy)$ since it can always be
+maximised by making $p_{\theta,\psi}(\rvx|\rvy)$ as diverse as possible, without
+reference to the ``true'' posterior $\pdata (\rvx|\rvy)$.
 
 \paragraph{Faithfulness weighted variance}
 The faithfulness weighted variance (FWV) was proposed by
 \citet{li2020multimodal}, measuring both how diverse generated images
-$\I{}\sim\pcomp{}(\cdot|\partI{})$ are and how well they fit the ground truth.
-To compute it we first draw $N$ pairs of $(\I{}_i, \partI{}_i)$ from the test
-set. Then for each $\partI{}_i$ we draw $K$ conditional samples from the model
-$\hat{\I{}}_{i,j} \sim \pcomp(\cdot | \partI{}_i)$ and let $\bar{\I{}}_i$ be the
-pixel-wise average of $\{\hat{\I{}}_{i,j}\}_{j=1}^K$. Finally,
+$\rvx\sim p_{\theta,\psi}(\cdot|\rvy)$ are and how well they fit the ground truth.
+To compute it we first draw $N$ pairs of $(\rvx_i, \rvy_i)$ from the test
+set. Then for each $\rvy_i$ we draw $K$ conditional samples from the model
+$\hat{\rvx}_{i,j} \sim \pcomp(\cdot | \rvy_i)$ and let $\bar{\rvx}_i$ be the
+pixel-wise average of $\{\hat{\rvx}_{i,j}\}_{j=1}^K$. Finally,
 \begin{equation}
-  \text{FWV} = \sum_{i=1}^N \sum_{j=1}^K w_{i,j} d_{\text{LPIPS}}(\hat{\I{}}_{i,j}, \bar{\I{}}_i),
+  \text{FWV} = \sum_{i=1}^N \sum_{j=1}^K w_{i,j} d_{\text{LPIPS}}(\hat{\rvx}_{i,j}, \bar{\rvx}_i),
   \text{ where }
-  w_{i,j} = \exp \left(- \frac{d_{\text{LPIPS}}(\hat{\I{}}_{i,j}, \I{}_i)}{2\sigma^2} \right).
+  w_{i,j} = \exp \left(- \frac{d_{\text{LPIPS}}(\hat{\rvx}_{i,j}, \rvx_i)}{2\sigma^2} \right).
 \end{equation}
 We normalise by $N$ and report $\frac{\text{FWV}}{N}$. We use $N = K = 100$ and
 compute the FWV for various values of $\sigma$. The parameter $\sigma$
@@ -711,9 +647,9 @@ contribute to the FWV. \textcolor{black}{Using a low $\sigma$ therefore favours
 % \paragraph{LPIPS-GT}
 % \Cref{fig:cigcvae-metrics} and \cref{tab:cigcvae-results-completion} show that IPA outperforms
 % all baselines on this metric. We believe this reflects the tendency of GAN-based
-% baselines to miss modes of $\pdata{}(\I{}|\partI{})$, while IPA more faithfully
+% baselines to miss modes of $\pdata (\rvx|\rvy)$, while IPA more faithfully
 % represents uncertainty. Our qualitative results in the appendix lend evidence to
-% this theory by showing that, for some $\partI{}$, all samples from CoModGAN are
+% this theory by showing that, for some $\rvy$, all samples from CoModGAN are
 % unexpectedly semantically similar.
 
 \section{Additional results} \label{supp:cigcvae-additional-results}
@@ -754,16 +690,16 @@ gain differs from prior work~\citep{harvey2019near}. Repeating some relevant
 definitions from the main text, $f_{\coord{}_1,\ldots,\coord{}_t}$ is a function which maps
 from a full image to a sequence of observations of the image at locations
 $\coord{}_1,\ldots,\coord{}_t$. When estimating the EIG at time step $t$, we will have already
-observed a sequence of observations denoted $\partI{}_{\coord{}_1,\ldots,\coord{}_{t-1}}$,
-extracted from some latent image $\I{}$ as $f_{\coord{}_1,\ldots,\coord{}_{t-1}}(\I{})$. We
-use a CNN which outputs $g(v|f_{\coord{}_1,\ldots,\coord{}_t}(\I{}))$, an approximation of the
+observed a sequence of observations denoted $\rvy_{\coord{}_1,\ldots,\coord{}_{t-1}}$,
+extracted from some latent image $\rvx$ as $f_{\coord{}_1,\ldots,\coord{}_{t-1}}(\rvx)$. We
+use a CNN which outputs $g(v|f_{\coord{}_1,\ldots,\coord{}_t}(\rvx))$, an approximation of the
 posterior over the latent variable of interest given a sequence of observations.
 Following \citet{harvey2019near}, we will from now on refer to this as the
 AVP-CNN (attentional variational posterior CNN).
 %
 Both our method and that of \citet{harvey2019near} sample image completions,
-which we denote $\I{}^{(1)},\ldots,\I{}^{(N)}$, conditioned on
-$\partI{}_{\coord{}_1,\ldots,\coord{}_{t-1}}$. \citet{harvey2019near} do so by retrieving
+which we denote $\rvx^{(1)},\ldots,\rvx^{(N)}$, conditioned on
+$\rvy_{\coord{}_1,\ldots,\coord{}_{t-1}}$. \citet{harvey2019near} do so by retrieving
 images which roughly match the observed pixel values from a database. Although
 completions from this are diverse, they can match the observed values poorly. We
 therefore replace this stage with an image completion network trained using
@@ -773,7 +709,7 @@ Given these components, \citet{harvey2019near} approximate the expected
 information gain with
 \begin{align}
   \label{eq:old-eig}
-  \text{EIG}(\coord{}_t; \partI{}_{\coord{}_1,\ldots,\coord{}_{t-1}}) &\approx \overbrace{\mathcal{H} \left[ g(\cdot|\partI{}_{\coord{}_{1},\ldots,\coord{}_{t-1}}) \right]}^{\text{entropy after $t-1$ scans}} - \overbrace{\frac{1}{N} \sum_{n=1}^N  \mathcal{H} \left[ g(\cdot|f_{\coord{}_1,\ldots,\coord{}_t}(\I{}^{(n)})) \right]}^{\text{expected entropy after $t$ scans}}.
+  \text{EIG}(\coord{}_t; \rvy_{\coord{}_1,\ldots,\coord{}_{t-1}}) &\approx \overbrace{\mathcal{H} \left[ g(\cdot|\rvy_{\coord{}_{1},\ldots,\coord{}_{t-1}}) \right]}^{\text{entropy after $t-1$ scans}} - \overbrace{\frac{1}{N} \sum_{n=1}^N  \mathcal{H} \left[ g(\cdot|f_{\coord{}_1,\ldots,\coord{}_t}(\rvx^{(n)})) \right]}^{\text{expected entropy after $t$ scans}}.
 \end{align}
 Since the prior entropy term of \cref{eq:old-eig} does not depend on $\coord{}_t$, it
 can be neglected when choosing $\coord{}_t$ with BOED. As only the expected posterior
@@ -788,7 +724,7 @@ dependence on $\coord{}_t$. To repeat \cref{eq:new-eig}, this results in the fol
 estimator for the EIG:
 \begin{align}
   \label{eq:new-eig-supp}
-  \text{EIG}(\coord{}_t;& \partI{}_{\coord{}_1,\ldots,\coord{}_{t-1}}) \approx \overbrace{\mathcal{H} \left[ \frac{1}{N} \sum_{n=1}^N g(\cdot|f_{\coord{}_1,\ldots,\coord{}_t}(\I{}^{(n)})) \right]}^{\text{entropy after $t-1$ scans}} - \overbrace{\frac{1}{N} \sum_{n=1}^N  \mathcal{H} \left[ g(\cdot|f_{\coord{}_1,\ldots,\coord{}_t}(\I{}^{(n)})) \right]}^{\text{expected entropy after $t$ scans}}.
+  \text{EIG}(\coord{}_t;& \rvy_{\coord{}_1,\ldots,\coord{}_{t-1}}) \approx \overbrace{\mathcal{H} \left[ \frac{1}{N} \sum_{n=1}^N g(\cdot|f_{\coord{}_1,\ldots,\coord{}_t}(\rvx^{(n)})) \right]}^{\text{entropy after $t-1$ scans}} - \overbrace{\frac{1}{N} \sum_{n=1}^N  \mathcal{H} \left[ g(\cdot|f_{\coord{}_1,\ldots,\coord{}_t}(\rvx^{(n)})) \right]}^{\text{expected entropy after $t$ scans}}.
 \end{align}
 While it is not immediately clear that this estimator is better than that in
 \cref{eq:old-eig}, one useful property is that, like the true expected
@@ -806,7 +742,7 @@ estimator denoted EIG leads to significantly better classification performance.
 
 Another view of our EIG estimator is as a variant of the inception
 score~\citep{salimans2016improved} for the sampled images
-$\I{}^{(1)},\ldots,\I{}^{(N)}$. The standard inception score is computed using
+$\rvx^{(1)},\ldots,\rvx^{(N)}$. The standard inception score is computed using
 an image classifier trained on ImageNet~\citep{salimans2016improved}.
 \Cref{eq:new-eig} is the inception score if this classifier is replaced with the
 AVP-CNN acting on observations of each image at locations $\coord{}_1,\ldots,\coord{}_t$.
@@ -840,30 +776,30 @@ from a uniform distribution over all valid locations.
 
 \paragraph{Uncond}
 This baseline ablates our estimator for the EIG (\cref{eq:new-eig}) by sampling
-images $\I{}^{(1)},\ldots,\I{}^{(N)}$ from the training dataset (without
-conditioning on $\partI{}_{\coord{}_1,\ldots,\coord{}_{t-1}}$) instead of from IPA
-(conditioned on $\partI{}_{\coord{}_1,\ldots,\coord{}_{t-1}}$). That is, we use:
+images $\rvx^{(1)},\ldots,\rvx^{(N)}$ from the training dataset (without
+conditioning on $\rvy_{\coord{}_1,\ldots,\coord{}_{t-1}}$) instead of from IPA
+(conditioned on $\rvy_{\coord{}_1,\ldots,\coord{}_{t-1}}$). That is, we use:
 \begin{align}
   \label{eq:uncond}
-  \text{U}^{\text{uncond}}(\coord{}_t; \coord{}_1,&\ldots,\coord{}_{t-1}) = \mathcal{H} \left[ \frac{1}{N} \sum_{n=1}^N g(\cdot|f_{\coord{}_1,\ldots,\coord{}_t}(\I{}^{(n)})) \right] - \frac{1}{N} \sum_{n=1}^N  \mathcal{H} \left[ g(\cdot|f_{\coord{}_1,\ldots,\coord{}_t}(\I{}^{(n)})) \right]
+  \text{U}^{\text{uncond}}(\coord{}_t; \coord{}_1,&\ldots,\coord{}_{t-1}) = \mathcal{H} \left[ \frac{1}{N} \sum_{n=1}^N g(\cdot|f_{\coord{}_1,\ldots,\coord{}_t}(\rvx^{(n)})) \right] - \frac{1}{N} \sum_{n=1}^N  \mathcal{H} \left[ g(\cdot|f_{\coord{}_1,\ldots,\coord{}_t}(\rvx^{(n)})) \right]
 \end{align}
-with $\I{}^{(1)},\ldots,\I{}^{(N)} \sim p(\I{})$. The resulting choice of scan
+with $\rvx^{(1)},\ldots,\rvx^{(N)} \sim p(\rvx)$. The resulting choice of scan
 location $\coord{}_t$ at each time step $t$ has no dependence on previous
-observations $\partI{}_{\coord{}_1,\ldots,\coord{}_{t-1}}$.
+observations $\rvy_{\coord{}_1,\ldots,\coord{}_{t-1}}$.
 
 \paragraph{Non-greedy uncond}
 When selecting scan locations that optimise the EIG, we select the scan location
 at each time step greedily to optimise the EIG from the next scan. To do
 otherwise (i.e.~maximise the EIG from multiple next scans) is intractable
 because of the dependence of the EIG at each $t$ on previous observations
-$\partI{}_{\coord{}_1,\ldots,\coord{}_{t-1}}$. However, since the above `Uncond' baseline
+$\rvy_{\coord{}_1,\ldots,\coord{}_{t-1}}$. However, since the above `Uncond' baseline
 selects each $\coord{}_t$ independently of what is observed at previous scans, we can
 remove this greedy property. We do so by selecting all $\coord{}_1,\ldots,\coord{}_T$
 simultaneously to maximise
 \begin{align}
-  \text{U}^{\text{non-greedy}}(\coord{}_1,&\ldots,\coord{}_T) = \mathcal{H} \left[ \frac{1}{N} \sum_{n=1}^N g(\cdot|f_{\emptyset}(\I{}^{(n)})) \right] - \frac{1}{N} \sum_{n=1}^N  \mathcal{H} \left[ g(\cdot|f_{\coord{}_1,\ldots,\coord{}_T}(\I{}^{(n)})) \right]
+  \text{U}^{\text{non-greedy}}(\coord{}_1,&\ldots,\coord{}_T) = \mathcal{H} \left[ \frac{1}{N} \sum_{n=1}^N g(\cdot|f_{\emptyset}(\rvx^{(n)})) \right] - \frac{1}{N} \sum_{n=1}^N  \mathcal{H} \left[ g(\cdot|f_{\coord{}_1,\ldots,\coord{}_T}(\rvx^{(n)})) \right]
 \end{align}
-with $\I{}^{(1)},\ldots,\I{}^{(N)} \sim p(\I{})$. Since the number of possible
+with $\rvx^{(1)},\ldots,\rvx^{(N)} \sim p(\rvx)$. Since the number of possible
 values of $\coord{}_1,\ldots,\coord{}_T$ increases exponentially with $T$, it is not feasible
 to search over all of them. We therefore optimise this sequence by
 randomly sampling a set of such sequences, and choosing the best from this set.
@@ -914,21 +850,21 @@ the relevant areas for these tasks.
 
 \Cref{fig:cigcvae-extra-xray-boed} shows additional visualisations of the Bayesian
 experimental design process for different test images, adding to the one shown
-in the main paper. The `information gains' shown for a particular $\I{}^*$
-(sampled conditioned on observations $\partI{}_{\coord{}_1,\ldots,\coord{}_{t-1}}$) are
+in the main paper. The `information gains' shown for a particular $\rvx^*$
+(sampled conditioned on observations $\rvy_{\coord{}_1,\ldots,\coord{}_{t-1}}$) are
 computed as the following KL divergence:
 % EIG but the `expected
 % entropy after $t$ scans' term is replaced by the entropy given a particular
-% sampled $\I{}^*$. That is,
+% sampled $\rvx^*$. That is,
 \begin{align}
   \label{eq:ig}
-                                                   \text{IG}(\I{}^*, \coord{}_t; \partI{}_{\coord{}_1,\ldots,\coord{}_{t-1}}) \approx \kl[\Bigg]{g(\cdot|f_{\coord{}_1,\ldots,\coord{}_t}(\I{}^*))}{\frac{1}{N} \sum_{n=1}^N g(\cdot|f_{\coord{}_1,\ldots,\coord{}_t}(\I{}^{(n)}))}.
+                                                   \text{IG}(\rvx^*, \coord{}_t; \rvy_{\coord{}_1,\ldots,\coord{}_{t-1}}) \approx \kl[\Bigg]{g(\cdot|f_{\coord{}_1,\ldots,\coord{}_t}(\rvx^*))}{\frac{1}{N} \sum_{n=1}^N g(\cdot|f_{\coord{}_1,\ldots,\coord{}_t}(\rvx^{(n)}))}.
 \end{align}
-Crucially, averaging information gains computed with $\I{}^*=\I{}^{(1)}$ to
-$\I{}^{(N)}$ gives the estimate of the EIG presented in \cref{eq:new-eig}.
+Crucially, averaging information gains computed with $\rvx^*=\rvx^{(1)}$ to
+$\rvx^{(N)}$ gives the estimate of the EIG presented in \cref{eq:new-eig}.
 
 \subsection{BOED experimental details}
-The AVP-CNN, $g$, is trained to map from masked images, $\partI{}$, to
+The AVP-CNN, $g$, is trained to map from masked images, $\rvy$, to
 distributions over the class labels. Each image in the Chest X-ray 14 dataset
 has labels indicating the presence or absence of each of 14 pathologies. We
 train $g$ to produce 15 outputs: an estimated probability of the presence or
@@ -1089,35 +1025,35 @@ is based on a common heuristic to make a VAE produce more regular samples:
 reducing the variance of the prior over its latent
 variables~\citep{vahdat2020nvae}. If $\mathbf{t}$ is a vector containing the
 temperature $\mathbf{t}_l$ for each layer $l$, then doing so corresponds to
-modifying the prior $\pmodel{}(\z{})$ so that the Gaussian distribution over each
+modifying the prior $p_\theta(\rvz)$ so that the Gaussian distribution over each
 group of latent variables is scaled by the corresponding temperature:
 \begin{equation}
-  \pmodel{}(\z{}; \mathbf{t}) = \prod_{l=1}^L  \frac{1}{C(\mathbf{t}_l, \z{}_{<l})} \pmodel{}(\z{}_l|\z{}_{<l})^{\frac{1}{\mathbf{t}^2_l}}
+  p_\theta(\rvz; \mathbf{t}) = \prod_{l=1}^L  \frac{1}{C(\mathbf{t}_l, \rvz_{<l})} p_\theta(\rvz_l|\rvz_{<l})^{\frac{1}{\mathbf{t}^2_l}}
 \end{equation}
-where $C(\mathbf{t}_l, \z{}_{<l})$ is a normalisation constant. In practice, since
-$\pmodel{}(\z{}_l|\z{}_{<l})$ is a Gaussian distribution, this scaling corresponds to
+where $C(\mathbf{t}_l, \rvz_{<l})$ is a normalisation constant. In practice, since
+$p_\theta(\rvz_l|\rvz_{<l})$ is a Gaussian distribution, this scaling corresponds to
 simply multiplying the standard deviation by $\mathbf{t}_l$.
 
-We can lower-bound the corresponding marginal likelihood $\pmodel{}(\partI{};
+We can lower-bound the corresponding marginal likelihood $p_\theta(\rvy;
 \mathbf{t})$ using the partial encoder similarly to the training objective in
 \cref{eq:reverse-obj}:
 \begin{align}
-  \EX_{\pdata{}(\partI{})} \left[ \log \pmodel(\partI{}; \mathbf{t}) \right] \geq \EX_{\pdata{}(\partI{})}\EX_{\partq{}(\z{}|\partI{})} \left[ \log\frac{\pmodel{}(\z{}; \mathbf{t})\pmodel{}(\partI{}|\z{})}{\partq{}(\z{}|\partI{})} \right] .
+  \EX_{\pdata (\rvy)} \left[ \log p_\theta(\rvy; \mathbf{t}) \right] \geq \EX_{\pdata (\rvy)}\EX_{p_\psi(\rvz|\rvy)} \left[ \log\frac{p_\theta(\rvz; \mathbf{t})p_\theta(\rvy|\rvz)}{p_\psi(\rvz|\rvy)} \right] .
 \end{align}
 We hypothesise that OOD examples will usually either be excessively regular, and
 therefore have a higher marginal likelihood for $t<1$, or excessively irregular,
 and therefore have a higher likelihood for $t>1$. In-distribution (ID) examples,
 on the other hand, should have the highest marginal likelihood for $t\approx 1$.
 A useful feature to distinguish between ID and OOD examples is therefore likely
-to be the gradient $\frac{\partial}{\partial\mathbf{t}}p(\partI{};
+to be the gradient $\frac{\partial}{\partial\mathbf{t}}p(\rvy;
 \mathbf{t})\lvert_{\mathbf{t}=\mathbf{1}}$, which we can approximate with the
 gradient w.r.t. $\mathbf{t}$ of the lower-bound above. We fit a multivariate
 Gaussian to 5000 samples of
-$\frac{\partial}{\partial\mathbf{t}}p(\partI{}^{(i)};
-\mathbf{t})\lvert_{\mathbf{t}=\mathbf{1}}$ with $\partI{}^{(i)}$ sampled from
+$\frac{\partial}{\partial\mathbf{t}}p(\rvy^{(i)};
+\mathbf{t})\lvert_{\mathbf{t}=\mathbf{1}}$ with $\rvy^{(i)}$ sampled from
 the training data with the training mask distribution. To obtain a score for how
-in-distribution a new example $\partI{}$ is, we compute the probability density
-of $\frac{\partial}{\partial\mathbf{t}}p(\partI{};
+in-distribution a new example $\rvy$ is, we compute the probability density
+of $\frac{\partial}{\partial\mathbf{t}}p(\rvy;
 \mathbf{t})\lvert_{\mathbf{t}=\mathbf{1}}$ under this multivariate Gaussian. The
 greater this score, the more likely it is that an example is in-distribution. We
 call this the ``temperature-gradient'' metric.
@@ -1153,34 +1089,25 @@ showing a wide range of completions for all the partial images.
   \begin{subfigure}[t]{0.14\textwidth}
     \centering
     \includegraphics[trim=0px 0px 2560px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/co_mod_gan_0_3_2.jpg}
-    %\includegraphics[trim=0px 0px 2560px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/co_mod_gan_0_3_6.jpg}
-    %\includegraphics[trim=0px 0px 2560px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/co_mod_gan_0_3_7.jpg}
     \includegraphics[trim=0px 0px 2560px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/co_mod_gan_0_4_2.jpg}
     \includegraphics[trim=0px 0px 2560px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/co_mod_gan_1_4_2.jpg}
     \includegraphics[trim=0px 0px 2560px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/co_mod_gan_56_4_12.jpg}
-    %\includegraphics[trim=0px 0px 2560px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/co_mod_gan_56_4_16.jpg}
-    \caption{$\I, \partI$}
+    \caption{$\rvx, \rvy$}
   \end{subfigure}
   \begin{subfigure}[t]{0.73\textwidth}
     \centering
     \includegraphics[trim=512px 0px 0px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/co_mod_gan_0_3_2.jpg}
-    %\includegraphics[trim=512px 0px 0px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/co_mod_gan_0_3_6.jpg}
-    %\includegraphics[trim=512px 0px 0px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/co_mod_gan_0_3_7.jpg}
     \includegraphics[trim=512px 0px 0px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/co_mod_gan_0_4_2.jpg}
     \includegraphics[trim=512px 0px 0px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/co_mod_gan_1_4_2.jpg}
     \includegraphics[trim=512px 0px 0px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/co_mod_gan_56_4_12.jpg}
-    %\includegraphics[trim=512px 0px 0px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/co_mod_gan_56_4_16.jpg}
     \caption{Sampled completions}
   \end{subfigure}
   \begin{subfigure}[t]{0.1\textwidth}
     \centering
     \includegraphics[height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/avg_co_mod_gan_0_3_2.jpg}
-    %\includegraphics[height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/avg_co_mod_gan_0_3_6.jpg}
-    %\includegraphics[height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/avg_co_mod_gan_0_3_7.jpg}
     \includegraphics[height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/avg_co_mod_gan_0_4_2.jpg}
     \includegraphics[height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/avg_co_mod_gan_1_4_2.jpg}
     \includegraphics[height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/avg_co_mod_gan_56_4_12.jpg}
-    %\includegraphics[height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/avg_co_mod_gan_56_4_16.jpg}
     \caption{Mean}
   \end{subfigure}
   %%%%%%%%%%%%%%%%%%%%%%
@@ -1197,41 +1124,32 @@ showing a wide range of completions for all the partial images.
   \begin{subfigure}[t]{0.14\textwidth}
     \centering
     \includegraphics[trim=0px 0px 2560px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/aipo_0_3_2.jpg}
-    %\includegraphics[trim=0px 0px 2560px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/aipo_0_3_6.jpg}
-    %\includegraphics[trim=0px 0px 2560px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/aipo_0_3_7.jpg}
     \includegraphics[trim=0px 0px 2560px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/aipo_0_4_2.jpg}
     \includegraphics[trim=0px 0px 2560px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/aipo_1_4_2.jpg}
     \includegraphics[trim=0px 0px 2560px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/aipo_56_4_12.jpg}
-    %\includegraphics[trim=0px 0px 2560px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/aipo_56_4_16.jpg}
-    \caption{$\I, \partI$}
+    \caption{$\rvx, \rvy$}
   \end{subfigure}
   \begin{subfigure}[t]{0.73\textwidth}
     \centering
     \includegraphics[trim=512px 0px 0px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/aipo_0_3_2.jpg}
-    %\includegraphics[trim=512px 0px 0px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/aipo_0_3_6.jpg}
-    %\includegraphics[trim=512px 0px 0px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/aipo_0_3_7.jpg}
     \includegraphics[trim=512px 0px 0px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/aipo_0_4_2.jpg}
     \includegraphics[trim=512px 0px 0px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/aipo_1_4_2.jpg}
     \includegraphics[trim=512px 0px 0px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/aipo_56_4_12.jpg}
-    %\includegraphics[trim=512px 0px 0px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/aipo_56_4_16.jpg}
     \caption{Sampled completions}
   \end{subfigure}
   \begin{subfigure}[t]{0.1\textwidth}
     \centering
     \includegraphics[height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/avg_aipo_0_3_2.jpg}
-    %\includegraphics[height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/avg_aipo_0_3_6.jpg}
-    %\includegraphics[height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/avg_aipo_0_3_7.jpg}
     \includegraphics[height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/avg_aipo_0_4_2.jpg}
     \includegraphics[height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/avg_aipo_1_4_2.jpg}
     \includegraphics[height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/avg_aipo_56_4_12.jpg}
-    %\includegraphics[height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/avg_aipo_56_4_16.jpg}
     \caption{Mean}
   \end{subfigure}
   %%%%%%%%%%%%%%%%%%%%%%
   \caption{Examples completions from our IPA model, to compare with
     \cref{fig:cigcvae-comodgan-failure}. These samples from IPA provide a much better
     representation of the inherent uncertainty in the image given the
-    observations. We did not find any $(\I{}, \partI{})$ pairs on which the IPA
+    observations. We did not find any $(\rvx, \rvy)$ pairs on which the IPA
     model failed in the same way as CoModGAN in \cref{fig:cigcvae-comodgan-failure}. }
   \label{fig:cigcvae-comodgan-failure-aipo}
 \end{figure*}
@@ -1273,7 +1191,7 @@ improve this aspect of the results.
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_0_gt_masked}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_1_gt_masked}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_3_gt_masked}
-      \caption{$\I, \partI$}
+      \caption{$\rvx, \rvy$}
     \end{subfigure}
     \begin{subfigure}[t]{0.17\textwidth}
       \centering
@@ -1316,7 +1234,7 @@ improve this aspect of the results.
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_0_gt_masked}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_1_gt_masked}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_3_gt_masked}
-      \caption*{$\I, \partI$}
+      \caption*{$\rvx, \rvy$}
     \end{subfigure}
     \begin{subfigure}[t]{0.17\textwidth}
       \centering
@@ -1386,7 +1304,7 @@ improve this aspect of the results.
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo_2_gt_masked.png}
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo_3_gt_masked.png}
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo_4_gt_masked.png}
-      \caption{$\I, \partI$}
+      \caption{$\rvx, \rvy$}
     \end{subfigure}
     \begin{subfigure}[t]{0.2\textwidth}
       \centering
@@ -1431,7 +1349,7 @@ improve this aspect of the results.
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo_2_gt_masked.png}
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo_3_gt_masked.png}
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo_4_gt_masked.png}
-      \caption*{$\I, \partI$}
+      \caption*{$\rvx, \rvy$}
     \end{subfigure}
     \begin{subfigure}[t]{0.2\textwidth}
       \centering
@@ -1479,7 +1397,7 @@ improve this aspect of the results.
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_0_gt_masked.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_13_gt_masked.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_32_gt_masked.jpg}
-      \caption{$\I, \partI$}
+      \caption{$\rvx, \rvy$}
     \end{subfigure}
     \begin{subfigure}[t]{0.25\textwidth}
       \centering
@@ -1508,7 +1426,7 @@ improve this aspect of the results.
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_0_gt_masked.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_13_gt_masked.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_32_gt_masked.jpg}
-      \caption*{$\I, \partI$}
+      \caption*{$\rvx, \rvy$}
     \end{subfigure}
     \begin{subfigure}[t]{0.25\textwidth}
       \centering
@@ -1537,7 +1455,7 @@ improve this aspect of the results.
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_0_gt_masked.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_13_gt_masked.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_32_gt_masked.jpg}
-      \caption*{$\I, \partI$}
+      \caption*{$\rvx, \rvy$}
     \end{subfigure}
     \begin{subfigure}[t]{0.25\textwidth}
       \centering
@@ -1594,7 +1512,7 @@ improve this aspect of the results.
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/bags/image_aipo_2_imagenet_gt_masked.png}
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/bags/image_aipo_3_imagenet_gt_masked.png}
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/bags/image_aipo_4_imagenet_gt_masked.png}
-      \caption{$\I, \partI$}
+      \caption{$\rvx, \rvy$}
     \end{subfigure}
     \begin{subfigure}[t]{0.27\textwidth}
       \centering
@@ -1637,7 +1555,7 @@ improve this aspect of the results.
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/shoes/image_aipo_2_imagenet_gt_masked.png}
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/shoes/image_aipo_3_imagenet_gt_masked.png}
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/shoes/image_aipo_4_imagenet_gt_masked.png}
-      \caption{$\I, \partI$}
+      \caption{$\rvx, \rvy$}
     \end{subfigure}
     \begin{subfigure}[t]{0.25\textwidth}
       \centering
@@ -1685,7 +1603,7 @@ improve this aspect of the results.
     \includegraphics[height=\xrayimgheight]{figs/cigcvae/image-samples/xray/x_y_4.jpg}
     \includegraphics[height=\xrayimgheight]{figs/cigcvae/image-samples/xray/x_y_5.jpg}
     \includegraphics[height=\xrayimgheight]{figs/cigcvae/image-samples/xray/x_y_6.jpg}
-    \caption{$\I, \partI$}
+    \caption{$\rvx, \rvy$}
   \end{subfigure}
   \begin{subfigure}[t]{0.4\textwidth}
     \centering
@@ -1717,7 +1635,7 @@ improve this aspect of the results.
     inspected completion panels for CoModGAN on 20 different ground truth
     images, and found that this type of mode collapse occurred in 5 of them.
     IPA, in contrast, produces reliably diverse image completions for any
-    $\partI{}$ or ground truth image inspected. We do not show samples with a
+    $\rvy$ or ground truth image inspected. We do not show samples with a
     reduced temperature, as we did not use them for BOED on the basis that this
     could significantly reduce coverage of the posterior. }
     \label{fig:cigcvae-xray-samples}
