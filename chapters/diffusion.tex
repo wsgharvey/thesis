@@ -9,7 +9,7 @@ We specify ``how much'' noise is added to the data at any point with a timestep 
 % The noising and generative processes can be understood in either discrete-time or continuous time. That is, we can imagine noise being added to the data either in a discrete series of steps or as a continuous process. In discrete time the analogy to hierarchical VAEs is precise, but it is simpler to first describe continuous-time diffusion models. In practice, there is little practical distinction between discrete and continuous time diffusion models since we must use a discretisation when sampling from a continuous time diffusion model. 
 
 We define how much noise is present at each timestep through a monotonically increasing schedule $\sigma(t)$ which maps from the timestep to the ``noise-to-signal ratio'' of the data. Formally, given clean data $\rvx_0$, a timestep $t$, and $\sigma := \sigma(t)$, the noisy data is distributed according to
-\begin{equation}
+\begin{equation} \label{eq:diffusion-xt-given-x0}
     q_\sigma(\rvx_t|\rvx_0) = \gN ( \rvx_t ; \rvx_0, \sigma^2 \mI ).
 \end{equation}
 Note the notational changes from a VAE's encoder: we no longer parameterise by $\phi$ as there are no longer any encoder parameters; we now explicitly subscript by $\sigma$ which may take on any of a continuous range of values; and our latent variables are now denoted $\rvx_t$. To define a conditional diffusion model, we must also recall the relationship to conditioning information $\rvy$. In conjunction with the data distribution $\pdata(\rvx_0, \rvy)$ we therefore define the marginal distribution
@@ -21,29 +21,142 @@ and its conditional
     q_\sigma(\rvx_t|\rvy) = \int q_\sigma(\rvx_t|\rvx_0) \pdata(\rvx_0|\rvy) \mathrm{d} \rvx_0.
 \end{equation}
 
-% \todo[inline]{replace $\rvx_\sigma$ here with $\rvz$? and then just redefine later after we introduce the notion of $\rvx_t$}
-% To formally introduce the DM framework, we begin by introducing the ``non-learnable encoder'' and associated notation. Recalling that the encoder for a VAE was written $q_\phi(\rvz|\rvx)$, we compare this to a diffusion encoder $q_\sigma(\rvx_\sigma|\rvx)$. There are a few differences. First, we now denote the latent variables $\rvx_\sigma$ instead of $\rvz$; this helps to make clear that the latent variables now live in the same space as the data $\rvx$ and the subscript of $\sigma$ denotes how much noise has been added. In this sense $\sigma$ is comparable to the layer index within a hierarchical VAE. From now on we will also use $\rvx_0 := \rvx$ to denote the data itself with no noise added. Second, we no longer have $\phi$ since our encoder has no learnable parameters. We write $q_\sigma$ to make explicit what noise level we are considering. Given this notation, the encoder simply describes a Gaussian conditional distribution
-% \begin{equation}
-%     q_\sigma(\rvx_\sigma|\rvx_0) = \gN ( \rvx_\sigma ; \rvx_0, \sigma^2 \mI ).
-% \end{equation}
-% In conjunction with the data distribution $\pdata(\rvx_0, \rvy)$ this defines the marginal distribution
-% \begin{equation}
-%     q_\sigma(\rvx_\sigma,\rvy) = \int q_\sigma(\rvx_\sigma|\rvx_0) \pdata(\rvx_0, \rvy) \mathrm{d} \rvx_0
-% \end{equation}
-% and its conditional
-% \begin{equation}
-%     q_\sigma(\rvx_\sigma|\rvy) = \int q_\sigma(\rvx_\sigma|\rvx_0) \pdata(\rvx_0|\rvy) \mathrm{d} \rvx_0
-% \end{equation}
-% which we will build on.
+Our training procedure can be understood as characterising these conditional distributions via a neural network that approximates the score function $\nabla_{\rvx_t} \log q_\sigma(\rvx_t)$. Our sampling procedure will use the learned approximate score function to morph samples, over a series of $N$ steps, through approximations of $q_{\sigma_0}(\cdot | \rvy)$, $q_{\sigma_1}(\cdot | \rvy)$ and so on until reaching the conditional data distribution $q_{\sigma_N}(\cdot | \rvy) = q_{0}(\cdot | \rvy)$. 
 
-Our training procedure can be understood as characterizing these conditional distributions via a neural network that approximates the score function $\nabla_{\rvx_t} q_\sigma(\rvx_t)$. Our sampling procedure will use the learned approximate score function to morph samples, over a series of $N$ steps, through approximations of $q_{\sigma_0}(\cdot | \rvy)$, $q_{\sigma_1}(\cdot | \rvy)$ and so on until reaching the conditional data distribution $q_{\sigma_N}(\cdot | \rvy) = q_{0}(\cdot | \rvy)$. 
+\section{Training diffusion models}
 
-\subsection{Training diffusion models}
+In this section we will derive an objective for training a neural network to approximate the score function $\nabla_{\rvx_t} \log q_\sigma(\rvx_t |\rvy)$~\citep{vincent2011connection,song2019generative}. The neural network has parameters $\theta$ and takes $\rvx$, $\rvy$, and $\sigma$ as input. We call its output $\rvs_\theta(\rvx, \rvy, \sigma)$. For any given $\sigma$, corresponding to a specific distribution which we wish to fit the score function of. 
 
-\subsection{Sampling from diffusion models}
+An ideal objective to do would be the mean-squared error between the neural network's outputs and the desired conditional score function $\nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvy)$. We call this the score-matching objective $\gL_\text{SM}$, but in general it is intractable because we do not have access to $\nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvy)$. We can, however, obtain an unbiased estimate of it; we begin by breaking it down as
+\begin{align}
+    \mathcal{L}_\text{SM}(\theta, t) &= \EX_{q_{\sigma(t)}(\rvx_t, \rvy)} \left[ || \nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvy) - \rvs_\theta(\rvx_t, \rvy, \sigma) ||_2^2 \right] \\
+    &= \EX_{q_{\sigma(t)}(\rvx_t, \rvy)} \big[ 
+    || \rvs_\theta(\rvx_t, \rvy, \sigma) ||_2^2
+    \nonumber\\ &\qquad\qquad\qquad
+    - 2 \left\langle \nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvy),
+    \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \big]
+    \nonumber\\ &\qquad\qquad\qquad
+    + C_1
+\end{align}
+where $C_1$ does not depend on $\theta$. We show in \cref{sec:proof-that-diffusion-does-score-matching} that this second term, which we call $S(\theta, t)$, can be rewritten in terms of the tractable score of the Gaussian $q_{\sigma(t)}(\rvx_t|\rvy)$ instead of the intractable score of $q_{\sigma(t)}(\rvx_t|\rvy)$:
+\begin{align}
+\allowdisplaybreaks
+S(\theta, t) &= \EX_{q_{\sigma(t)}(\rvx_t, \rvy)} \left[ - 2 \left\langle \nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvy), \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \right] \\
+    &= \EX_{q_{\sigma(t)}(\rvx_0, \rvx_t, \rvy)} \left[ -2 \left\langle \nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvx_0), \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle  \right].
+\end{align}
+Substituting this identity back into our desired objective, and letting $C_1$ and $C_2$ be two scalars that do not depend on $\theta$, we get
+\begin{align}
+    \mathcal{L}_\text{SM}(\theta, t) &= \EX_{q_{\sigma(t)}(\rvx_0, \rvx_t, \rvy)} \big[ 
+    || \rvs_\theta(\rvx_t, \rvy, \sigma) ||_2^2
+    \nonumber\\ &\qquad\qquad\qquad
+    - 2 \left\langle \nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvx_0), \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \big] + C_1 \\
+    &= \EX_{q_{\sigma(t)}(\rvx_0, \rvx_t, \rvy)} \big[ 
+    || \rvs_\theta(\rvx_t, \rvy, \sigma) ||_2^2
+    \nonumber\\ &\qquad\qquad\qquad
+    - 2 \left\langle \nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvx_0), \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle
+    \nonumber\\ &\qquad\qquad\qquad
+    + || \nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvx_0) ||_2^2 \big] + C_2 \\
+    &= \EX_{q_{\sigma(t)}(\rvx_0, \rvx_t, \rvy)} \big[ 
+    || \rvs_\theta(\rvx_t, \rvy, \sigma) - \nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvx_0) ||_2^2 \big] + C_2.
+\end{align}
+Introducing the analytic score of the Gaussian $\rvx_0$, and defining our implicit score-matching loss as $\mathcal{L}_\text{ISM}(\theta, t) := \mathcal{L}_\text{SM}(\theta, t) - C_2$, we get
+\begin{align}
+    \mathcal{L}_\text{ISM}(\theta, t) &= \EX_{q_{\sigma(t)}(\rvx_0, \rvx_t, \rvy)} \left[ 
+    || \rvs_\theta(\rvx_t, \rvy, \sigma) - \frac{\rvx_0-\rvx_t}{\sigma^2} ||_2^2 \right]
+\end{align}
+We can therefore train a diffusion model with the simple objective of a mean-squared error loss between the neural network's output and $\frac{\rvx_0-\rvx_t}{\sigma^2}$.
+
+The loss can be equivalently computed in different spaces, for example a a squared error loss to $\rvx_0$ with
+\begin{align}
+    \mathcal{L}_\text{ISM}(\theta, t) &= \frac{1}{\sigma^2} \EX_{q_{\sigma(t)}(\rvx_0, \rvx_t, \rvy)} \left[ 
+    || \hat{\rvx}_0(\rvx_t, \rvy, \sigma) - \rvx_0 ||_2^2 \right]
+\end{align}
+where $\hat{\rvx}_0(\rvx_t, \rvy, \sigma) := \sigma^2 \cdot \rvs_\theta(\rvx_t, \rvy, \sigma) + \rvx_t$. It is often also written as a squared error loss to $\epsilon := \frac{\rvx_t - \rvx_0}{\sigma}$, a scaled version of the noise added when sampling $\rvx_t \sim q(\cdot|\rvx_0)$, with
+\begin{align}
+    \mathcal{L}_\text{ISM} &= \frac{1}{\sigma} \EX_{q_{\sigma(t)}(\rvx_0, \rvx_t, \rvy)} \left[ 
+    || \hat{\mathbf{\epsilon}}_\theta(\rvx_t, \rvy, \sigma) - \epsilon ||_2^2 \right]
+\end{align}
+where $\hat{\mathbf{\epsilon}}_\theta(\rvx_t, \rvy, \sigma) := \sigma \cdot \rvs_\theta(\rvx_t, \rvy, \sigma)$.
+
+
+
+\section{Old - training diffusion models}
+
+In this section we will derive an objective for training a neural network to approximate the score function $\nabla_{\rvx_t} \log q_\sigma(\rvx_t |\rvy)$~\citep{vincent2011connection,song2019generative}. The neural network has parameters $\theta$ and takes $\rvx$, $\rvy$, and $\sigma$ as input. We call its output $\rvs_\theta(\rvx, \rvy, \sigma)$. For any given $\sigma$, corresponding to a specific distribution which we wish to fit the score function of. 
+
+% Consider the joint distribution $q_{\sigma(t)}(\rvx_t, \rvx_0, \rvy)$ in which we explicitly consider the relationship between noised data $\rvx_t$ and clean data $\rvx_0$. Its conditional $q_{\sigma(t)}(\rvx_t|\rvx_0,\rvy)$ is Gaussian with mean $\rvx_0$ and variance $\sigma(t)^2$, following \cref{eq:diffusion-xt-given-x0}. Its score function can therefore be analytically computed as $\frac{\rvx_0 - \rvx_t}{\sigma(t)^2}$. Following \citet{vincent2011connection}, we now show that fitting $\rvs_\theta(\rvx, \rvy, \sigma)$ to this quantity with a mean-squared error loss is equivalent to fitting it to score of the distribution of interest, $q_{\sigma(t)}(\rvx_t | \rvy)$.
+
+An ideal objective to do would be the mean-squared error between the neural network's outputs and the desired conditional score function $\nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvy)$. We call this the score-matching objective $\gL_\text{SM}$, but in general it is intractable because we do not have access to $\nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvy)$. We can, however, obtain an unbiased estimate of it; we begin by breaking it down as
+\begin{align}
+    \mathcal{L}_\text{SM}(\theta, t) &= \EX_{q_{\sigma(t)}(\rvx_t, \rvy)} \left[ || \nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvy) - \rvs_\theta(\rvx_t, \rvy, \sigma) ||_2^2 \right] \\
+    &= \EX_{q_{\sigma(t)}(\rvx_t, \rvy)} \big[ 
+    || \rvs_\theta(\rvx_t, \rvy, \sigma) ||_2^2
+    \nonumber\\ &\qquad\qquad\qquad
+    - 2 \left\langle \nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvy),
+    \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \big]
+    \nonumber\\ &\qquad\qquad\qquad
+    + C_1
+\end{align}
+where $C_1$ does not depend on $\theta$. We show in \cref{sec:proof-that-diffusion-does-score-matching} that this second term, which we call $S(\theta, t)$, can be rewritten in terms of the tractable score of the Gaussian $q_{\sigma(t)}(\rvx_t|\rvy)$ instead of the intractable score of $q_{\sigma(t)}(\rvx_t|\rvy)$:
+\begin{align}
+\allowdisplaybreaks
+S(\theta, t) &= \EX_{q_{\sigma(t)}(\rvx_t, \rvy)} \left[ - 2 \left\langle \nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvy), \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \right] \\
+    &= \EX_{q_{\sigma(t)}(\rvx_0, \rvx_t, \rvy)} \left[ -2 \left\langle \nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvx_0), \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle  \right].
+\end{align}
+Substituting this identity back into our desired objective, and letting $C_1$ and $C_2$ be two scalars that do not depend on $\theta$, we get
+\begin{align}
+    \mathcal{L}_\text{SM}(\theta, t) &= \EX_{q_{\sigma(t)}(\rvx_0, \rvx_t, \rvy)} \big[ 
+    || \rvs_\theta(\rvx_t, \rvy, \sigma) ||_2^2
+    \nonumber\\ &\qquad\qquad\qquad
+    - 2 \left\langle \nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvx_0), \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \big] + C_1 \\
+    &= \EX_{q_{\sigma(t)}(\rvx_0, \rvx_t, \rvy)} \big[ 
+    || \rvs_\theta(\rvx_t, \rvy, \sigma) ||_2^2
+    \nonumber\\ &\qquad\qquad\qquad
+    - 2 \left\langle \nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvx_0), \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle
+    \nonumber\\ &\qquad\qquad\qquad
+    + || \nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvx_0) ||_2^2 \big] + C_2 \\
+    &= \EX_{q_{\sigma(t)}(\rvx_0, \rvx_t, \rvy)} \big[ 
+    || \rvs_\theta(\rvx_t, \rvy, \sigma) - \nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvx_0) ||_2^2 \big] + C_2.
+\end{align}
+Introducing the analytic score of the Gaussian $\rvx_0$, and defining our implicit score-matching loss as $\mathcal{L}_\text{ISM}(\theta, t) := \mathcal{L}_\text{SM}(\theta, t) - C_2$, we get
+\begin{align}
+    \mathcal{L}_\text{ISM}(\theta, t) &= \EX_{q_{\sigma(t)}(\rvx_0, \rvx_t, \rvy)} \left[ 
+    || \rvs_\theta(\rvx_t, \rvy, \sigma) - \frac{\rvx_0-\rvx_t}{\sigma^2} ||_2^2 \right]
+\end{align}
+We can therefore train a diffusion model with the simple objective of a mean-squared error loss between the neural network's output and $\frac{\rvx_0-\rvx_t}{\sigma^2}$.
+
+The loss can be equivalently computed in different spaces, for example a a squared error loss to $\rvx_0$ with
+\begin{align}
+    \mathcal{L}_\text{ISM}(\theta, t) &= \frac{1}{\sigma^2} \EX_{q_{\sigma(t)}(\rvx_0, \rvx_t, \rvy)} \left[ 
+    || \hat{\rvx}_0(\rvx_t, \rvy, \sigma) - \rvx_0 ||_2^2 \right]
+\end{align}
+where $\hat{\rvx}_0(\rvx_t, \rvy, \sigma) := \sigma^2 \cdot \rvs_\theta(\rvx_t, \rvy, \sigma) + \rvx_t$. It is often also written as a squared error loss to $\epsilon := \frac{\rvx_t - \rvx_0}{\sigma}$, a scaled version of the noise added when sampling $\rvx_t \sim q(\cdot|\rvx_0)$, with
+\begin{align}
+    \mathcal{L}_\text{ISM} &= \frac{1}{\sigma} \EX_{q_{\sigma(t)}(\rvx_0, \rvx_t, \rvy)} \left[ 
+    || \hat{\mathbf{\epsilon}}_\theta(\rvx_t, \rvy, \sigma) - \epsilon ||_2^2 \right]
+\end{align}
+where $\hat{\mathbf{\epsilon}}_\theta(\rvx_t, \rvy, \sigma) := \sigma \cdot \rvs_\theta(\rvx_t, \rvy, \sigma)$.
+
+
+\section{Sampling from diffusion models}
 
 We can now more formally describe our sampling procedure, following the notation of \citet{karras2022elucidating}. We take as hyperparameters a number of steps $N$ and a series of noise levels $\sigma_0 > \sigma_1 > \cdots > \sigma_N = 0$. If $\sigma_0$ is sufficiently large then, for any $\rvy$, $q_{\sigma_N}(\rvx_{\sigma_N}|\rvy) $ is well approximated by $\gN(\rvx_{\sigma_N} ; \vzero, {\sigma_N}^2\mI)$ and so we start by sampling $\rvx_{\sigma_N} \sim \gN(\vzero, {\sigma_N}^2\mI)$. We then transform $\rvx_{\sigma_N}$ into each $\rvx_i$
 
+
+\chapter{Some proof} \label{sec:proof-that-diffusion-does-score-matching}
+
+\begin{align}
+\allowdisplaybreaks
+S(\theta, t) &= \EX_{q_{\sigma(t)}(\rvx_t, \rvy)} \left[ - 2 \left\langle \nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvy)^\top, \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \right] \\
+    &= \EX_{\pdata(\rvy)}\left[  - 2 \int q_{\sigma(t)}(\rvx_t | \rvy) \left\langle \nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t | \rvy), \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \mathrm{d} \rvx_t \right] \\
+    &= \EX_{\pdata(\rvy)}\left[ - 2 \int q_{\sigma(t)}(\rvx_t | \rvy) \left\langle \frac{\nabla_{\rvx_t} q_{\sigma(t)}(\rvx_t|\rvy)}{q_{\sigma(t)}(\rvx_t | \rvy)}, \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \mathrm{d} \rvx_t \right] \\
+    &= \EX_{\pdata(\rvy)}\left[  - 2 \int \left\langle \nabla_{\rvx_t} q_{\sigma(t)}(\rvx_t | \rvy), \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \mathrm{d} \rvx_t \right] \\
+    &= \EX_{\pdata(\rvy)}\left[  - 2 \int \left\langle \nabla_{\rvx_t} \int \pdata(\rvx_0|\rvy) q_{\sigma(t)}(\rvx_t|\rvx_0) \mathrm{d}\rvx_0, \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \mathrm{d} \rvx_t \right] \\
+    &= \EX_{\pdata(\rvy)}\left[  - 2 \int \left\langle \int \pdata(\rvx_0|\rvy) \nabla_{\rvx_t} q_{\sigma(t)}(\rvx_t|\rvx_0) \mathrm{d}\rvx_0, \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \mathrm{d} \rvx_t \right] \\
+    &= \EX_{\pdata(\rvy)}\left[  - 2 \int \left\langle \int \pdata(\rvx_0|\rvy) q_{\sigma(t)}(\rvx_t|\rvx_0) \nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvx_0) \mathrm{d}\rvx_0, \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \mathrm{d} \rvx_t \right] \\
+    &= \EX_{\pdata(\rvy)}\left[  - 2 \int q_{\sigma(t)}(\rvx_0, \rvx_t|\rvy) \left\langle \nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvx_0), \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle  \mathrm{d}\rvx_0 \mathrm{d} \rvx_t \right] \\
+    &= \EX_{q_{\sigma(t)}(\rvx_0, \rvx_t, \rvy)} \left[ -2 \left\langle \nabla_{\rvx_t} \log q_{\sigma(t)}(\rvx_t|\rvx_0), \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle  \right]
+\end{align}
 
 
 \chapter{Old Diffusion Model Stuff}
