@@ -174,14 +174,25 @@ We can then express the KL divergence as:
     = &\frac{1}{2 \hat{\sigma}_{0,i:i-1}^2} || \hat{\mu}_{0:i-1} \cdot \rvx_0 - \hat{\mu}_{0:i-1} \cdot \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma) ||_2^2 \\
     = &\frac{\hat{\mu}_{0:i-1}^2}{2 \hat{\sigma}_{0,i:i-1}^2} || \rvx_0 - \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma) ||_2^2.
 \end{align}
+\begin{align}
+    \mathcal{L}_T(\rvx_0) = \sum_{i=2}^T \EX_{q(\rvx_{t_i}|\rvx_0)} \left[ \kl{q(\rvx_{t_{i-1}} | \rvx_{t_i}, \rvx_0)}{p_\theta(\rvx_{t_{i-1}} | \rvx_{t_i})} \right].
+\end{align}
 So we are able to express the lower-bound with a mean-squared error loss between $\rvx_0$ and the learned prediction of $\rvx_0$. We can equivalently write this as a mean-squared error loss between the predicted score function and our target for it. Given that the target is $\rvs := \frac{\rvx_0 - \rvx_t}{\sigma^2}$, we find
 \begin{align}
     \kl{q(\rvx_{t_{i-1}} | \rvx_{t_i}, \rvx_0)}{p_\theta(\rvx_{t_{i-1}} | \rvx_{t_i})} 
-    &= \frac{\hat{\mu}_{0:i-1}^2}{2 \hat{\sigma}_{0,i:i-1}^2} || \rvx_0 - \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma) ||_2^2 \\
-    &= \frac{\hat{\mu}_{0:i-1}^2 \sigma^4}{2 \hat{\sigma}_{0,i:i-1}^2} || \frac{\rvx_0}{\sigma^2} - \frac{\hat{\rvx}_\theta(\rvx_t, \rvy, \sigma)}{\sigma^2} ||_2^2 \\
-    &= \frac{\hat{\mu}_{0:i-1}^2 \sigma^4}{2 \hat{\sigma}_{0,i:i-1}^2} || \frac{\rvx_0-\rvx_t}{\sigma^2} - \rvs_\theta(\rvx_t, \rvy, \sigma) ||_2^2
+    &= \frac{\hat{\mu}_{0:i-1}^2}{2 \hat{\sigma}_{0,i:i-1}^2} || \rvx_0 - \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma_{t_i}) ||_2^2 \\
+    &= \frac{\hat{\mu}_{0:i-1}^2 \sigma^4}{2 \hat{\sigma}_{0,i:i-1}^2} || \frac{\rvx_0}{\sigma_{t_i}^2} - \frac{\hat{\rvx}_\theta(\rvx_t, \rvy, \sigma_{t_i})}{\sigma_{t_i}^2} ||_2^2 \\
+    &= \frac{\hat{\mu}_{0:i-1}^2 \sigma_{t_i}^4}{2 \hat{\sigma}_{0,i:i-1}^2} || \frac{\rvx_0-\rvx_t}{\sigma_{t_i}^2} - \rvs_\theta(\rvx_t, \rvy, \sigma_{t_i}) ||_2^2
 \end{align}
-
+Recall that our lower-bound $\mathcal{L}_T(\rvx_0)$ is a sum over these KL divergences:
+\begin{align}
+    \mathcal{L}_T(\rvx_0) &= \sum_{i=2}^T \EX_{q(\rvx_{t_i}|\rvx_0)} \left[ \kl{q(\rvx_{t_{i-1}} | \rvx_{t_i}, \rvx_0)}{p_\theta(\rvx_{t_{i-1}} | \rvx_{t_i})} \right] \\
+    &= \sum_{i=2}^T \frac{\hat{\mu}_{0:i-1}^2 \sigma_{t_i}^4}{2 \hat{\sigma}_{0,i:i-1}^2} \EX_{q(\rvx_{t_i}|\rvx_0)} \left[  || \frac{\rvx_0-\rvx_t}{\sigma_{t_i}^2} - \rvs_\theta(\rvx_t, \rvy, \sigma_{t_i}) ||_2^2 \right]
+\end{align}
+In the limit where the number of sampling steps $N$ tends to infinity, it becomes an integral. Given that the internal term depends only on $\sigma_t$ and not on the value of $t$ itself otherwise, ...
+\begin{align}
+    \mathcal{L}_T(\rvx_0) &= ...
+\end{align}
 
 , we will now determine the form of $p_\theta(\rvx_{t_{i-1}}|\rvx_{t_i})$ so that we can consider the KL divergence between them. Euler integration of the reverse SDE involves taking a deterministic step and then adding Gaussian noise, so $p_\theta(\rvx_{t_{i-1}}|\rvx_{t_i})$ will be Gaussian. In particular, referring to the reverse SDE in \cref{eq:reverse-diffusion}, the step will be in direction $g(t)^2 s_\theta(\rvx_{t_i}, \rvy, \sigma_{t_i})$. Since the step is from $t_i$ to $t_{i-1}$, the step will produce mean value $\rvx_i - (t_i-t_{i-1}) g(t)^2 s_\theta(\rvx_{t_i}, \rvy, \sigma_{t_i})$.
 %
