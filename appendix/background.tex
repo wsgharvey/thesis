@@ -1,0 +1,16 @@
+\chapter{Diffusion models}
+
+\chapter{Score-matching objective derivation} \label{sec:proof-that-diffusion-does-score-matching}
+
+\begin{align}
+\allowdisplaybreaks
+S(\theta, t) &= \EX_{q(\rvx_t, \rvy)} \left[ - 2 \left\langle \nabla_{\rvx_t} \log q(\rvx_t|\rvy)^\top, \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \right] \\
+    &= \EX_{\pdata(\rvy)}\left[  - 2 \int q(\rvx_t | \rvy) \left\langle \nabla_{\rvx_t} \log q(\rvx_t | \rvy), \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \mathrm{d} \rvx_t \right] \\
+    &= \EX_{\pdata(\rvy)}\left[ - 2 \int q(\rvx_t | \rvy) \left\langle \frac{\nabla_{\rvx_t} q(\rvx_t|\rvy)}{q(\rvx_t | \rvy)}, \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \mathrm{d} \rvx_t \right] \\
+    &= \EX_{\pdata(\rvy)}\left[  - 2 \int \left\langle \nabla_{\rvx_t} q(\rvx_t | \rvy), \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \mathrm{d} \rvx_t \right] \\
+    &= \EX_{\pdata(\rvy)}\left[  - 2 \int \left\langle \nabla_{\rvx_t} \int \pdata(\rvx_0|\rvy) q(\rvx_t|\rvx_0) \mathrm{d}\rvx_0, \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \mathrm{d} \rvx_t \right] \\
+    &= \EX_{\pdata(\rvy)}\left[  - 2 \int \left\langle \int \pdata(\rvx_0|\rvy) \nabla_{\rvx_t} q(\rvx_t|\rvx_0) \mathrm{d}\rvx_0, \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \mathrm{d} \rvx_t \right] \\
+    &= \EX_{\pdata(\rvy)}\left[  - 2 \int \left\langle \int \pdata(\rvx_0|\rvy) q(\rvx_t|\rvx_0) \nabla_{\rvx_t} \log q(\rvx_t|\rvx_0) \mathrm{d}\rvx_0, \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \mathrm{d} \rvx_t \right] \\
+    &= \EX_{\pdata(\rvy)}\left[  - 2 \int q(\rvx_0, \rvx_t|\rvy) \left\langle \nabla_{\rvx_t} \log q(\rvx_t|\rvx_0), \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle  \mathrm{d}\rvx_0 \mathrm{d} \rvx_t \right] \\
+    &= \EX_{q(\rvx_0, \rvx_t, \rvy)} \left[ -2 \left\langle \nabla_{\rvx_t} \log q(\rvx_t|\rvx_0), \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle  \right]
+\end{align}

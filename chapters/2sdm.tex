@@ -1,6 +1,6 @@
-\chapter{Comparing Conditional and Unconditional Diffusion Models}
+\chapter{Conditional Diffusion Models Outperform Unconditional Diffusion Models}
 
-\begin{figure}[b]
+\begin{figure}[t]
     \includegraphics[width=\textwidth]{figs/2sdm/2SDM-main-fig.pdf}
     \caption{Class-conditional ImageNet-256 samples from our method, 2SDM, and a diffusion model baseline, EDM~\citep{karras2022elucidating}, both trained for 12 GPU days. Samples within the same column are generated with the same random seed and class label. In most columns the samples from 2SDM are visibly better, agreeing with the FIDs reported in \cref{sec:2sdm-experiments}.}
     \label{fig:latent-imagenet-samples}
@@ -9,26 +9,26 @@
 
 \begin{figure}[t]
     \centering
-    \includegraphics{figs/2sdm/vcdm-diagram.pdf}
-    \caption{Visualization of 2SDM's generation process. First the auxiliary DGM samples a CLIP embedding, corresponding to a cross in the space of CLIP embeddings (red) in our illustration. Next, our conditional image model maps from the sampled CLIP embedding to a sampled image, visualized on the image manifold (blue). The distribution over plausible images is complex and multi-modal but becomes simpler when conditioned on a CLIP embedding. On the right we show three rows of sampled images. Within each row, all images are generated given the same CLIP embedding.}
+    \includegraphics[width=\textwidth]{figs/2sdm/vcdm-diagram.pdf}
+    \caption{Visualisation of 2SDM's generation process. First the auxiliary DGM samples a CLIP embedding, corresponding to a cross in the space of CLIP embeddings (red) in our illustration. Next, our conditional image model maps from the sampled CLIP embedding to a sampled image, visualized on the image manifold (blue). The distribution over plausible images is complex and multi-modal but becomes simpler when conditioned on a CLIP embedding. On the right we show three rows of sampled images. Within each row, all images are generated given the same CLIP embedding.}
     \label{fig:samples}
 \end{figure}
 
 
 \label{sec:2sdm-intro}
-Recent text-to-image diffusion generative models (DGMs) have exhibited stunning sample quality~\citep{saharia2022photorealistic} to the point that they are now being used to create art~\citep{oppenlaender2022creativity}. 
-%
-Further work has explored conditioning on scene layouts~\citep{zhang2023adding}, segmentation masks~\citep{zhang2023adding,hu2022self}, or the appearance of a particular object \citep{ma2023unified}. We broadly lump these methods together as ``conditional'' DGMs to contrast them with ``unconditional'' image DGMs which sample an image without dependence on text or any other information.
+We have introduced diffusion models as conditional generative models which take a conditioning input $\rvy$. Prior work has shown that, if $\rvy$ is a text prompt, the resulting text-conditional diffusion models can have stunning sample quality and even be usable as artistic tools~\citep{saharia2022photorealistic,oppenlaender2022creativity}. Other effective types of conditional generation explored in prior work include conditioning on scene layouts~\citep{zhang2023adding}, segmentation masks~\citep{zhang2023adding,hu2022self}, or the appearance of a particular object \citep{ma2023unified}. We broadly lump these methods together as ``conditional'' DGMs to contrast them with ``unconditional'' image DGMs which sample an image without dependence on text or any other information. Unconditional image DGMs fit into the framework described if $\rvy$ is considered to be the null variable, but we will usually omit $\rvy$ totally when describing them.
 %
 Relative to unconditional DGMs, conditional DGMs typically produce more realistic samples~\citep{ho2022classifier,bao2022conditional,hu2022self} and work better with few sampling steps~\citep{meng2022distillation}. Furthermore our results suggest that sample realism grows with ``how much'' information the DGM is conditioned on. We therefore distinguish between ``strongly-conditional'' generation, where we condition on a high-dimensional feature like a long text prompt, and ``lightly-conditional'' generation, where
-\begin{wrapfigure}[16]{r}{0.5\textwidth}
+we condition on a lower dimensional feature like a class label or short text prompt. As hinted at in \cref{fig:stable-diffusion-example} an image is likely to be more realistic if conditioned on being ``an aerial photograph of a road between green fields'' (strongly-conditional generation) than if it is if simply conditioned on being ``an aerial photograph'' (lightly-conditional generation). 
+
+% \begin{wrapfigure}[16]{r}{0.5\textwidth}
+\begin{figure}[t]
     \centering
     \includegraphics[width=0.24\textwidth]{figs/2sdm/uncond-aerial-photo.jpg}
     \includegraphics[width=0.24\textwidth]{figs/2sdm/cond-aerial-photo.jpg}
     \caption{\textbf{Left:} Output from Stable Diffusion~\citep{rombach2022high} prompted to produce ``aerial photography''. \textbf{Right:} Using a more detailed prompt\protect\footnotemark with the same random seed removes the ``smudged'' road artifact that appears on the left. 2SDM builds on this observation.}
     \label{fig:stable-diffusion-example}
-\end{wrapfigure}
-we condition on a lower dimensional feature like a class label or short text prompt. As hinted at in \cref{fig:stable-diffusion-example} an image is likely to be more realistic if conditioned on being ``an aerial photograph of a road between green fields'' (strongly-conditional generation) than if it is if simply conditioned on being ``an aerial photograph'' (lightly-conditional generation). 
+\end{figure}
 
 % We therefore further distinguish between ``strongly-conditional'' image generation, where the image is conditioned on e.g. a long text prompt, which works well, and ``lightly-conditional'' generation, where the image is conditioned on a lower-dimensional feature like a class label or short text prompt, which works less well.
 
@@ -44,15 +44,15 @@ Our final approach, based on unCLIP, is depicted in \cref{fig:samples}. A first 
 \paragraph{Contributions} In \cref{sec:2sdm-background,sec:2sdm-cond-vs-uncond-dgms} we revisit unCLIP and then provide a novel explanation for why it is well-suited to the unconditional and lightly-conditional setting which was not explored by \citet{ramesh2022hierarchical}. We then demonstrate empirically that our lightly-conditional variant, 2SDM, yields large improvements on a variety of image datasets, tasks, and metrics in \cref{sec:2sdm-experiments}.
 
 \section{Background} \label{sec:2sdm-background}
-\paragraph{Conditional DGMs}
-We provide a high-level overview of conditional DGMs that is sufficient to understand our contributions, referring to \citeauthor{karras2022elucidating} for a more complete description and derivation. A conditional image DGM~\citep{tashiro2021csdi} samples an image $\rvx$ given a conditioning input $\rvy$, where $\rvy$ can be, for example, a class label, a text description, or both of these in a tuple. We can recover an unconditional DGM by setting $\rvy$ to a null variable in the below. Given a dataset of $(\rvx,\rvy)$ pairs sampled from $\pdata(\cdot,\cdot)$, a conditional DGM $p_\theta(\rvx|\rvy)$ is fit to approximate $\pdata(\rvx|\rvy)$. It is parameterized by a neural network $\hat{\rvx}_\theta(\cdot)$ trained to optimize
-\begin{align}\label{eq:diffusion-loss}
-    % \mathcal{L}(\theta) = 
-    \mathbb{E}_{u(\sigma)p_\sigma(\rvx_\sigma|\rvx,\sigma)\pdata(\rvx,\rvy)} \left[ \lambda(\sigma) \lvert\lvert \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) \rvert\rvert^2 \right]
-\end{align}
-where $\rvx_\sigma \sim p_\sigma(\cdot|\rvx,\sigma)$ is a copy of $\rvx$ corrupted by Gaussian noise with standard deviation $\sigma$; $u(\sigma)$ is a broad distribution over noise standard deviations; and $\lambda(\sigma)$ is a weighting function.
-%
-If $\lambda$ and $u$ are chosen appropriately, \cref{eq:diffusion-loss} is a lower bound on the data likelihood. It is common to instead set $\lambda$ and $u$ to values that maximize perceptual quality of the generated images but there remains  a close relationship to the ELBO~\citep{kingma2023understanding}. During inference, samples from $p_\theta(\rvx|\rvy)$ are drawn via a stochastic differential equation with dynamics dependent on $\hat{\rvx}_\theta(\cdot)$.
+% \paragraph{Conditional DGMs}
+% We provide a high-level overview of conditional DGMs that is sufficient to understand our contributions, referring to \citeauthor{karras2022elucidating} for a more complete description and derivation. A conditional image DGM~\citep{tashiro2021csdi} samples an image $\rvx$ given a conditioning input $\rvy$, where $\rvy$ can be, for example, a class label, a text description, or both of these in a tuple. We can recover an unconditional DGM by setting $\rvy$ to a null variable in the below. Given a dataset of $(\rvx,\rvy)$ pairs sampled from $\pdata(\cdot,\cdot)$, a conditional DGM $p_\theta(\rvx|\rvy)$ is fit to approximate $\pdata(\rvx|\rvy)$. It is parameterized by a neural network $\hat{\rvx}_\theta(\cdot)$ trained to optimize
+% \begin{align}\label{eq:diffusion-loss}
+%     % \mathcal{L}(\theta) = 
+%     \mathbb{E}_{u(\sigma)p_\sigma(\rvx_\sigma|\rvx,\sigma)\pdata(\rvx,\rvy)} \left[ \lambda(\sigma) \lvert\lvert \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) \rvert\rvert^2 \right]
+% \end{align}
+% where $\rvx_\sigma \sim p_\sigma(\cdot|\rvx,\sigma)$ is a copy of $\rvx$ corrupted by Gaussian noise with standard deviation $\sigma$; $u(\sigma)$ is a broad distribution over noise standard deviations; and $\lambda(\sigma)$ is a weighting function.
+% %
+% If $\lambda$ and $u$ are chosen appropriately, \cref{eq:diffusion-loss} is a lower bound on the data likelihood. It is common to instead set $\lambda$ and $u$ to values that maximize perceptual quality of the generated images but there remains  a close relationship to the ELBO~\citep{kingma2023understanding}. During inference, samples from $p_\theta(\rvx|\rvy)$ are drawn via a stochastic differential equation with dynamics dependent on $\hat{\rvx}_\theta(\cdot)$.
 
 
 
@@ -96,7 +96,7 @@ We see that, given a small training budget, it is best to condition on little in
 Recall that unCLIP leverages a CLIP-conditional generative model even when the original task calls for only a text-conditional image generative model. In light of this section, it makes sense that this should provide a benefit as long as the combination of text and CLIP embedding contains ``more'' information than the text prompt alone, which will always be the case. However, the disparity is even larger if we compare the CLIP-conditional generative model with an unconditional generative model  (i.e. one conditioned on zero bits of information). The unCLIP approach can therefore be expected to provide larger benefits for unconditional (or lightly-conditional) generation than for the text-conditional setting in which it was developed.
 
 
-\section{Method} \label{sec:2sdm-2sdm-method}
+\section{Using conditional DGMs for unconditional tasks} \label{sec:2sdm-2sdm-method}
 % We have established that conditioning on CLIP embeddings improves DGMs. We now point out that this fact can be seen as a significant reason for unCLIP's success; it
 We now formally introduce 2SDM, a variant of unCLIP for the unconditional setting. Recall that, for unconditional generation, the user does not wish to specify any input to condition on and, for the lightly-conditional setting, any such input is low-dimensional. We will denote any input $\rva$ (letting $\rva$ be a null variable in the unconditional setting) and from now on always use $\rvy := e_i(\rvx)$ to refer to a CLIP embedding. To make this deterministic encoding compatible with a probabilistic generative modeling perspective, we consider a joint distribution $\pdata(\rvx, \rvy, \rva)=\pdata(\rvx, \rva)\delta_{e_i(\rvx)}(\rvy)$, where $\pdata(\rvx, \rva)$ is described by a dataset and $\delta_{e_i(\rvx)}(\rvy)$ is a Dirac conditional distribution enforcing that $\rvy$ is the CLIP embedding of $\rvx$. From now on all distributions denoted with $\pdata$ should be understood as marginals and/or conditionals of this joint distribution, including our target distribution $\pdata(\rvx|\rva)$. 2SDM approximates this target distribution as
 %
