@@ -3,6 +3,9 @@
 
 Diffusion models, or DMs~\citep{sohl2015deep,ho2020denoising,nichol2021improved,song2020score}, can be understood as hierarchical variational auto-encoders with a very simple encoder: rather than parameterising a distribution with a neural network, the encoder simply adds Gaussian noise to the data. This ``encoder'' is commonly then referred to as the ``forward'' (or ``noising'') process. The equivalent of the VAE's prior and decoder are then the ``reverse'' (or ``generative'') process, which uses a learned ``denoising'' function in the form of a neural network. Sampling from a DM begins with drawing a sample from a Gaussian distribution that approximates a heavily noised sample from the data distribution. Running the reverse/generative process on this sample then gradually removes noise from it, moving the sample closer to the data manifold. By the end of the generative process, if all is trained well, the samples from this process should match the data distribution. As we will show later, fitting the DM simply involves training a neural network to predict clean data give noisy data using a mean-squared error loss. This leads to more stable training than for a VAE, in which the prior, decoder, and encoder are all learned jointly, leading to a ``moving target'' problem as each component must keep compensating for changes to the others.
 
+
+\section{Sampling from a diffusion process}
+
 \begin{figure}
     \centering
     \includegraphics[scale=1]{figs/thesis/diffusion_process.pdf}
@@ -10,7 +13,34 @@ Diffusion models, or DMs~\citep{sohl2015deep,ho2020denoising,nichol2021improved,
     \label{fig:diffusion-overview}
 \end{figure}
 
-\section{The forward process as an SDE} \label{sec:diffusion-forward-sde}
+
+\begin{table*}
+  \caption{Definitions for symbols used.}
+  \label{tab:notation}
+  \centering
+  \begin{tabular}{rp{9cm}}
+    \toprule
+    Symbol    & Definition   \\
+    \midrule
+    $\rvx$                                  & Data which we wish to learn a generative model of. \\
+    $\rvy$                                  & Data on which the generative model should be conditioned. \\
+    $\pdata(\rvx, \rvy)$                    & Data distribution. \\
+    \midrule
+    $t$                                     & Time in relation to the diffusion SDE and ODE.  \\
+    $\rvx_t$                                & ``Noisy'' data at time $t \geq 0$ in the diffusion process.  \\
+    $q(\rvx,\rvy,\rvx_{t_1},\ldots,\rvx_{t_n})$   & Joint distribution defined by the data distribution and forward SDE for any $t_1,\ldots,t_n \geq 0$. We will also use $q$ to denote any conditional or marginal of such a distribution.  \\
+    $g(t)$                                  & Scaling factor for Wiener process noise added in the forward SDE at time $t$. Defined to be positive for all $t > 0$. \\
+    $\sigma(t)$                             & Given by $\sigma(t)^2 = \int g(t)^2 \mathrm{d}t$. Standard deviation of noise added by the forward SDE between time $0$ and $t$. \\
+    \midrule
+    $\sigma$                                & Equivalent to $\sigma(t)$. When it simplifies results, we will define the process explicitly in terms of $\sigma$ instead of using $t$. \\
+    $\rvx_\sigma$                           & ``Noisy'' data described in terms of the standard deviation of added noise $\sigma$ instead of the time $t$. Equivalent to $\rvx_t$ for $t$ satisfying $\sigma = \sigma_t$. \\
+    $q(\rvx,\rvy,\rvx_{\sigma_1},\ldots,\rvx_{\sigma_n})$   & Equivalent to $q(\rvx,\rvy,\rvx_{t_1},\ldots,\rvx_{t_n})$ if each $\sigma_i = \sigma(t_i)$. This distribution is agnostic to $g(t)$. \\
+    SNR                                     & The signal-to-noise ratio, given by $\frac{1}{\sigma^2}$. \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+\subsection{The forward process as an SDE} \label{sec:diffusion-forward-sde}
 This forward process is defined through a combination of the initial condition $\rvx_0 \sim \pdata(\cdot|\rvy)$ and the stochastic differential equation (SDE):\footnote{We describe here the ``variance-exploding'' diffusion process. We generalise to a broader family of forward processes in ..., which require more complex notation.}
 \begin{equation} \label{eq:forward-diffusion}
     \mathrm{d}\rvx = g(t) \mathrm{d}\rvw
@@ -29,7 +59,7 @@ If $t$ is large and correspondingly $\sigma_t$ is large, $q(\rvx_t|\rvx_0,\rvy)$
 \end{equation}
 diminishes with $\sigma_t^2$. This forward process can therefore be used to map from clean data $\rvx_0$ to data that is arbitrarily well-approximated by a simple distribution. In the next section we will discuss how to do the more challenging counterpart: transforming samples from a simple distribution into samples from the data distribution.
 
-\section{The reverse SDE} \label{sec:diffusion-forward-sde}
+\subsection{The reverse SDE} \label{sec:diffusion-forward-sde}
 Our aim in this section is to ``invert'' the forward process from the previous section, yielding a way to create clean data from noise. To do so we refer to a result  derived by \citet{anderson1982reverse}, and recalled in the diffusion modelling context by \citet{song2020score}, showing that the reverse of a diffusion process is also a diffusion process. A straightforward application of this result to the diffusion SDE in \cref{eq:forward-diffusion} reveals that the corresponding reverse-time diffusion SDE is
 \begin{equation} \label{eq:reverse-diffusion}
     \mathrm{d}\rvx = -g(t)^2 \nabla_\rvx \log q(\rvx_t|\rvy) \mathrm{d}t + g(t) \mathrm{d}\bar{\rvw}
@@ -42,7 +72,7 @@ from time $t=T$ to $t=0$ with any SDE solver.\footnote{Possible choices include 
 
 % Assuming that we have such an estimator, \cref{eq:reverse-diffusion} provides a way to morph from $\rvx_T$ sampled from a Gaussian distribution for some large $T$, to approximate samples from the data distribution $\rvx_0 \sim \pdata(\cdot|\rvy)$. To do so, we only need a tool for integrating SDEs. This can be simple like Euler integration, or may be a more complex Runge-Kutta~\citep{grathwohl2018ffjord} or Heun~\citep{karras2022elucidating} integration method.
 
-\section{A reverse ODE} \label{sec:diffusion-ode}
+\subsection{A reverse ODE} \label{sec:diffusion-ode}
 In this section we will describe how to replace the SDE that parameterizes our generative model with an ODE. This can make the integration simpler and we will describe how it enables exact likelihood evaluation for any given $\rvx_0$.  \citet{song2020score} show that, for any diffusion process, there exists a deterministic process whose trajectories share the same marginal distributions $\{q(\rvx_t)\}_t$ as the stochastic diffusion process. This deterministic process is described by the ODE
 \begin{align}
     \mathrm{d}\rvx &= - \frac{1}{2} g(t)^2 \nabla_\rvx \log q(\rvx_t|\rvy) \mathrm{d}t \\
@@ -66,7 +96,7 @@ of the Jacobian of the ``drift'' term in \cref{eq:diffusion-ode-with-nn} along t
 % The other major advantage of having an ODE is that it allows for exact evaluation of the likelihood of any given data point under the distribution defined by the model.
 
 
-\section{Training a diffusion model} \label{sec:diffusion-training}
+\section{Learning the score function} \label{sec:diffusion-training}
 
 The objective, when training a diffusion model, is to obtain a good estimate of the score function, $s_\theta(\rvx_t, \rvy, t) \approx \nabla_{\rvx_t} \log q(\rvx_t)$ for all $t$ of interest so that we can use it to parameterise our SDE or ODE. Given that $q(\rvx_t) = \int q(\rvx_0) \gN(\rvx_t; \vzero, \sigma_t^2\mI) \mathrm{d}\rvx_0$, we can equivalently state our objective as obtaining a good estimate of 
 $$
@@ -120,121 +150,148 @@ To be able to sample from the diffusion model, integrating the SDE or ODE from \
 \end{align}
 where $\lambda(\sigma)$ is a weighting function that controls how much network capacity is spent modelling the score function at each noise level. We show in \cref{sec:diffusion-likelihood} that, if $\lambda(\sigma)$ is set appropriately, this loss yields a lower-bound on the data likelihood.
 
-\section{Lower-bounding the data likelihood} \label{sec:diffusion-likelihood}
+\section{A training objective that lower-bounds data likelihood} \label{sec:diffusion-likelihood}
 In \cref{sec:diffusion-ode} we describe how to compute the likelihoods of data with respect to our diffusion model. One may ask why, then, we derive the $\gL_\text{ISM}$ objective in \cref{eq:diffusion-loss-all-sigma} instead of directly optimising the likelihood of the training data. One reason is that the exact likelihood is expensive to compute since it requires an entire simulation of the ODE trajectory. In this section we show, however, that an appropriate choice of $\lambda(\sigma)$ turns the objective proposed in \cref{eq:diffusion-loss-all-sigma} into a lower bound on the data likelihood. This enables likelihood-based training with a cheap-to-evaluate training objective.
 
-To construct the lower bound, we consider sampling from the SDE in \cref{eq:reverse-diffusion} by integrating from a time $t_\text{max}$ corresponding to noise-to-signal ratio $\sigma_\text{max}$ to time $0$. Suppose that we use Euler integration and discretise the simulation by modelling $N$ steps, one for each $i = N,\ldots,1$ which moves from $\rvx_{t_i}$ to $\rvx_{t_{i-1}}$  where each $t_i = \frac{i}{N} t_\text{max}$ (such that $t_N = t_\text{max}$ and $t_0 = 0$). We can write the joint probability of a trajectory
+To construct the lower bound, we consider sampling from the SDE in \cref{eq:reverse-diffusion} by simulating it from time $t_\text{max}$ corresponding to noise-to-signal ratio $\sigma_\text{max}$ to a time $t_\text{min}$ which is close to zero.
+A simple method for simulation is to discretise it into $N$ steps. At each step $i = N,\ldots,1$ we then morph $\rvx_{t(i)}$ into $\rvx_{s(i)}$, where
+\begin{equation}\nonumber
+t(i) := \frac{i}{N} (t_\text{max} - t_\text{min}) + t_\text{min} \quad \text{and} \quad s(i) := t(i-1).
+\end{equation}
+For brevity we will from now on write $t(i)$ as simply $t$ and $s(i)$ as simply $s$ when the index is clear from the context. We can write the joint probability of a trajectory
 \begin{align} \label{eq:diffusion-reverse-joint-prob}
-    p_\theta(\rvx_0,\rvx_{t_1},\ldots,\rvx_{t_N}) = p(\rvx_{t_N}) \prod_{i=1}^N p_\theta(\rvx_{t_{i-1}} | \rvx_{t_i})
+    p_\theta(\rvx,\rvx_{t(0)},\ldots,\rvx_{t(N)}) = p(\rvx_{t_N}) \left( \prod_{i=1}^N p_\theta(\rvx_{s(i)} | \rvx_{t(i)}) \right) p_\theta(\rvx|\rvx_{t(0)})
 \end{align}
-where $p(\rvx_{t_N})$ is the Gaussian approximation of $q(\rvx_{t_N})$ with no learnable parameters, while $p_\theta(\rvx_{t_{i-1}} | \rvx_{t_i})$ is parameterised by our score function estimate. We would like to match a marginal of this, $p_\theta(\rvx_0)$, to the data distribution, by fitting $\theta$ to maximise $p_\theta(\rvx_0)$ for $\rvx_0$ sampled from the data distribution. We next describe how we use this joint distribution to construct a lower-bound on $p_\theta(\rvx_0)$, before expanding on the form of each $p_\theta(\rvx_{t_{i-1}}|\rvx_{t_i})$.
+where $p(\rvx_{(N)})$ is the Gaussian approximation of $q(\rvx_{t(N)})$ with no learnable parameters, while $p_\theta(\rvx_{s(i)} | \rvx_{t(i)})$ is parameterised by our score function estimate. We would like to match a marginal of this, $p_\theta(\rvx_{t_\text{min}})$, to the data distribution, by fitting $\theta$ to maximise $p_\theta(\rvx_0)$ for $\rvx_0$ sampled from the data distribution. We next describe how we use this joint distribution to construct a lower-bound on $p_\theta(\rvx_0)$, before expanding on the form of each $p_\theta(\rvx_{s(i)}|\rvx_{t(i)})$.
 
-We start by noting that the forward process yields an analytically tractable form of $q(\rvx_{t_1},\ldots,\rvx_{t_N}|\rvx_0)$ which we can express as $q(\rvx_{t_N}|\rvx_0) \prod_{i=2}^N q(\rvx_{t_{i-1}} | \rvx_{t_i}, \rvx_0)$. We can integrate this into the following lower-bound of $p_\theta(\rvx_0)$ as follows:
+We start by noting that the forward process yields an analytically tractable form of $q(\rvx_{t(0)},\ldots,\rvx_{t(N)}|\rvx)$ which we can express as $q(\rvx_{t(N)}|\rvx) \prod_{i=1}^N q(\rvx_{s(i)} | \rvx_{t(i)}, \rvx)$. We can integrate this into the following lower-bound of $p_\theta(\rvx)$ as follows:
 \begin{align}
-    \log p_\theta(\rvx_0) &\geq \log p_\theta(\rvx_0) - \kl{q(\rvx_{t_1},\ldots,\rvx_{t_N}|\rvx_0)}{p_\theta(\rvx_{t_1},\ldots,\rvx_{t_N}|\rvx_0)} \\
-    &= \EX_{q(\rvx_{t_1},\ldots,\rvx_{t_N}|\rvx_0)} \left[ \log \frac{p(\rvx_{t_N}) \prod_{i=1}^N p_\theta(\rvx_{t_{i-1}} | \rvx_{t_i})}{q(\rvx_{t_N}|\rvx_0) \prod_{i=2}^N q(\rvx_{t_{i-1}} | \rvx_{t_i}, \rvx_0)} \right] \\
-    &= \kl{q(\rvx_{t_N}|\rvx_0)}{p(\rvx_{t_N})} \nonumber\\
-    &\hspace{5mm} + \EX_{q(\rvx_{t_1}|\rvx_0)} \left[ - \log p_\theta(\rvx_0|\rvx_{t_1}) \right] \nonumber\\
-    &\hspace{5mm} + \mathcal{L}_T(\rvx_0) \label{eq:full-diffusion-elbo}
+    \log p_\theta(\rvx) &\geq \log p_\theta(\rvx) - \kl{q(\rvx_{t(0)},\ldots,\rvx_{t(N)}|\rvx)}{p_\theta(\rvx_{t(0)},\ldots,\rvx_{t(N)}|\rvx)} \\
+    &= \EX_{q(\rvx_{t(0)},\ldots,\rvx_{t(N)}|\rvx)} \left[ \log \frac{p(\rvx_{t(N)}) \prod_{i=1}^N p_\theta(\rvx_{s(i)} | \rvx_{t(i)}) p_\theta(\rvx|\rvx_{t(0)}) }{q(\rvx_{t(N)}|\rvx) \prod_{i=1}^N q(\rvx_{s(i)} | \rvx_{t(i)}, \rvx)} \right] \\
+    &= \kl{q(\rvx_{t(N)}|\rvx)}{p(\rvx_{t(N)})} \nonumber\\
+    &\hspace{5mm} + \EX_{q(\rvx_{t(0)}|\rvx)} \left[ - \log p_\theta(\rvx|\rvx_{t(0)}) \right] \nonumber\\
+    &\hspace{5mm} + \mathcal{L}_T(\rvx) \label{eq:full-diffusion-elbo}
 \end{align}
 where
 \begin{align}
-    \mathcal{L}_T(\rvx_0) = \sum_{i=2}^T \EX_{q(\rvx_{t_i}|\rvx_0)} \left[ \kl{q(\rvx_{t_{i-1}} | \rvx_{t_i}, \rvx_0)}{p_\theta(\rvx_{t_{i-1}} | \rvx_{t_i})} \right].
+    \mathcal{L}_N(\rvx) = \sum_{i=1}^N \EX_{q(\rvx_{t(i)}|\rvx)} \left[ \kl{q(\rvx_{s(i)} | \rvx_{t(i)}, \rvx)}{p_\theta(\rvx_{s(i)} | \rvx_{t(i)})} \right].
 \end{align}
-Following \citet{kingma2021variational}, we will call the first line of \cref{eq:full-diffusion-elbo} the ``prior loss''; the second line the ``reconstruction loss''; and the third line the ``diffusion loss''. The prior loss is not improved by optimising $\theta$ but can be made arbitrarily small by choosing large $t_N$. The reconstruction loss can similarly be made arbitrarily small by choosing small $t_1$, even if we choose a simple parameterisation of $p_\theta(\rvx_0|\rvx_{t_1})$ like a Gaussian with fixed variance centred on $\rvx_{t_1}$. Given such appropriate choices of $t_1$ and $t_N$, this lower-bound will be dominated by the diffusion loss $\mathcal{L}_t(\rvx_0)$. For the remainder of this section we will therefore focus on estimating $\mathcal{L}_t(\rvx_0)$.
+Following \citet{kingma2021variational}, we will call the first line of \cref{eq:full-diffusion-elbo} the ``prior loss''; the second line the ``reconstruction loss''; and the third line the ``diffusion loss''. The prior loss is not improved by optimising $\theta$ but can be made arbitrarily small by choosing large $t_\text{max}=t(N)$. The reconstruction loss can similarly be made arbitrarily small by choosing small $t_\text{min}=t(0)$, even if we choose a simple parameterisation of $p_\theta(\rvx|\rvx_{t(0)})$. Given such appropriate choices of $t_\text{min}$ and $t_\text{max}$, this lower-bound will be dominated by the diffusion loss $\mathcal{L}_t(\rvx)$. For the remainder of this section we will therefore focus on estimating $\mathcal{L}_t(\rvx)$.
 
-To evaluate $\mathcal{L}_t(\rvx_0)$, we first make explicit the form of each of $q(\rvx_{t_{i-1}} | \rvx_{t_i}, \rvx_0)$ and $p_\theta(\rvx_{t_{i-1}} | \rvx_{t_i})$. From the definition of the forward process, we have that
+To evaluate $\mathcal{L}_t(\rvx)$, we first make explicit the form of each of $q(\rvx_{s} | \rvx_{t}, \rvx_0)$ and $p_\theta(\rvx_{s} | \rvx_{t})$. From the definition of the forward process, we have that
 \begin{align} \label{eq:q-step-pdf}
-    q(\rvx_{t_{i-1}} | \rvx_{t_i}, \rvx_0) &= \frac{q(\rvx_{t_{i-1}} | \rvx_0) q(\rvx_{t_i} | \rvx_{t_{i-1}})}{q(\rvx_{t_i}|\rvx_0)} \\
-    &= \frac{\gN(\rvx_{t_{i-1}}; \rvx_0, \sigma_{0:i-1}^2 \mI) \gN(\rvx_{t_{i}}; \rvx_{t_{i-1}}, \sigma_{i-1:i}^2 \mI) }{\gN(\rvx_{t_i}; \rvx_0, \sigma_{0:i}^2 \mI)}
+    q(\rvx_{s} | \rvx_{t}, \rvx) &= \frac{q(\rvx_{s} | \rvx) q(\rvx_{t} | \rvx_{s})}{q(\rvx_{t}|\rvx)} = \frac{\gN(\rvx_{s}; \rvx, \sigma_{s}^2 \mI) \gN(\rvx_{t}; \rvx_{s}, \sigma_{t|s}^2 \mI) }{\gN(\rvx_{t}; \rvx, \sigma_{t}^2 \mI)}
 \end{align}
-where $\sigma_{a:b}^2$ should be interpreted as the variance of the noise added when integrating the forward process from $t_a$ to $t_b$, i.e. $\sigma_{a:b}^2 = \int_{t_a}^{t_b} g(t)^2 \mathrm{d}t$. We can exploit the conjugacy of Gaussians to simplify \cref{eq:q-step-pdf} to the Gaussian
+where $\sigma_{t|s}^2$ should be interpreted as the variance of the noise added when integrating the forward process from $s$ to $t$, i.e. $\sigma_{t|s}^2 = \int_{s}^{t} g(t)^2 \mathrm{d}t$. We can exploit the conjugacy of Gaussians to simplify \cref{eq:q-step-pdf} to the Gaussian
 \begin{align}
-    q(\rvx_{t_{i-1}} | \rvx_{t_i}, \rvx_0) &= \gN( \rvx_{t_{i-1}}; \hat{\mu}_{i:i-1} \cdot \rvx_{t_i} + \hat{\mu}_{0:i-1} \cdot \rvx_0; \hat{\sigma}_{0,i:i-1}^2 \mI )
+    q(\rvx_s|\rvx_t,\rvx) = \gN( \rvx_s; \mathbf{\mu}_Q(\rvx_t, \rvx; s, t), \sigma_Q^2(s, t) \mathbf{I})
 \end{align}
 where
 \begin{align} \nonumber
-    &\hat{\sigma}_{0,i:i-1}^2 := \left( \frac{1}{\sigma_{0:i-1}^2} + \frac{1}{\sigma_{i-1:i}^2} \right)^{-1} , \\
-    \nonumber
-    \hat{\mu}_{i:i-1} &:= \frac{\hat{\sigma}_{0,i:i-1}^2}{\sigma_{i-1:i}^2} 
-    \quad \text{and} \quad
-    \hat{\mu}_{0:i-1} := \frac{\hat{\sigma}_{0,i:i-1}^2}{\sigma_{0:i-1}^2}.
+    \mathbf{\mu}_Q(\rvx_t, \rvx; s, t) &:= \frac{\sigma_s^2}{\sigma_t^2} \rvx_t + \frac{\sigma_{t|s}^2}{\sigma_t^2} \rvx \\
+    \sigma_Q(s, t) &:= \frac{\sigma_s^2 \sigma_{t|s}^2}{\sigma_t^2}
 \end{align}
 
-Our objective is to minimize the KL divergence between $q(\rvx_{t_i-1}|\rvx_{t_i},\rvx_0)$ and $p_\theta(\rvx_{t_{i-1}}|\rvx_{t_i})$, so intuitively a sensible parameterization for $p_\theta$ is to make it as close as possible to $q$. Since this distribution cannot be made to depend on $\rvx_0$, we instead construct it using an estimate of $\rvx_0$ obtained from the predicted score function as $\hat{\rvx}_\theta(\rvx_t, \rvy, \sigma) = \rvx_\sigma + \sigma^2 \cdot \rvs_\theta(\rvx_t, \rvy, \sigma)$. 
-We will show in ...TODO... that, if our score function estimate is correct, this estimate of $\rvx_0$ given $\rvx_t$ will be optimal in terms of mean-squared error.
-We can then parameterize $p_\theta(\rvx_{t_{i-1}} | \rvx_{t_i})$ in exactly the same was as $q(\rvx_{t_{i-1}} | \rvx_{t_i},\rvx_0)$, simply substituting the predicted value of $\rvx_0$ for the true value\footnote{This form of $p_\theta(\rvx_{t_{i-1}} | \rvx_{t_i})$ is not exactly the same as that obtained by peforming e.g. an Euler integration step on the reverse SDE in \cref{eq:reverse-diffusion-with-nn}, but will become so if we let the integration step size tend to zero\todo{show this in appendix}. }:
+Our objective is to minimize the KL divergence between $q(\rvx_s|\rvx_t,\rvx)$ and $p_\theta(\rvx_{s}|\rvx_{t})$, so intuitively a sensible parameterization for $p_\theta$ would be as close as possible to the form of $q$. Since $p_\theta(\rvx_{s}|\rvx_{t})$ cannot be a function of $\rvx$, we instead construct it using an estimate of $\rvx$ obtained from the predicted score function as $\hat{\rvx}_\theta(\rvx_t, \rvy, \sigma) = \rvx_\sigma + \sigma^2 \cdot \rvs_\theta(\rvx_t, \rvy, \sigma)$. 
+We will show in ...TODO... that, if our score function estimate is correct, this estimate of $\rvx$ given $\rvx_t$ will be optimal in terms of mean-squared error.
+We can then parameterize $p_\theta(\rvx_{s} | \rvx_{t})$ in exactly the same was as $q(\rvx_{s} | \rvx_{t},\rvx)$, simply substituting the predicted value of $\rvx$ for the true value\footnote{This form of $p_\theta(\rvx_{s} | \rvx_{t})$ is not exactly the same as that obtained by performing e.g. an Euler integration step on the reverse SDE in \cref{eq:reverse-diffusion-with-nn}, but will become so if we let the integration step size tend to zero\todo{show this in appendix}. }:
 \begin{align}
-    p_\theta(\rvx_{t_{i-1}} | \rvx_{t_i}) &= \gN( \rvx_{t_{i-1}}; \hat{\mu}_{i:i-1} \cdot \rvx_{t_i} + \hat{\mu}_{0:i-1} \cdot \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma); \hat{\sigma}_{0,i:i-1}^2 \mI ).
+    p_\theta(\rvx_{s} | \rvx_{t}) &= \gN( \rvx_{s}; \mathbf{\mu}_Q(\rvx_t, \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma); s, t), \sigma_Q^2(s, t) \mI ).
 \end{align}
 We can then express the KL divergence as:
 \begin{align}
-    &\kl{q(\rvx_{t_{i-1}} | \rvx_{t_i}, \rvx_0)}{p_\theta(\rvx_{t_{i-1}} | \rvx_{t_i})} \\ 
-    = &\frac{1}{2 \hat{\sigma}_{0,i:i-1}^2} || (\hat{\mu}_{i:i-1} \cdot \rvx_{t_i} + \hat{\mu}_{0:i-1} \cdot \rvx_0) - (\hat{\mu}_{i:i-1} \cdot \rvx_{t_i} + \hat{\mu}_{0:i-1} \cdot \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma)) ||_2^2 \\
-    = &\frac{1}{2 \hat{\sigma}_{0,i:i-1}^2} || \hat{\mu}_{0:i-1} \cdot \rvx_0 - \hat{\mu}_{0:i-1} \cdot \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma) ||_2^2 \\
-    = &\frac{\hat{\mu}_{0:i-1}^2}{2 \hat{\sigma}_{0,i:i-1}^2} || \rvx_0 - \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma) ||_2^2.
+    &\kl{q(\rvx_{s} | \rvx_{t}, \rvx_0)}{p_\theta(\rvx_{s} | \rvx_{t})} \\ 
+    = &\frac{1}{2 \sigma_Q^2(s, t)} || \mathbf{\mu}_Q(\rvx_t, \rvx; s, t) - \mathbf{\mu}_Q(\rvx_t, \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma); s, t) ||_2^2 \\
+    = &\frac{1}{2 \sigma_Q^2(s, t)} || \frac{\sigma_{t|s}^2}{\sigma_t^2} ( \rvx - \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma) ) ||_2^2 \\
+    = &\frac{\sigma_{t|s}^2}{2 \sigma_s^2 \sigma_t^2} || \rvx_0 - \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma) ||_2^2 \\
+    = &\frac{\sigma_{t}^2 - \sigma_s^2}{2 \sigma_s^2 \sigma_t^2} || \rvx_0 - \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma) ||_2^2 \\
+    = &\frac{1}{2} \left( \frac{1}{\sigma_s^2} - \frac{1}{\sigma_t^2} \right) || \rvx_0 - \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma) ||_2^2.
 \end{align}
+Following \citet{kingma2021variational}, we will proceed by introducing the signal-to-noise ratio defined as $\text{SNR}(t) = \frac{1}{\sigma_t^2}$. We can then write the KL divergence as
 \begin{align}
-    \mathcal{L}_T(\rvx_0) = \sum_{i=2}^T \EX_{q(\rvx_{t_i}|\rvx_0)} \left[ \kl{q(\rvx_{t_{i-1}} | \rvx_{t_i}, \rvx_0)}{p_\theta(\rvx_{t_{i-1}} | \rvx_{t_i})} \right].
+\kl{q(\rvx_{s} | \rvx_{t}, \rvx_0)}{p_\theta(\rvx_{s} | \rvx_{t})} = &\frac{1}{2} \left( SNR(s) - SNR(t) \right) || \rvx_0 - \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma) ||_2^2,
 \end{align}
-So we are able to express the lower-bound with a mean-squared error loss between $\rvx_0$ and the learned prediction of $\rvx_0$. We can equivalently write this as a mean-squared error loss between the predicted score function and our target for it. Given that the target is $\rvs := \frac{\rvx_0 - \rvx_t}{\sigma^2}$, we find
+and so
 \begin{align}
-    \kl{q(\rvx_{t_{i-1}} | \rvx_{t_i}, \rvx_0)}{p_\theta(\rvx_{t_{i-1}} | \rvx_{t_i})} 
-    &= \frac{\hat{\mu}_{0:i-1}^2}{2 \hat{\sigma}_{0,i:i-1}^2} || \rvx_0 - \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma_{t_i}) ||_2^2 \\
-    &= \frac{\hat{\mu}_{0:i-1}^2 \sigma^4}{2 \hat{\sigma}_{0,i:i-1}^2} || \frac{\rvx_0}{\sigma_{t_i}^2} - \frac{\hat{\rvx}_\theta(\rvx_t, \rvy, \sigma_{t_i})}{\sigma_{t_i}^2} ||_2^2 \\
-    &= \frac{\hat{\mu}_{0:i-1}^2 \sigma_{t_i}^4}{2 \hat{\sigma}_{0,i:i-1}^2} || \frac{\rvx_0-\rvx_t}{\sigma_{t_i}^2} - \rvs_\theta(\rvx_t, \rvy, \sigma_{t_i}) ||_2^2
+    \mathcal{L}_N(\rvx) = \frac{1}{2} \sum_{i=1}^N \left( SNR(s) - SNR(t) \right) || \rvx - \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma) ||_2^2.
 \end{align}
-Recall that our lower-bound $\mathcal{L}_T(\rvx_0)$ is a sum over these KL divergences:
+% which can be estimated with
+% \begin{align}
+%     % \mathcal{L}_N(\rvx) = \frac{N}{2} \EX_{t \sim \text{Uniform}(1, N)} \left[ \left( SNR(s) - SNR(t) \right) || \rvx - \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma) ||_2^2 \right].
+%     \mathcal{L}_N(\rvx) = \frac{1}{2} \int \left[ \left( SNR(s) - SNR(t) \right) || \rvx - \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma) ||_2^2 \right] u(t) \mathrm{d}t . ???
+% \end{align}
+% where $u(t)$ is a uniform distribution over integers $1$ to $N$. 
+This reveals that the contribution of each denoising step to the log-likelihood is closely related its change to the signal-to-noise ratio. The squared-error term reveals that it is also strongly dependent on the accuracy of the prediction of $\rvx$ given $\rvx_t$ and $\rvy$. A better lower-bound will be obtained by taking more steps, and changing the signal-to-noise ratio by less in each step. To make this lower-bound agnostic to the number of steps, we can consider the limit where infinitely many steps are taken. To do so, we  follow \citet{kingma2021variational} and replace $s$ with $t-\frac{t_\text{diff}}{T}$, where $t_\text{diff} = \frac{t_\text{max}-t_\text{min}}{\tau}$. Then, taking the limit as $\tau \rightarrow 0$ gives 
 \begin{align}
-    \mathcal{L}_T(\rvx_0) &= \sum_{i=2}^T \EX_{q(\rvx_{t_i}|\rvx_0)} \left[ \kl{q(\rvx_{t_{i-1}} | \rvx_{t_i}, \rvx_0)}{p_\theta(\rvx_{t_{i-1}} | \rvx_{t_i})} \right] \\
-    &= \sum_{i=2}^T \frac{\hat{\mu}_{0:i-1}^2 \sigma_{t_i}^4}{2 \hat{\sigma}_{0,i:i-1}^2} \EX_{q(\rvx_{t_i}|\rvx_0)} \left[  || \frac{\rvx_0-\rvx_t}{\sigma_{t_i}^2} - \rvs_\theta(\rvx_t, \rvy, \sigma_{t_i}) ||_2^2 \right]
+    \mathcal{L}_T(\rvx) &= \lim_{T\rightarrow\infty} \frac{1}{2} \sum_{i=1}^T \left[ \left( \frac{SNR(t-\frac{t_\text{diff}}{T}) - SNR(t)}{\tau} \right) || \rvx - \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma) ||_2^2 \right] \\
+    &= \frac{1}{2} \int SNR'(t) || \rvx - \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma) ||_2^2 \mathrm{d}t \label{eq:difusion-elbo} \\
+    &= \frac{1}{2} \int || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \mathrm{d}\text{SNR}.
 \end{align}
-In the limit where the number of sampling steps $N$ tends to infinity, it becomes an integral. Given that the internal term depends only on $\sigma_t$ and not on the value of $t$ itself otherwise, ...
-\begin{align}
-    \mathcal{L}_T(\rvx_0) &= ...
-\end{align}
+We can obtain an unbiased estimate of the integral in \cref{eq:difusion-elbo} using a single Monte Carlo sample of $\sigma$. Optionally, we can also define a proposal distribution $q(\sigma)$ and use importance sampling.
 
-, we will now determine the form of $p_\theta(\rvx_{t_{i-1}}|\rvx_{t_i})$ so that we can consider the KL divergence between them. Euler integration of the reverse SDE involves taking a deterministic step and then adding Gaussian noise, so $p_\theta(\rvx_{t_{i-1}}|\rvx_{t_i})$ will be Gaussian. In particular, referring to the reverse SDE in \cref{eq:reverse-diffusion}, the step will be in direction $g(t)^2 s_\theta(\rvx_{t_i}, \rvy, \sigma_{t_i})$. Since the step is from $t_i$ to $t_{i-1}$, the step will produce mean value $\rvx_i - (t_i-t_{i-1}) g(t)^2 s_\theta(\rvx_{t_i}, \rvy, \sigma_{t_i})$.
-%
-% Referring to \cref{eq:reverse-diffusion} again, the variance will be $\int_{t_{i-1}}^{t_i} g(t_i)^2 \mathrm{d}t = \sigma_{i-1:i}$.
-Since we are interested in minimising the KL divergence to $q(\rvx_{t_{i-1}} | \rvx_{t_i}, \rvx_0)$, we can simply copy its variance $\hat{\sigma}_{0,i:i-1}^2$. We therefore write $p_\theta(\rvx_{t_{i-1}}|\rvx_{t_i})$ as
-\begin{equation}
-    p_\theta(\rvx_{t_{i-1}}|\rvx_{t_i}) = \gN \Big( \rvx_{t_{i-1}}; \rvx_i-(t_i-t_{i-1}) g(t_i)^2 s_\theta(\rvx_{t_i}, \rvy, \sigma_{t_i}); \hat{\sigma}_{0,i:i-1}^2 \mI \Big).
-\end{equation}
-This Euler step clearly will have some integration error when $T$ is finite and therefore $t_i$ and $t_{i-1}$ are a finite distance apart. In this section we are concerned with ensuring that $\theta$ is good enough to give us a high likelihood with a perfect integrator, and not with minimizing integration errors. We therefore look at the limit of $\mathcal{L}_T(\rvx_0)$ as $T \rightarrow \infty$:
-\begin{align}
-    \mathcal{L}_\infty(\rvx_0) &= \lim_{T\rightarrow\infty} \sum_{i=2}^T \EX_{q(\rvx_{t_i}|\rvx_0)} \left[ \kl{q(\rvx_{t_{i-1}} | \rvx_{t_i}, \rvx_0)}{p_\theta(\rvx_{t_{i-1}} | \rvx_{t_i})} \right] \\
-    &= \int_0^{t_\text{max}} \EX_{q(\rvx_t|\rvx_0)} \left[ \frac{1}{2\sigma_q(t)^2} || \mu_q(\rvx_t, t) - \mu_\theta(\rvx_t, t) ||_2^2 \right] \mathrm{d}t
-\end{align}
 
-\section{Parameterising the prediction of the score function}
-We now describe a relationship between predicting the score function and predicting various other quantities. Given $\rvx_\sigma$ and an estimate $s_\theta(\rvx_\sigma, \rvy, \sigma) \approx \frac{\rvx_0-\rvx_\sigma}{\sigma^2}$, it is simple to obtain mean-squared error estimates of various other quantities: 
-\begin{itemize}
-    \item An estimate of the clean data $\rvx_0$ can be obtained as ${\hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) :=  \sigma^2 \cdot s_\theta(\rvx_\sigma, \rvy, \sigma) + \rvx_\sigma}$
-    \item The noise added to $\rvx_0$ to create $\rvx_\sigma$, scaled to unit variance, is often denoted $\epsilon := \frac{\rvx_\sigma-\rvx_0}{\sigma}$. This can be estimated as $\hat{\epsilon}_\theta := - \sigma \cdot s_\theta(\rvx_\sigma, \rvy, \sigma)$.
-\end{itemize}
+% So we are able to express the lower-bound with a mean-squared error loss between $$ and the learned prediction of $$. We can equivalently write this as a mean-squared error loss between the predicted score function and our target for it. Given that the target is $\rvs := \frac{ - \rvx_t}{\sigma^2}$, we find
+% \begin{align}
+%     \kl{q(\rvx_{s} | \rvx_{t}, )}{p_\theta(\rvx_{s} | \rvx_{t})} 
+%     &= \frac{\hat{\mu}_{0:i-1}^2}{2 \hat{\sigma}_{0,i:i-1}^2} ||  - \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma_{t(i)}) ||_2^2 \\
+%     &= \frac{\hat{\mu}_{0:i-1}^2 \sigma^4}{2 \hat{\sigma}_{0,i:i-1}^2} || \frac{}{\sigma_{t(i)}^2} - \frac{\hat{\rvx}_\theta(\rvx_t, \rvy, \sigma_{t(i)})}{\sigma_{t(i)}^2} ||_2^2 \\
+%     &= \frac{\hat{\mu}_{0:i-1}^2 \sigma_{t(i)}^4}{2 \hat{\sigma}_{0,i:i-1}^2} || \frac{-\rvx_t}{\sigma_{t(i)}^2} - \rvs_\theta(\rvx_t, \rvy, \sigma_{t(i)}) ||_2^2
+% \end{align}
+% Recall that our lower-bound $\mathcal{L}_T()$ is a sum over these KL divergences:
+% \begin{align}
+%     \mathcal{L}_T() &= \sum_{i=2}^T \EX_{q(\rvx_{t(i)}|)} \left[ \kl{q(\rvx_{s(i)} | \rvx_{t(i)}, )}{p_\theta(\rvx_{s(i)} | \rvx_{t(i)})} \right] \\
+%     &= \sum_{i=2}^T \frac{\hat{\mu}_{0:i-1}^2 \sigma_{t(i)}^4}{2 \hat{\sigma}_{0,i:i-1}^2} \EX_{q(\rvx_{t(i)}|)} \left[  || \frac{-\rvx_t}{\sigma_{t(i)}^2} - \rvs_\theta(\rvx_t, \rvy, \sigma_{t(i)}) ||_2^2 \right] \\
+%     &= \sum_{i=2}^T \frac{\sigma_{t(i)}^4}{2 \hat{\sigma}_{0:i-1}^2} \EX_{q(\rvx_{t(i)}|)} \left[  || \frac{-\rvx_t}{\sigma_{t(i)}^2} - \rvs_\theta(\rvx_t, \rvy, \sigma_{t(i)}) ||_2^2 \right] \\
+%     &= \sum_{i=2}^T \frac{1}{2} \sigma_{t(i)}^2 \frac{\sigma_{t(i)}^2}{\sigma_{s(i)}^2} \EX_{q(\rvx_{t(i)}|)} \left[  || \frac{-\rvx_t}{\sigma_{t(i)}^2} - \rvs_\theta(\rvx_t, \rvy, \sigma_{t(i)}) ||_2^2 \right] \\
+%     &= \sum_{i=2}^T \frac{1}{2} \sigma_{t(i)}^2 \frac{\sigma_{t(i)}^2}{\sigma_{s(i)}^2} \EX_{q(\rvx_{t(i)}|)} \left[  || \frac{-\rvx_t}{\sigma_{t(i)}^2} - \rvs_\theta(\rvx_t, \rvy, \sigma_{t(i)}) ||_2^2 \right] \\
+%     &\approx \sum_{i=2}^T \frac{1}{2} \sigma_{t(i)}^2 (1 + \frac{\frac{\mathrm{d}\sigma_t^2}{\mathrm{d}t} \mathrm{d}t}{\sigma_{s(i)}^2}) \EX_{q(\rvx_{t(i)}|)} \left[  || \frac{-\rvx_t}{\sigma_{t(i)}^2} - \rvs_\theta(\rvx_t, \rvy, \sigma_{t(i)}) ||_2^2 \right] \\
+% \end{align}
+% In the limit where the number of sampling steps $N$ tends to infinity, it becomes an integral. Given that the internal term depends only on $\sigma_t$ and not on the value of $t$ itself otherwise, ...
+% \begin{align}
+%     \mathcal{L}_T(\rvx_0) &= 
+% \end{align}
 
-Similarly, it is possible to map from a prediction of any of these quantities to the estimate of the score function needed for sampling following the reverse SDE and ODE in \cref{eq:reverse-diffusion-with-nn,eq:diffusion-ode-with-nn}. Various papers have proposed parameterising neural networks to predict these other quantities~\cite{ho2020denoising,sohl2015deep} and then implicitly obtaining the score from them; in particular \citet{ho2020denoising} train a neural network to predict $\epsilon$ and we use this approach in \cref{ch:fdm}. More recently, \citet{karras2022elucidating} demonstrated that the choice of which of these to predict is unimportant as long as the network parameterisation and per-timestep weighting of the loss function are explicitly controlled for. Their framework suggests that we: name the neural network output $\rvx_out$; compute $\hat{\rvx}_\theta(\cdots) := c_\text{skip}(\sigma) \cdot \rvx_\sigma + c_\text{out} \cdot \rvx_out$; compute the mean-squared error loss between $\hat{\rvx}$.
+% , we will now determine the form of $p_\theta(\rvx_{s(i)}|\rvx_{t(i)})$ so that we can consider the KL divergence between them. Euler integration of the reverse SDE involves taking a deterministic step and then adding Gaussian noise, so $p_\theta(\rvx_{s(i)}|\rvx_{t(i)})$ will be Gaussian. In particular, referring to the reverse SDE in \cref{eq:reverse-diffusion}, the step will be in direction $g(t)^2 s_\theta(\rvx_{t(i)}, \rvy, \sigma_{t(i)})$. Since the step is from $t(i)$ to $s(i)$, the step will produce mean value $\rvx_i - (t(i)-s(i)) g(t)^2 s_\theta(\rvx_{t(i)}, \rvy, \sigma_{t(i)})$.
+% %
+% % Referring to \cref{eq:reverse-diffusion} again, the variance will be $\int_{s(i)}^{t(i)} g(t(i))^2 \mathrm{d}t = \sigma_{i-1:i}$.
+% Since we are interested in minimising the KL divergence to $q(\rvx_{s(i)} | \rvx_{t(i)}, \rvx_0)$, we can simply copy its variance $\hat{\sigma}_{0,i:i-1}^2$. We therefore write $p_\theta(\rvx_{s(i)}|\rvx_{t(i)})$ as
+% \begin{equation}
+%     p_\theta(\rvx_{s(i)}|\rvx_{t(i)}) = \gN \Big( \rvx_{s(i)}; \rvx_i-(t(i)-s(i)) g(t(i))^2 s_\theta(\rvx_{t(i)}, \rvy, \sigma_{t(i)}); \hat{\sigma}_{0,i:i-1}^2 \mI \Big).
+% \end{equation}
+% This Euler step clearly will have some integration error when $T$ is finite and therefore $t(i)$ and $s(i)$ are a finite distance apart. In this section we are concerned with ensuring that $\theta$ is good enough to give us a high likelihood with a perfect integrator, and not with minimizing integration errors. We therefore look at the limit of $\mathcal{L}_T(\rvx_0)$ as $T \rightarrow \infty$:
+% \begin{align}
+%     \mathcal{L}_\infty(\rvx_0) &= \lim_{T\rightarrow\infty} \sum_{i=2}^T \EX_{q(\rvx_{t(i)}|\rvx_0)} \left[ \kl{q(\rvx_{s(i)} | \rvx_{t(i)}, \rvx_0)}{p_\theta(\rvx_{s(i)} | \rvx_{t(i)})} \right] \\
+%     &= \int_0^{t_\text{max}} \EX_{q(\rvx_t|\rvx_0)} \left[ \frac{1}{2\sigma_q(t)^2} || \mu_q(\rvx_t, t) - \mu_\theta(\rvx_t, t) ||_2^2 \right] \mathrm{d}t
+% \end{align}
 
-The loss can be equivalently computed in different spaces, for example a a squared error loss to $\rvx_0$ with
-\begin{align}
-    \mathcal{L}_\text{ISM}(\theta, \sigma) &= \frac{1}{\sigma^4} \EX_{q(\rvx_0, \rvx_\sigma, \rvy)} \left[ 
-    || \hat{\rvx}_0(\rvx_\sigma, \rvy, \sigma) - \rvx_0 ||_2^2 \right]
-\end{align}
-where $\hat{\rvx}_0(\rvx_\sigma, \rvy, \sigma) := \sigma^2 \cdot \rvs_\theta(\rvx_\sigma, \rvy, \sigma) + \rvx_\sigma$. 
-It is often also written as a squared error loss to $\epsilon := \frac{\rvx_\sigma - \rvx_0}{\sigma}$, a scaled version of the noise added when sampling $\rvx_\sigma \sim q(\cdot|\rvx_0)$, with
-\begin{align}
-    \mathcal{L}_\text{ISM}(\theta, \sigma) &= \frac{1}{\sigma^2} \EX_{q(\rvx_0, \rvx_\sigma, \rvy)} \left[ 
-    || \hat{\mathbf{\epsilon}}_\theta(\rvx_\sigma, \rvy, \sigma) - \epsilon ||_2^2 \right]
-\end{align}
-where $\hat{\mathbf{\epsilon}}_\theta(\rvx_\sigma, \rvy, \sigma) := \sigma \cdot \rvs_\theta(\rvx_\sigma, \rvy, \sigma)$.
+% \section{Parameterising the prediction of the score function}
+% We now describe a relationship between predicting the score function and predicting various other quantities. Given $\rvx_\sigma$ and an estimate $s_\theta(\rvx_\sigma, \rvy, \sigma) \approx \frac{\rvx_0-\rvx_\sigma}{\sigma^2}$, it is simple to obtain mean-squared error estimates of various other quantities: 
+% \begin{itemize}
+%     \item An estimate of the clean data $\rvx_0$ can be obtained as ${\hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) :=  \sigma^2 \cdot s_\theta(\rvx_\sigma, \rvy, \sigma) + \rvx_\sigma}$
+%     \item The noise added to $\rvx_0$ to create $\rvx_\sigma$, scaled to unit variance, is often denoted $\epsilon := \frac{\rvx_\sigma-\rvx_0}{\sigma}$. This can be estimated as $\hat{\epsilon}_\theta := - \sigma \cdot s_\theta(\rvx_\sigma, \rvy, \sigma)$.
+% \end{itemize}
 
-For sampling to work well, the loss above must be low across a range of noise levels. We can therefore write the full loss with an integral over $\theta$:
-\begin{align} \label{eq:diffusion-loss-all-sigma}
-    \mathcal{L}_\text{ISM}(\theta) &= \int_{\sigma_\text{min}}^{\sigma_\text{max}} \lambda(\sigma) \frac{1}{\sigma^2} \EX_{q(\rvx_0, \rvx_\sigma, \rvy)} \left[ 
-    || \hat{\mathbf{\epsilon}}_\theta(\rvx_\sigma, \rvy, \sigma) - \epsilon ||_2^2 \right] \mathrm{d}\sigma
-\end{align}
-where $\lambda(\sigma)$ is a weighting function that controls how much network capacity is spent modelling the score function at each noise level. We show in \cref{sec:diffusion-likelihood} that, if $\lambda(\sigma)$ is set appropriately, this loss yields a lower-bound on the data likelihood. Before doing so, however, we show how to use the learned artefact $\hat{\mathbf{\epsilon}}_\theta$ to define and sample from a generative model.
+% Similarly, it is possible to map from a prediction of any of these quantities to the estimate of the score function needed for sampling following the reverse SDE and ODE in \cref{eq:reverse-diffusion-with-nn,eq:diffusion-ode-with-nn}. Various papers have proposed parameterising neural networks to predict these other quantities~\cite{ho2020denoising,sohl2015deep} and then implicitly obtaining the score from them; in particular \citet{ho2020denoising} train a neural network to predict $\epsilon$ and we use this approach in \cref{ch:fdm}. More recently, \citet{karras2022elucidating} demonstrated that the choice of which of these to predict is unimportant as long as the network parameterisation and per-timestep weighting of the loss function are explicitly controlled for. Their framework suggests that we: name the neural network output $\rvx_out$; compute $\hat{\rvx}_\theta(\cdots) := c_\text{skip}(\sigma) \cdot \rvx_\sigma + c_\text{out} \cdot \rvx_out$; compute the mean-squared error loss between $\hat{\rvx}$.
+
+% The loss can be equivalently computed in different spaces, for example a a squared error loss to $\rvx_0$ with
+% \begin{align}
+%     \mathcal{L}_\text{ISM}(\theta, \sigma) &= \frac{1}{\sigma^4} \EX_{q(\rvx_0, \rvx_\sigma, \rvy)} \left[ 
+%     || \hat{\rvx}_0(\rvx_\sigma, \rvy, \sigma) - \rvx_0 ||_2^2 \right]
+% \end{align}
+% where $\hat{\rvx}_0(\rvx_\sigma, \rvy, \sigma) := \sigma^2 \cdot \rvs_\theta(\rvx_\sigma, \rvy, \sigma) + \rvx_\sigma$. 
+% It is often also written as a squared error loss to $\epsilon := \frac{\rvx_\sigma - \rvx_0}{\sigma}$, a scaled version of the noise added when sampling $\rvx_\sigma \sim q(\cdot|\rvx_0)$, with
+% \begin{align}
+%     \mathcal{L}_\text{ISM}(\theta, \sigma) &= \frac{1}{\sigma^2} \EX_{q(\rvx_0, \rvx_\sigma, \rvy)} \left[ 
+%     || \hat{\mathbf{\epsilon}}_\theta(\rvx_\sigma, \rvy, \sigma) - \epsilon ||_2^2 \right]
+% \end{align}
+% where $\hat{\mathbf{\epsilon}}_\theta(\rvx_\sigma, \rvy, \sigma) := \sigma \cdot \rvs_\theta(\rvx_\sigma, \rvy, \sigma)$.
+
+% For sampling to work well, the loss above must be low across a range of noise levels. We can therefore write the full loss with an integral over $\theta$:
+% \begin{align} \label{eq:diffusion-loss-all-sigma}
+%     \mathcal{L}_\text{ISM}(\theta) &= \int_{\sigma_\text{min}}^{\sigma_\text{max}} \lambda(\sigma) \frac{1}{\sigma^2} \EX_{q(\rvx_0, \rvx_\sigma, \rvy)} \left[ 
+%     || \hat{\mathbf{\epsilon}}_\theta(\rvx_\sigma, \rvy, \sigma) - \epsilon ||_2^2 \right] \mathrm{d}\sigma
+% \end{align}
+% where $\lambda(\sigma)$ is a weighting function that controls how much network capacity is spent modelling the score function at each noise level. We show in \cref{sec:diffusion-likelihood} that, if $\lambda(\sigma)$ is set appropriately, this loss yields a lower-bound on the data likelihood. Before doing so, however, we show how to use the learned artefact $\hat{\mathbf{\epsilon}}_\theta$ to define and sample from a generative model.
 
 
 
