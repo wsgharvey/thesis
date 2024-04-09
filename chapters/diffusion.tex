@@ -47,49 +47,49 @@ This forward process is defined through a combination of the initial condition $
 \end{equation}
 defined for all $t \geq 0$, with $\rvw$ being the standard Wiener process, also known as Brownian motion. The rate at which noise is added, $g(t)$, is a hyperparameter. We will keep this exposition general by not assuming any value for it, but note that \citet{karras2022elucidating} show that setting $g(t) := \sqrt{2t}$ yields good performance.
 
-For any finite set of times $t_1,\ldots,t_n$, the forward process defines a joint distribution over all of $\rvx_{t_1},\ldots,\rvx_{t_n}$ and $\rvy$. We will denote such joint distributions as $q(\rvx_{t_1},\ldots,\rvx_{t_n}, \rvy)$, and similarly denote marginal or conditional distributions derived from them with $q$, with the specific distribution of interest being clear from variable names. In this notation, $q(\rvx_0,\rvy) = \pdata(\rvx_0,\rvy)$ is the data distribution. Many conditional distributions that follow from this are tractable, including the distribution over a variable at time $t$ conditioned on its value at time $0$:
+For any finite set of times $t_1,\ldots,t_n$, the forward process defines a joint distribution over all of $\rvx_{t_1},\ldots,\rvx_{t_n}$, $\rvx$, and $\rvy$. We will denote such joint distributions as $q(\rvx,\rvy,\rvx_{t_1},\ldots,\rvx_{t_n})$, and similarly denote marginal or conditional distributions derived from them with $q$, with the specific distribution of interest being clear from variable names. Note that $q(\rvx_0,\rvy) = \pdata(\rvx_0,\rvy)$ is simply the data distribution. Many conditional distributions that follow from this are tractable, including the distribution over $\rvx_t$ conditioned on $\rvx$:
 \begin{equation}
-    q(\rvx_t|\rvx_0,\rvy) := \gN \left( \rvx_t; \rvx_0, \sigma_t^2 \mI \right) \quad \text{where} \quad \sigma_t^2 := \int_0^t g(t')^2 \mathrm{d}t'.
+    q(\rvx_t|\rvx,\rvy) := \gN \left( \rvx_t; \rvx, \sigma(t)^2 \mI \right) \quad \text{where} \quad \sigma(t)^2 := \int_0^t g(t')^2 \mathrm{d}t'.
 \end{equation}
-If we view the forward process as adding noise to clean data then $\sigma_t$ can be viewed as the ``noise-to-signal ratio'' of $\rvx_t$ and, if we follow \citet{karras2022elucidating} by setting $g(t) := \sqrt{2t}$ then we have the simple relationship that $\sigma_t = t$ for all $t\geq0$.
+If we view the forward process as adding noise to clean data then $\sigma(t)$ can be viewed as the ``noise-to-signal ratio'' of $\rvx_t$ and, if we follow \citet{karras2022elucidating} by setting $g(t) := \sqrt{2t}$ then we have the simple relationship that $\sigma(t) = t$ for all $t\geq0$.
 
-If $t$ is large and correspondingly $\sigma_t$ is large, $q(\rvx_t|\rvx_0,\rvy)$ will be very well approximated by the Gaussian $\gN(0; \sigma_t^2\mI)$. In particular, we can observe that the KL divergence
+If $t$ is large and correspondingly $\sigma(t)$ is large, $q(\rvx_t|\rvx,\rvy)$ will be very well approximated by the Gaussian $\gN(0; \sigma(t)^2\mI)$. In particular, we can observe that the KL divergence
 \begin{equation}
-    \kl{q(\rvx_t|\rvx_0,\rvy)}{\gN(0; \sigma_t^2\mI)} :=\frac{1}{2\sigma_t^2} \rvx^\top \rvx
+    \kl{q(\rvx_t|\rvx,\rvy)}{\gN(0; \sigma(t)^2\mI)} :=\frac{1}{2\sigma(t)^2} \rvx^\top \rvx
 \end{equation}
-diminishes with $\sigma_t^2$. This forward process can therefore be used to map from clean data $\rvx_0$ to data that is arbitrarily well-approximated by a simple distribution. In the next section we will discuss how to do the more challenging counterpart: transforming samples from a simple distribution into samples from the data distribution.
+diminishes with $\sigma(t)^2$. This forward process can therefore be used to map from clean data $\rvx$ to data that is arbitrarily well-approximated by a simple distribution. In the next section we will discuss how to do the more challenging counterpart: transforming samples from a simple distribution into samples from the data distribution.
 
 \subsection{The reverse SDE} \label{sec:diffusion-forward-sde}
 Our aim in this section is to ``invert'' the forward process from the previous section, yielding a way to create clean data from noise. To do so we refer to a result  derived by \citet{anderson1982reverse}, and recalled in the diffusion modelling context by \citet{song2020score}, showing that the reverse of a diffusion process is also a diffusion process. A straightforward application of this result to the diffusion SDE in \cref{eq:forward-diffusion} reveals that the corresponding reverse-time diffusion SDE is
 \begin{equation} \label{eq:reverse-diffusion}
     \mathrm{d}\rvx = -g(t)^2 \nabla_\rvx \log q(\rvx_t|\rvy) \mathrm{d}t + g(t) \mathrm{d}\bar{\rvw}
 \end{equation}
-with $\bar{\rvw}$ is a standard Wiener process when time flows backward from $\infty$ to $0$ and $\nabla_\rvx \log q(\rvx_t)$ is the generally intractable score of $q(\rvx_t)$ as defined through the forward process. The task of the neural network in a diffusion model is to estimate $\nabla_{\rvx_t} \log q(\rvx_t)$, and we will see in \cref{sec:diffusion-training} how this is done. Assuming that we have such an estimator, which we call $s_\theta(\rvx_t, \rvy, \sigma_t) \approx \nabla_{\rvx_t} \log q(\rvx_t)$, we can define a generative model as follows. Given large $T \in \mathbb{R}^{>0}$, we sample $\rvx_T \sim \gN(\vzero, \sigma_t^2 \mI)$; then we simulate the SDE
+with $\bar{\rvw}$ is a standard Wiener process when time flows backward from $\infty$ to $0$ and $\nabla_\rvx \log q(\rvx_t)$ is the generally intractable score of $q(\rvx_t)$ as defined through the forward process. The task of the neural network in a diffusion model is to estimate $\nabla_{\rvx_t} \log q(\rvx_t)$, and we will see in \cref{sec:diffusion-training} how this is done. Assuming that we have such an estimator, which we call $s_\theta(\rvx_t, \rvy, t) \approx \nabla_{\rvx_t} \log q(\rvx_t)$, we can define a generative model as follows. Given large $T \in \mathbb{R}^{>0}$, we sample $\rvx_T \sim \gN(\vzero, \sigma(t)^2 \mI)$; then we simulate the SDE
 \begin{equation} \label{eq:reverse-diffusion-with-nn}
-    \mathrm{d}\rvx = -g(t)^2 s_\theta(\rvx_t, \rvy, \sigma_t) \mathrm{d}t + g(t) \mathrm{d}\bar{\rvw}
+    \mathrm{d}\rvx = -g(t)^2 s_\theta(\rvx_t, \rvy, t) \mathrm{d}t + g(t) \mathrm{d}\bar{\rvw}
 \end{equation}
-from time $t=T$ to $t=0$ with any SDE solver.\footnote{Possible choices include Euler integration~\citep{ho2020denoising}, more complex Runge-Kutta~\citep{grathwohl2018ffjord} solvers, or a Heun solver~\citep{karras2022elucidating}.} We will call the distribution over $\rvx_0$ parameterized by this process $p_\theta^\text{SDE}(\rvx_0)$. It approximates the data distribution $q(\rvx_0)$, with any approximation error being due to (1) imperfect fitting of the score function; and (2) the approximation of $q(\rvx_T)$ with a Gaussian. If $T$ is chosen to be large enough, source (1) will dominate. In practice there will also be some approximation error from numerically simulating the SDE, but we consider $p_\theta^\text{SDE}(\rvx_0)$ to be the distribution achieved with perfect SDE integration.
+from time $t=T$ to $t=0$ with any SDE solver.\footnote{Possible choices include Euler integration~\citep{ho2020denoising}, more complex Runge-Kutta~\citep{grathwohl2018ffjord} solvers, or a Heun solver~\citep{karras2022elucidating}.} We will call the distribution over $\rvx$ parameterized by this process $p_\theta^\text{SDE}(\rvx)$. It approximates the data distribution $\pdata(\rvx)$, with any approximation error being due to (1) imperfect fitting of the score function; and (2) the approximation of $q(\rvx_T)$ with a Gaussian. If $T$ is chosen to be large enough, source (1) will dominate. In practice there will also be some approximation error from numerically simulating the SDE, but we consider $p_\theta^\text{SDE}(\rvx)$ to be the distribution achieved with perfect SDE integration.
 
 % Assuming that we have such an estimator, \cref{eq:reverse-diffusion} provides a way to morph from $\rvx_T$ sampled from a Gaussian distribution for some large $T$, to approximate samples from the data distribution $\rvx_0 \sim \pdata(\cdot|\rvy)$. To do so, we only need a tool for integrating SDEs. This can be simple like Euler integration, or may be a more complex Runge-Kutta~\citep{grathwohl2018ffjord} or Heun~\citep{karras2022elucidating} integration method.
 
 \subsection{A reverse ODE} \label{sec:diffusion-ode}
-In this section we will describe how to replace the SDE that parameterizes our generative model with an ODE. This can make the integration simpler and we will describe how it enables exact likelihood evaluation for any given $\rvx_0$.  \citet{song2020score} show that, for any diffusion process, there exists a deterministic process whose trajectories share the same marginal distributions $\{q(\rvx_t)\}_t$ as the stochastic diffusion process. This deterministic process is described by the ODE
+In this section we will describe how to replace the SDE that parameterizes our generative model with an ODE. This can make the integration simpler and we will describe how it enables exact likelihood evaluation for any given $\rvx$.  \citet{song2020score} show that, for any diffusion process, there exists a deterministic process whose trajectories share the same marginal distributions $\{q(\rvx_t)\}_t$ as the stochastic diffusion process. This deterministic process is described by the ODE
 \begin{align}
     \mathrm{d}\rvx &= - \frac{1}{2} g(t)^2 \nabla_\rvx \log q(\rvx_t|\rvy) \mathrm{d}t \\
-    &\approx - \frac{1}{2} g(t)^2 \nabla_\rvx s_\theta(\rvx_t, \rvy, \sigma_t) \mathrm{d}t. \label{eq:diffusion-ode-with-nn}
+    &\approx - \frac{1}{2} g(t)^2 \nabla_\rvx s_\theta(\rvx_t, \rvy, t) \mathrm{d}t. \label{eq:diffusion-ode-with-nn}
 \end{align}
-We can now use the same generative model described in \cref{sec:diffusion-forward-sde} except that we integrate an ODE instead of an SDE. We will call the resulting distribution $p_\theta^\text{ODE}(\rvx_0)$. Note that this distribution will not necessarily be identical to $p_\theta^\text{SDE}(\rvx_0)$ if the approximation of the score function is imperfect, but both will approximate the data distribution.
+We can now use the same generative model described in \cref{sec:diffusion-forward-sde} except that we integrate an ODE instead of an SDE. We will call the resulting distribution $p_\theta^\text{ODE}(\rvx)$. Note that this distribution will not necessarily be identical to $p_\theta^\text{SDE}(\rvx)$ if the approximation of the score function is imperfect, but both will approximate the data distribution.
 
-Our now involves simply sampling $\rvx_T \sim \gN(\vzero, \sigma_t^2\mI)$ and then computing $\rvx_0 = f^{T:0}_\theta(\rvx_T)$, where $f^{T:0}_\theta$ is a function that simulates \cref{eq:diffusion-ode-with-nn} from time $T$ to $0$. Importantly, $f^{T:0}_\theta$ is deterministic and, since it comes from the integration of an ODE, invertible. If we assume that $f^{T:0}_\theta$ is also continuously differentiable then we can apply the change of variables rule to find
+Sampling from our model now involves simply sampling $\rvx_T \sim \gN(\vzero, \sigma(t)^2\mI)$ and then computing $\rvx_0 = f^{T:0}_\theta(\rvx_T)$, where $f^{T:0}_\theta$ is a function that simulates \cref{eq:diffusion-ode-with-nn} from time $T$ to $0$. Importantly, $f^{T:0}_\theta$ is deterministic and, since it comes from the integration of an ODE, invertible. If we assume that $f^{T:0}_\theta$ is also continuously differentiable then we can apply the change of variables rule to find
 \begin{equation}
     p_\theta^\text{ODE}(\rvx_0) = p_\theta(\rvx_T) \left| \det \mJ_{f^{T:0}_\theta}(\rvx_T) \right|^{-1}
 \end{equation}
 where $\det \mJ_{f^{T:0}_\theta}(\rvx_T)$ is the determinant of the Jacobian of $f^{T:0}_\theta$ evaluated at $\rvx_T$. Following \citet{chen2018neural}, this can be efficiently estimated by integrating the trace
 \begin{equation}
-    \text{Tr}\left( \frac{\partial}{\partial \rvx_t} \left( - \frac{1}{2} g(t)^2 \nabla_\rvx s_\theta(\rvx_t, \rvy, \sigma_t) \right)
+    \text{Tr}\left( \frac{\partial}{\partial \rvx_t} \left( - \frac{1}{2} g(t)^2 \nabla_\rvx s_\theta(\rvx_t, \rvy, t) \right)
     \right)
 \end{equation}
-of the Jacobian of the ``drift'' term in \cref{eq:diffusion-ode-with-nn} along the path of $\rvx$ while simulating the ODE. \citet{song2020score} showed that diffusion models can yield statae-of-the-art data log likelihoods when evaluated in this way.
+of the Jacobian of the ``drift'' term in \cref{eq:diffusion-ode-with-nn} along the path of $\rvx_t$ while simulating the ODE. \citet{song2020score} showed that diffusion models can yield statae-of-the-art data log likelihoods when evaluated in this way.
 
 % A downside is that it has been observed empirically that not adding noise during integration can lead to more error build up if the approximation of $\nabla_\rvx \log q(\rvx_t|\rvy)$ is imperfect~\citep{karras2022elucidating}. We will describe in \cref{TODO} more advanced techniques which can combine the advantages of adding noise during sampling with those of this deterministic approach.
 
@@ -98,59 +98,66 @@ of the Jacobian of the ``drift'' term in \cref{eq:diffusion-ode-with-nn} along t
 
 \section{Learning the score function} \label{sec:diffusion-training}
 
-The objective, when training a diffusion model, is to obtain a good estimate of the score function, $s_\theta(\rvx_t, \rvy, t) \approx \nabla_{\rvx_t} \log q(\rvx_t)$ for all $t$ of interest so that we can use it to parameterise our SDE or ODE. Given that $q(\rvx_t) = \int q(\rvx_0) \gN(\rvx_t; \vzero, \sigma_t^2\mI) \mathrm{d}\rvx_0$, we can equivalently state our objective as obtaining a good estimate of 
-$$
-\nabla_{\rvx_t} \log q(\rvx_t) = \nabla_{\rvx_t} \log \int q(\rvx_0) \gN(\rvx_t; \rvx_0, \sigma_t^2\mI) \mathrm{d}\rvx_0
-$$
-for all $\sigma_t$ of interest. This does not depend on $t$ except through $\sigma_t$ and so in this section we will consider the problem of learning a score function for given values of $\sigma$ without considering how they relate to $t$. This means that we can re-use the same learned score function estimator even if we decide to change the relationship between $\sigma$ and $t$ by changing the value of $g(t)$ in \cref{eq:forward-diffusion}. We can therefore disentangle the learning of a diffusion model from the definition of the ODEs and SDEs used to sample from it. To make this clear, in the remainder of this section when we have in mind a particular noise-to-signal ratio $\sigma=\sigma_t$ and wish to refer to the corresponding variable $\rvx_t$, we will abuse notation and do so without reference to $t$ by simply writing $\rvx_\sigma$. We will also now write the score estimate as $s_\theta(\rvx_\sigma, \rvy, \sigma)$ so that it takes $\sigma$ as an argument instead of $t$. In the following, we derive an objective for matching $s_\theta(\rvx_\sigma, \rvy, \sigma)$ to $\nabla_{\rvx_\sigma} \log q(\rvx_\sigma |\rvy)$~\citep{vincent2011connection,song2019generative}. These scores are the gradients depicted by arrows in \cref{fig:diffusion-overview}.
+\subsection{Training is agnostic to the specific mapping between $t$ and $\sigma$}
+The objective, when training a diffusion model, is to obtain a good estimate of the score function, $s_\theta(\rvx_t, \rvy, t) \approx \nabla_{\rvx_t} \log q(\rvx_t)$ for all $t$ of interest so that we can use it to parameterise our SDE or ODE. Given that $q(\rvx_t) = \int q(\rvx) \gN(\rvx_t; \rvx, \sigma_t^2\mI) \mathrm{d}\rvx$, we can equivalently state our objective as obtaining a good estimate of 
+\begin{equation}
+\nabla_{\rvx_t} \log q(\rvx_t) = \nabla_{\rvx_t} \log \int q(\rvx) \gN(\rvx_t; \rvx, \sigma_t^2\mI) \mathrm{d}\rvx
+\end{equation}
+for all $\sigma(t)$ of interest.
 
-An ideal objective would be the mean-squared error between the neural network's outputs and the desired score function. We call this the score-matching objective $\gL_\text{SM}$, but in general it is intractable because we do not have access to $\nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvy)$. We can, however, obtain an unbiased estimate of it; we begin by breaking it down as
+This does not depend on $t$ except through $\sigma(t)$ and so for the rest of this chapter we will consider the problem of learning a score function for given values of $\sigma$ without considering how they relate to $t$. This means that we can re-use the same learned score function estimator even if we decide to change the relationship between $\sigma$ and $t$ by changing the value of $g(t)$ in the forward SDE (\cref{eq:forward-diffusion}). We can therefore disentangle the learning of a diffusion model from the definition of the ODEs and SDEs used to sample from it. To make this clear, in the remainder of this section when we have in mind a particular noise-to-signal ratio $\sigma=\sigma_t$ and wish to refer to the corresponding variable $\rvx_t$, we will do so without reference to $t$ by simply writing $\rvx_\sigma$. We will also now write the score estimate as $s_\theta(\rvx_\sigma, \rvy, \sigma)$ so that it takes $\sigma$ as an argument instead of $t$. In the following, we derive an objective for matching $s_\theta(\rvx_\sigma, \rvy, \sigma)$ to $\nabla_{\rvx_\sigma} \log q(\rvx_\sigma |\rvy)$~\citep{vincent2011connection,song2019generative}. These scores are the gradients depicted by arrows in \cref{fig:diffusion-overview}.
+
+\subsection{An objective for learning to estimate the score function}
+An ideal objective would be the mean-squared error between the neural network's outputs and the desired score function. We call this the score-matching objective $\gL_\text{SM}$,
 \begin{align}
-    \mathcal{L}_\text{SM}(\theta, \sigma) &= \EX_{q(\rvx_\sigma, \rvy)} \left[ || \nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvy) - \rvs_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \right] \\
-    &= \EX_{q(\rvx_\sigma, \rvy)} \big[ 
+    \mathcal{L}_\text{SM}(\theta, \sigma) &= \EX_{q(\rvx_\sigma, \rvy)} \left[ || \nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvy) - \rvs_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \right],
+\end{align}
+but in general $\gL_\text{SM}$ is intractable because we do not have access to $\nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvy)$. We can, however, obtain an unbiased estimate of $\gL_\text{SM}$. To do so we begin by breaking it down as
+\begin{align}
+    \EX_{q(\rvx_\sigma, \rvy)} \big[ 
     || \rvs_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2
-    \nonumber\\ &\qquad\qquad\quad
+    % \nonumber\\ &\qquad\qquad\quad
     - 2 \left\langle \nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvy),
     \rvs_\theta(\rvx_\sigma, \rvy, \sigma) \right\rangle \big]
-    \nonumber\\ &\quad
+    % \nonumber\\ &\quad
     + C_1
 \end{align}
-where $C_1$ does not depend on $\theta$. We show in \cref{sec:proof-that-diffusion-does-score-matching} that this second term, which we call $S(\theta, \sigma)$, can be rewritten in terms of the tractable score of the Gaussian $q_{\sigma}(\rvx_\sigma|\rvy)$ instead of the intractable score of $q_{\sigma}(\rvx_\sigma|\rvy)$:
+where $C_1$ does not depend on $\theta$. We show in \cref{sec:proof-that-diffusion-does-score-matching} that this second term can be rewritten in terms of the tractable score of the Gaussian $q_{\sigma}(\rvx_\sigma|\rvx,\rvy)$ instead of the intractable score of $q_{\sigma}(\rvx_\sigma|\rvy)$:
 \begin{align}
 \allowdisplaybreaks
-S(\theta, \sigma) &= \EX_{q(\rvx_\sigma, \rvy)} \left[ - 2 \left\langle \nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvy), \rvs_\theta(\rvx_\sigma, \rvy, \sigma) \right\rangle \right] \\
-    &= \EX_{q(\rvx_0, \rvx_\sigma, \rvy)} \left[ -2 \left\langle \nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvx_0), \rvs_\theta(\rvx_\sigma, \rvy, \sigma) \right\rangle  \right].
+    &\EX_{q(\rvx_\sigma, \rvy)} \left[ - 2 \left\langle \nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvy), \rvs_\theta(\rvx_\sigma, \rvy, \sigma) \right\rangle \right] \\
+    =& \EX_{q(\rvx, \rvx_\sigma, \rvy)} \left[ -2 \left\langle \nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvx), \rvs_\theta(\rvx_\sigma, \rvy, \sigma) \right\rangle  \right].
 \end{align}
-Substituting this identity back into our desired objective, and letting $C_1$ and $C_2$ be two scalars that do not depend on $\theta$, we get
+Substituting this identity into $\mathcal{L}_\text{SM}(\theta, \sigma)$, and letting $C_2$ be a scalar that do not depend on $\theta$, we get
 \begin{align}
-    \mathcal{L}_\text{SM}(\theta, \sigma) &= \EX_{q(\rvx_0, \rvx_\sigma, \rvy)} \big[ 
+    \mathcal{L}_\text{SM}(\theta, \sigma) &= \EX_{q(\rvx, \rvx_\sigma, \rvy)} \big[ 
     || \rvs_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2
     \nonumber\\ &\qquad\qquad\qquad
-    - 2 \left\langle \nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvx_0), \rvs_\theta(\rvx_\sigma, \rvy, \sigma) \right\rangle \big] + C_1 \\
-    &= \EX_{q(\rvx_0, \rvx_\sigma, \rvy)} \big[ 
+    - 2 \left\langle \nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvx), \rvs_\theta(\rvx_\sigma, \rvy, \sigma) \right\rangle \big] + C_1 \\
+    &= \EX_{q(\rvx, \rvx_\sigma, \rvy)} \big[ 
     || \rvs_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2
     \nonumber\\ &\qquad\qquad\qquad
-    - 2 \left\langle \nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvx_0), \rvs_\theta(\rvx_\sigma, \rvy, \sigma) \right\rangle
+    - 2 \left\langle \nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvx), \rvs_\theta(\rvx_\sigma, \rvy, \sigma) \right\rangle
     \nonumber\\ &\qquad\qquad\qquad
-    + || \nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvx_0) ||_2^2 \big] + C_2 \\
-    &= \EX_{q(\rvx_0, \rvx_\sigma, \rvy)} \big[ 
-    || \rvs_\theta(\rvx_\sigma, \rvy, \sigma) - \nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvx_0) ||_2^2 \big] + C_2.
+    + || \nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvx) ||_2^2 \big] + C_2 \\
+    &= \EX_{q(\rvx, \rvx_\sigma, \rvy)} \big[ 
+    || \rvs_\theta(\rvx_\sigma, \rvy, \sigma) - \nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvx) ||_2^2 \big] + C_2.
 \end{align}
-Introducing the analytic score of the Gaussian $\rvx_0$, and defining our implicit score-matching loss as $\mathcal{L}_\text{ISM}(\theta, \sigma) := \mathcal{L}_\text{SM}(\theta, \sigma) - C_2$, we get
+Introducing the analytic score of the Gaussian $\rvx$, and defining our implicit score-matching loss as $\mathcal{L}_\text{ISM}(\theta, \sigma) := \mathcal{L}_\text{SM}(\theta, \sigma) - C_2$, we get
 \begin{align} \label{eq:ism-loss}
-    \mathcal{L}_\text{ISM}(\theta, \sigma) &= \EX_{q(\rvx_0, \rvx_\sigma, \rvy)} \left[ 
-    || \rvs_\theta(\rvx_\sigma, \rvy, \sigma) - \frac{\rvx_0-\rvx_\sigma}{\sigma^2} ||_2^2 \right]
+    \mathcal{L}_\text{ISM}(\theta, \sigma) &= \EX_{q(\rvx, \rvx_\sigma, \rvy)} \left[ 
+    || \rvs_\theta(\rvx_\sigma, \rvy, \sigma) - \frac{\rvx-\rvx_\sigma}{\sigma^2} ||_2^2 \right]
 \end{align}
-We can therefore train a diffusion model with the simple objective of a mean-squared error loss between the neural network's output and $\frac{\rvx_0-\rvx_\sigma}{\sigma^2}$.
+We can therefore train a diffusion model with the simple objective of a mean-squared error loss between the neural network's output and $\frac{\rvx-\rvx_\sigma}{\sigma^2}$.
 
-To be able to sample from the diffusion model, integrating the SDE or ODE from \cref{eq:reverse-diffusion-with-nn,eq:diffusion-ode-with-nn} from some large $\sigma_\text{max}$ to some $\sigma_\text{min}$ that is sufficiently close to zero\footnote{Setting $\sigma_\text{min}$ to exactly zero would cause problems when we divide by $\sigma$, but we can allow it to get arbitrarily close to zero so that $q(\rvx_{\sigma_\text{min}})$ is arbitrarily close to the data distribution.}, we need $s_\theta(\rvx_\sigma, \rvy, \sigma)$ to be a good approximation of the score for all $\sigma$ within this range. We therefore make the loss an integral of \cref{eq:ism-loss} over $\sigma$:
+Recall that, for sampling, we need the score function estimate to be accurate for a range of $\sigma$. In particular, we will consider a range $\sigma_\text{min}$ to $\sigma_\text{max}$, chosen such that $\sigma_\text{min}$ is sufficiently close to zero.\footnote{Setting $\sigma_\text{min}$ to exactly zero would cause problems when we divide by $\sigma$, but we can allow it to get arbitrarily close to zero so that $q(\rvx_{\sigma_\text{min}})$ is arbitrarily close to the data distribution.} We need $s_\theta(\rvx_\sigma, \rvy, \sigma)$ to be a good approximation of the score for all $\sigma$ within this range. We therefore make the loss an integral of \cref{eq:ism-loss} over $\sigma$:
 \begin{align} \label{eq:diffusion-loss-all-sigma}
     \mathcal{L}_\text{ISM}(\theta) &= \int_{\sigma_\text{min}}^{\sigma_\text{max}} \lambda(\sigma) \EX_{q(\rvx_0, \rvx_\sigma, \rvy)} \left[ 
     || \rvs_\theta(\rvx_\sigma, \rvy, \sigma) - \frac{\rvx_0-\rvx_\sigma}{\sigma^2} ||_2^2 \right] \mathrm{d}\sigma
 \end{align}
-where $\lambda(\sigma)$ is a weighting function that controls how much network capacity is spent modelling the score function at each noise level. We show in \cref{sec:diffusion-likelihood} that, if $\lambda(\sigma)$ is set appropriately, this loss yields a lower-bound on the data likelihood.
+where $\lambda(\sigma)$ is a weighting function that controls how much network capacity is spent modelling the score function at each noise level. In the following we will describes how $\lambda(\sigma)$ can be set to yield a lower-bound on the data likelihood, or to maximise perceptual quality.
 
-\section{A training objective that lower-bounds data likelihood} \label{sec:diffusion-likelihood}
+\subsection{A training objective that lower-bounds data likelihood} \label{sec:diffusion-likelihood}
 In \cref{sec:diffusion-ode} we describe how to compute the likelihoods of data with respect to our diffusion model. One may ask why, then, we derive the $\gL_\text{ISM}$ objective in \cref{eq:diffusion-loss-all-sigma} instead of directly optimising the likelihood of the training data. One reason is that the exact likelihood is expensive to compute since it requires an entire simulation of the ODE trajectory. In this section we show, however, that an appropriate choice of $\lambda(\sigma)$ turns the objective proposed in \cref{eq:diffusion-loss-all-sigma} into a lower bound on the data likelihood. This enables likelihood-based training with a cheap-to-evaluate training objective.
 
 To construct the lower bound, we consider sampling from the SDE in \cref{eq:reverse-diffusion} by simulating it from time $t_\text{max}$ corresponding to noise-to-signal ratio $\sigma_\text{max}$ to a time $t_\text{min}$ which is close to zero.
@@ -293,5 +300,7 @@ We can obtain an unbiased estimate of the integral in \cref{eq:difusion-elbo} us
 % \end{align}
 % where $\lambda(\sigma)$ is a weighting function that controls how much network capacity is spent modelling the score function at each noise level. We show in \cref{sec:diffusion-likelihood} that, if $\lambda(\sigma)$ is set appropriately, this loss yields a lower-bound on the data likelihood. Before doing so, however, we show how to use the learned artefact $\hat{\mathbf{\epsilon}}_\theta$ to define and sample from a generative model.
 
+\subsection{Weighting the loss for perceptual quality}
 
+\subsection{Parameterizing the neural network}
 
