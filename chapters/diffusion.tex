@@ -162,7 +162,7 @@ Recall that, for sampling, we need the score function estimate to be accurate fo
 \end{align}
 where $\lambda(\sigma)$ is a weighting function that controls how much network capacity is spent modelling the score function at each noise level. In the following we will describes how $\lambda(\sigma)$ can be set to yield a lower-bound on the data likelihood, or to maximise perceptual quality.
 
-\subsection{Equivalence of score function prediction and data reconstruction} \label{eq:equivalent-parameterisations}
+\subsection{Equivalence of score function prediction and data reconstruction} \label{eq:diffusion-equivalent-parameterisations}
 In the previous section we described an objective that trains the neural network to predict the score function $\nabla_{\rvx_\sigma} q(\rvx_\sigma|\rvx,\rvy) = \frac{\rvx-\rvx_\sigma}{\sigma^2}$ given $\rvx_\sigma$ and $\sigma$ in a way that is optimal in terms of mean-squared error, and showed that the same estimate is also an optimal prediction of $\nabla_{\rvx_\sigma} q(\rvx_\sigma|\rvy)$. In this section, we show that this estimate can be used to derive estimates of several other quantities that are also optimal in terms of mean-squared error. First, consider the problem of estimating the clean data $\rvx$. To do so, we can rewrite \cref{eq:diffusion-loss-all-sigma} as
 \begin{align} \label{eq:x0-diffusion-loss}
     \mathcal{L}_\text{ISM}(\theta) &= \int_{\sigma_\text{min}}^{\sigma_\text{max}} \frac{\lambda(\sigma)}{\sigma^4} \EX_{q(\rvx_0, \rvx_\sigma, \rvy)} \left[ 
@@ -178,7 +178,7 @@ Another quantity that is often of interest is $\epsilon$, which can be understoo
 It is therefore clear that we can obtain an estimate of $\epsilon$ from a learned score function as $-\sigma \cdot \rvs_\theta(\rvx_\sigma, \rvy, \sigma)$. We will from now on denote such an estimator $\mathbf{\epsilon}_\theta(\rvx_\sigma, \rvy, \sigma) := -\sigma \cdot \rvs_\theta(\rvx_\sigma, \rvy, \sigma)$.
 
 While we have described the perspective of learning an estimator for the score function and then using it to predict these other quantities if required, the problem of training a diffusion model can equally be framed as one of learning an estimator for e.g. $\rvx$ or $\epsilon$ using \cref{eq:x0-diffusion-loss} or \cref{eq:epsilon-diffusion-loss} and then, if required, deriving an estimate of the score function from it. This is equivalent as long as the weighting function is scaled appropriately as in \cref{eq:x0-diffusion-loss,eq:epsilon-diffusion-loss} and the parameterisation of the neural network's output is handled appropriately as we will discuss in 
-\cref{sec:diffusion-architecture}. 
+\cref{sec:diffusion-architecture}. In the remainder of this chapter we will describe the loss as an L2 distance between $\rvx$ and $\rvx_\theta(\rvx_\sigma, \rvy, \sigma)$ as it will simplify some derivations. In ... we will consider prediction of $\epsilon$. In ... we will ...
 
 \subsection{Weighting the loss to lower-bound data likelihood} \label{sec:diffusion-likelihood}
 % In \cref{sec:diffusion-ode} we describe how to compute the likelihoods of data with respect to our diffusion model. One may ask why, then, we derive the $\gL_\text{ISM}$ objective in \cref{eq:diffusion-loss-all-sigma} instead of directly optimising the likelihood of the training data. One reason is that the exact likelihood is expensive to compute since it requires an entire simulation of the ODE trajectory. In this section we show, however, that an appropriate choice of $\lambda(\sigma)$ turns the objective proposed in \cref{eq:diffusion-loss-all-sigma} into a lower bound on the data likelihood. This enables likelihood-based training with a cheap-to-evaluate training objective.
@@ -212,7 +212,7 @@ We start by noting that the forward process yields an analytically tractable for
     &\log p_\theta(\rvx) \\
     \geq &\log p_\theta(\rvx) - \kl{q(\rvx_{\sigma(0)},\ldots,\rvx_{\sigma(N)}|\rvx)}{p_\theta(\rvx_{\sigma(0)},\ldots,\rvx_{\sigma(N)}|\rvx)} \\
     = &\EX_{q(\rvx_{\sigma(0)},\ldots,\rvx_{\sigma(N)}|\rvx)} \left[ \log \frac{p(\rvx_{\sigma(N)}) \prod_{i=1}^N p_\theta(\rvx_{\rho} | \rvx_{\sigma}) p_\theta(\rvx|\rvx_{\sigma(0)}) }{q(\rvx_{\sigma(N)}|\rvx) \prod_{i=1}^N q(\rvx_{\rho} | \rvx_{\sigma}, \rvx)} \right] \\
-    = &\kl{q(\rvx_{\rho(N)}|\rvx)}{p(\rvx_{\sigma(N)})} + \EX_{q(\rvx_{\sigma(0)}|\rvx)} \left[ - \log p_\theta(\rvx|\rvx_{\sigma(0)}) \right] + \mathcal{L}_N(\theta, \rvx) \label{eq:full-diffusion-elbo}
+    = &-\kl{q(\rvx_{\rho(N)}|\rvx)}{p(\rvx_{\sigma(N)})} + \EX_{q(\rvx_{\sigma(0)}|\rvx)} \left[ \log p_\theta(\rvx|\rvx_{\sigma(0)}) \right] - \mathcal{L}_N(\theta, \rvx) \label{eq:full-diffusion-elbo}
 \end{align}
 where
 \begin{align}
@@ -235,7 +235,7 @@ where
     \sigma_Q(s, t) &:= \frac{\rho^2 (\sigma^2-\rho^2)}{\sigma^2}.
 \end{align}
 
-Recall that our objective is minimised by minimising the KL divergence between $q(\rvx_\rho|\rvx_\sigma,\rvx)$ and $p_\theta(\rvx_{\rho}|\rvx_{\sigma})$, so intuitively a sensible parameterisation for $p_\theta(\rvx_\rho|\rvx_\sigma)$ would be as close as possible to the form of $q(\rvx_\rho|\rvx_\sigma,\rvx)$. Since $p_\theta(\rvx_{\rho}|\rvx_{\sigma})$ cannot be a function of $\rvx$, we cannot make them exactly equal. We instead define $p_\theta(\rvx_\rho|\rvx_\sigma)$ so that they are close by copying the form of $q(\rvx_\rho|\rvx_\sigma,\rvx)$ but approximating $\rvx$ using our estimate $\hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma)$, obtained as described in \cref{eq:equivalent-parameterisations}.\footnote{With non-zero integration step size, this form of $p_\theta(\rvx_{\sigma} | \rvx_{\rho})$ is not exactly the same as that obtained by performing e.g. an Euler integration step on the reverse SDE in \cref{eq:reverse-diffusion-with-nn}, but will become so if we let the integration step size tend to zero\todo{show this in appendix}.}:
+Recall that our objective is minimised by minimising the KL divergence between $q(\rvx_\rho|\rvx_\sigma,\rvx)$ and $p_\theta(\rvx_{\rho}|\rvx_{\sigma})$, so intuitively a sensible parameterisation for $p_\theta(\rvx_\rho|\rvx_\sigma)$ would be as close as possible to the form of $q(\rvx_\rho|\rvx_\sigma,\rvx)$. Since $p_\theta(\rvx_{\rho}|\rvx_{\sigma})$ cannot be a function of $\rvx$, we cannot make them exactly equal. We instead define $p_\theta(\rvx_\rho|\rvx_\sigma)$ so that they are close by copying the form of $q(\rvx_\rho|\rvx_\sigma,\rvx)$ but approximating $\rvx$ using our estimate $\hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma)$, obtained as described in \cref{eq:diffusion-equivalent-parameterisations}.\footnote{With non-zero integration step size, this form of $p_\theta(\rvx_{\sigma} | \rvx_{\rho})$ is not exactly the same as that obtained by performing e.g. an Euler integration step on the reverse SDE in \cref{eq:reverse-diffusion-with-nn}, but will become so if we let the integration step size tend to zero\todo{show this in appendix}.}:
 \begin{align}
     p_\theta(\rvx_{\rho} | \rvx_{\sigma}) &= \gN( \rvx_{\rho}; \mathbf{\mu}_Q(\rvx_\sigma, \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma); \rho, \sigma), \sigma_Q^2(\rho, \sigma) \mI ).
 \end{align}
@@ -248,87 +248,34 @@ We can then express the KL divergence as:
     = &\frac{\sigma^2 - \rho^2}{2 \rho^2 \sigma^2} || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \\
     = &\frac{1}{2} \left( \frac{1}{\rho^2} - \frac{1}{\sigma^2} \right) || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2.
 \end{align}
-Following \citet{kingma2021variational}, we will proceed by introducing the signal-to-noise ratio defined as $\text{SNR}(t) = \frac{1}{\sigma_t^2}$. We can then write the KL divergence as
+Following \citet{kingma2021variational}, we will proceed by introducing the signal-to-noise ratio defined as $\text{SNR}(\sigma) = \frac{1}{\sigma^2}$. We can then write the KL divergence as
 \begin{align}
-\kl{q(\rvx_{s} | \rvx_{t}, \rvx)}{p_\theta(\rvx_{s} | \rvx_{t})} = &\frac{1}{2} \left( SNR(s) - SNR(t) \right) || \rvx - \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma) ||_2^2,
+\kl{q(\rvx_{\rho} | \rvx_{\sigma}, \rvx)}{p_\theta(\rvx_{\rho} | \rvx_{\sigma})} = &\frac{1}{2} \left( SNR(\rho) - SNR(\sigma) \right) || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2,
 \end{align}
 and so
 \begin{align}
-    \mathcal{L}_\infty(\rvx) = \frac{1}{2} \sum_{i=1}^N \left( SNR(s) - SNR(t) \right) || \rvx - \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma) ||_2^2.
+    \mathcal{L}_\infty(\rvx) = \frac{1}{2} \sum_{i=1}^N \left( SNR(\rho) - SNR(\sigma) \right) || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2.
 \end{align}
-This reveals that the contribution of each denoising step to the log-likelihood is closely related its change to the signal-to-noise ratio. The squared-error term reveals that it is also strongly dependent on the accuracy of the prediction of $\rvx$ given $\rvx_t$ and $\rvy$. A better lower-bound will be obtained by taking more steps, and changing the signal-to-noise ratio by less in each step. To make this lower-bound agnostic to the number of steps, we can consider the limit where infinitely many steps are taken. To do so, we  follow \citet{kingma2021variational} and replace $s$ with $t-\frac{t_\text{diff}}{T}$, where $t_\text{diff} = \frac{t_\text{max}-t_\text{min}}{\tau}$. Then, taking the limit as $\tau \rightarrow 0$ gives 
+This reveals that the contribution of each denoising step to the log-likelihood is closely related its change to the signal-to-noise ratio. The squared-error term reveals that it is also strongly dependent on the accuracy of the prediction of $\rvx$ given $\rvx_t$ and $\rvy$. A better lower-bound will be obtained by taking more steps, and changing the signal-to-noise ratio by less in each step. To make this lower-bound agnostic to the number of steps, we can consider the limit where infinitely many steps are taken. To do so, we  follow \citet{kingma2021variational} and replace $\rho$ with $\sigma-\frac{\sigma_\text{diff}}{N}$, where $\sigma_\text{diff} = \sigma_\text{max}-\sigma_\text{min}$. Then, taking the limit as $N \rightarrow \infty$ gives 
 \begin{align}
-    \mathcal{L}_T(\rvx) &= \lim_{T\rightarrow\infty} \frac{1}{2} \sum_{i=1}^T \left[ \left( \frac{SNR(t-\frac{t_\text{diff}}{T}) - SNR(t)}{\tau} \right) || \rvx - \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma) ||_2^2 \right] \\
-    &= \frac{1}{2} \int SNR'(t) || \rvx - \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma) ||_2^2 \mathrm{d}t \label{eq:difusion-elbo} \\
-    &= \frac{1}{2} \int || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \mathrm{d}\text{SNR}.
+    \mathcal{L}_\infty(\rvx) &= \lim_{N\rightarrow\infty} \frac{1}{2} \sum_{i=1}^N \left[ \left( \frac{SNR(\sigma-\frac{\sigma_\text{diff}}{N}) - SNR(\sigma)}{\frac{\sigma_\text{diff}}{N}} \right) || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \right] \\
+    &= \frac{1}{2} \int_{\sigma_\text{min}}^{\sigma_\text{max}} -\text{SNR}'(\sigma) || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \mathrm{d}\sigma \label{eq:difusion-elbo} \\
+    &= \frac{1}{2} \int_{\text{SNR}(\sigma_\text{min})}^{\text{SNR}(\sigma_\text{max})} - || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \mathrm{d}\text{SNR} \\
+    &= \frac{1}{2} \int_{\text{SNR}(\sigma_\text{max})}^{\text{SNR}(\sigma_\text{min})} || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \mathrm{d}\text{SNR}. \label{eq:diffusion-integral-dsnr}
 \end{align}
-We can obtain an unbiased estimate of the integral in \cref{eq:difusion-elbo} using a single Monte Carlo sample of $\sigma$. Optionally, we can also define a proposal distribution $q(\sigma)$ and use importance sampling.
-
-
-% So we are able to express the lower-bound with a mean-squared error loss between $$ and the learned prediction of $$. We can equivalently write this as a mean-squared error loss between the predicted score function and our target for it. Given that the target is $\rvs := \frac{ - \rvx_t}{\sigma^2}$, we find
-% \begin{align}
-%     \kl{q(\rvx_{s} | \rvx_{t}, )}{p_\theta(\rvx_{s} | \rvx_{t})} 
-%     &= \frac{\hat{\mu}_{0:i-1}^2}{2 \hat{\sigma}_{0,i:i-1}^2} ||  - \hat{\rvx}_\theta(\rvx_t, \rvy, \sigma_{t(i)}) ||_2^2 \\
-%     &= \frac{\hat{\mu}_{0:i-1}^2 \sigma^4}{2 \hat{\sigma}_{0,i:i-1}^2} || \frac{}{\sigma_{t(i)}^2} - \frac{\hat{\rvx}_\theta(\rvx_t, \rvy, \sigma_{t(i)})}{\sigma_{t(i)}^2} ||_2^2 \\
-%     &= \frac{\hat{\mu}_{0:i-1}^2 \sigma_{t(i)}^4}{2 \hat{\sigma}_{0,i:i-1}^2} || \frac{-\rvx_t}{\sigma_{t(i)}^2} - \rvs_\theta(\rvx_t, \rvy, \sigma_{t(i)}) ||_2^2
-% \end{align}
-% Recall that our lower-bound $\mathcal{L}_T()$ is a sum over these KL divergences:
-% \begin{align}
-%     \mathcal{L}_T() &= \sum_{i=2}^T \EX_{q(\rvx_{t(i)}|)} \left[ \kl{q(\rvx_{s(i)} | \rvx_{t(i)}, )}{p_\theta(\rvx_{s(i)} | \rvx_{t(i)})} \right] \\
-%     &= \sum_{i=2}^T \frac{\hat{\mu}_{0:i-1}^2 \sigma_{t(i)}^4}{2 \hat{\sigma}_{0,i:i-1}^2} \EX_{q(\rvx_{t(i)}|)} \left[  || \frac{-\rvx_t}{\sigma_{t(i)}^2} - \rvs_\theta(\rvx_t, \rvy, \sigma_{t(i)}) ||_2^2 \right] \\
-%     &= \sum_{i=2}^T \frac{\sigma_{t(i)}^4}{2 \hat{\sigma}_{0:i-1}^2} \EX_{q(\rvx_{t(i)}|)} \left[  || \frac{-\rvx_t}{\sigma_{t(i)}^2} - \rvs_\theta(\rvx_t, \rvy, \sigma_{t(i)}) ||_2^2 \right] \\
-%     &= \sum_{i=2}^T \frac{1}{2} \sigma_{t(i)}^2 \frac{\sigma_{t(i)}^2}{\sigma_{s(i)}^2} \EX_{q(\rvx_{t(i)}|)} \left[  || \frac{-\rvx_t}{\sigma_{t(i)}^2} - \rvs_\theta(\rvx_t, \rvy, \sigma_{t(i)}) ||_2^2 \right] \\
-%     &= \sum_{i=2}^T \frac{1}{2} \sigma_{t(i)}^2 \frac{\sigma_{t(i)}^2}{\sigma_{s(i)}^2} \EX_{q(\rvx_{t(i)}|)} \left[  || \frac{-\rvx_t}{\sigma_{t(i)}^2} - \rvs_\theta(\rvx_t, \rvy, \sigma_{t(i)}) ||_2^2 \right] \\
-%     &\approx \sum_{i=2}^T \frac{1}{2} \sigma_{t(i)}^2 (1 + \frac{\frac{\mathrm{d}\sigma_t^2}{\mathrm{d}t} \mathrm{d}t}{\sigma_{s(i)}^2}) \EX_{q(\rvx_{t(i)}|)} \left[  || \frac{-\rvx_t}{\sigma_{t(i)}^2} - \rvs_\theta(\rvx_t, \rvy, \sigma_{t(i)}) ||_2^2 \right] \\
-% \end{align}
-% In the limit where the number of sampling steps $N$ tends to infinity, it becomes an integral. Given that the internal term depends only on $\sigma_t$ and not on the value of $t$ itself otherwise, ...
-% \begin{align}
-%     \mathcal{L}_T(\rvx_0) &= 
-% \end{align}
-
-% , we will now determine the form of $p_\theta(\rvx_{s(i)}|\rvx_{t(i)})$ so that we can consider the KL divergence between them. Euler integration of the reverse SDE involves taking a deterministic step and then adding Gaussian noise, so $p_\theta(\rvx_{s(i)}|\rvx_{t(i)})$ will be Gaussian. In particular, referring to the reverse SDE in \cref{eq:reverse-diffusion}, the step will be in direction $g(t)^2 s_\theta(\rvx_{t(i)}, \rvy, \sigma_{t(i)})$. Since the step is from $t(i)$ to $s(i)$, the step will produce mean value $\rvx_i - (t(i)-s(i)) g(t)^2 s_\theta(\rvx_{t(i)}, \rvy, \sigma_{t(i)})$.
-% %
-% % Referring to \cref{eq:reverse-diffusion} again, the variance will be $\int_{s(i)}^{t(i)} g(t(i))^2 \mathrm{d}t = \sigma_{i-1:i}$.
-% Since we are interested in minimising the KL divergence to $q(\rvx_{s(i)} | \rvx_{t(i)}, \rvx_0)$, we can simply copy its variance $\hat{\sigma}_{0,i:i-1}^2$. We therefore write $p_\theta(\rvx_{s(i)}|\rvx_{t(i)})$ as
-% \begin{equation}
-%     p_\theta(\rvx_{s(i)}|\rvx_{t(i)}) = \gN \Big( \rvx_{s(i)}; \rvx_i-(t(i)-s(i)) g(t(i))^2 s_\theta(\rvx_{t(i)}, \rvy, \sigma_{t(i)}); \hat{\sigma}_{0,i:i-1}^2 \mI \Big).
-% \end{equation}
-% This Euler step clearly will have some integration error when $T$ is finite and therefore $t(i)$ and $s(i)$ are a finite distance apart. In this section we are concerned with ensuring that $\theta$ is good enough to give us a high likelihood with a perfect integrator, and not with minimizing integration errors. We therefore look at the limit of $\mathcal{L}_T(\rvx_0)$ as $T \rightarrow \infty$:
-% \begin{align}
-%     \mathcal{L}_\infty(\rvx_0) &= \lim_{T\rightarrow\infty} \sum_{i=2}^T \EX_{q(\rvx_{t(i)}|\rvx_0)} \left[ \kl{q(\rvx_{s(i)} | \rvx_{t(i)}, \rvx_0)}{p_\theta(\rvx_{s(i)} | \rvx_{t(i)})} \right] \\
-%     &= \int_0^{t_\text{max}} \EX_{q(\rvx_t|\rvx_0)} \left[ \frac{1}{2\sigma_q(t)^2} || \mu_q(\rvx_t, t) - \mu_\theta(\rvx_t, t) ||_2^2 \right] \mathrm{d}t
-% \end{align}
-
-% \section{Parameterising the prediction of the score function}
-% We now describe a relationship between predicting the score function and predicting various other quantities. Given $\rvx_\sigma$ and an estimate $s_\theta(\rvx_\sigma, \rvy, \sigma) \approx \frac{\rvx_0-\rvx_\sigma}{\sigma^2}$, it is simple to obtain mean-squared error estimates of various other quantities: 
-% \begin{itemize}
-%     \item An estimate of the clean data $\rvx_0$ can be obtained as ${\hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) :=  \sigma^2 \cdot s_\theta(\rvx_\sigma, \rvy, \sigma) + \rvx_\sigma}$
-%     \item The noise added to $\rvx_0$ to create $\rvx_\sigma$, scaled to unit variance, is often denoted $\epsilon := \frac{\rvx_\sigma-\rvx_0}{\sigma}$. This can be estimated as $\hat{\epsilon}_\theta := - \sigma \cdot s_\theta(\rvx_\sigma, \rvy, \sigma)$.
-% \end{itemize}
-
-% Similarly, it is possible to map from a prediction of any of these quantities to the estimate of the score function needed for sampling following the reverse SDE and ODE in \cref{eq:reverse-diffusion-with-nn,eq:diffusion-ode-with-nn}. Various papers have proposed parameterising neural networks to predict these other quantities~\cite{ho2020denoising,sohl2015deep} and then implicitly obtaining the score from them; in particular \citet{ho2020denoising} train a neural network to predict $\epsilon$ and we use this approach in \cref{ch:fdm}. More recently, \citet{karras2022elucidating} demonstrated that the choice of which of these to predict is unimportant as long as the network parameterisation and per-timestep weighting of the loss function are explicitly controlled for. Their framework suggests that we: name the neural network output $\rvx_out$; compute $\hat{\rvx}_\theta(\cdots) := c_\text{skip}(\sigma) \cdot \rvx_\sigma + c_\text{out} \cdot \rvx_out$; compute the mean-squared error loss between $\hat{\rvx}$.
-
-% The loss can be equivalently computed in different spaces, for example a a squared error loss to $\rvx_0$ with
-% \begin{align}
-%     \mathcal{L}_\text{ISM}(\theta, \sigma) &= \frac{1}{\sigma^4} \EX_{q(\rvx_0, \rvx_\sigma, \rvy)} \left[ 
-%     || \hat{\rvx}_0(\rvx_\sigma, \rvy, \sigma) - \rvx_0 ||_2^2 \right]
-% \end{align}
-% where $\hat{\rvx}_0(\rvx_\sigma, \rvy, \sigma) := \sigma^2 \cdot \rvs_\theta(\rvx_\sigma, \rvy, \sigma) + \rvx_\sigma$. 
-% It is often also written as a squared error loss to $\epsilon := \frac{\rvx_\sigma - \rvx_0}{\sigma}$, a scaled version of the noise added when sampling $\rvx_\sigma \sim q(\cdot|\rvx_0)$, with
-% \begin{align}
-%     \mathcal{L}_\text{ISM}(\theta, \sigma) &= \frac{1}{\sigma^2} \EX_{q(\rvx_0, \rvx_\sigma, \rvy)} \left[ 
-%     || \hat{\mathbf{\epsilon}}_\theta(\rvx_\sigma, \rvy, \sigma) - \epsilon ||_2^2 \right]
-% \end{align}
-% where $\hat{\mathbf{\epsilon}}_\theta(\rvx_\sigma, \rvy, \sigma) := \sigma \cdot \rvs_\theta(\rvx_\sigma, \rvy, \sigma)$.
-
-% For sampling to work well, the loss above must be low across a range of noise levels. We can therefore write the full loss with an integral over $\theta$:
-% \begin{align} \label{eq:diffusion-loss-all-sigma}
-%     \mathcal{L}_\text{ISM}(\theta) &= \int_{\sigma_\text{min}}^{\sigma_\text{max}} \lambda(\sigma) \frac{1}{\sigma^2} \EX_{q(\rvx_0, \rvx_\sigma, \rvy)} \left[ 
-%     || \hat{\mathbf{\epsilon}}_\theta(\rvx_\sigma, \rvy, \sigma) - \epsilon ||_2^2 \right] \mathrm{d}\sigma
-% \end{align}
-% where $\lambda(\sigma)$ is a weighting function that controls how much network capacity is spent modelling the score function at each noise level. We show in \cref{sec:diffusion-likelihood} that, if $\lambda(\sigma)$ is set appropriately, this loss yields a lower-bound on the data likelihood. Before doing so, however, we show how to use the learned artefact $\hat{\mathbf{\epsilon}}_\theta$ to define and sample from a generative model.
+\Cref{eq:diffusion-integral-dsnr} leads to the interpretation of the diffusion loss shown in TODO. We can obtain an unbiased estimate of the integral in \cref{eq:difusion-elbo} with importance sampling from a proposal distribution $q(\sigma)$: 
+\begin{align}
+    \mathcal{L}_\infty(\rvx) &= \EX_{\sigma \sim q(\cdot)} \left[ \frac{-\text{SNR}'(\sigma)}{2 \cdot q(\sigma)} || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \right]  \\
+    &= \EX_{\sigma \sim q(\cdot)} \left[ \frac{1}{\sigma^3 \cdot q(\sigma)} || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \right]. \label{eq:diffusion-loss}
+\end{align}
+It is common to estimate this objective with a single Monte Carlo sample of $\sigma$ per data point during training.
 
 \subsection{Weighting the loss for perceptual quality}
+Optimising the loss in \cref{eq:diffusion-loss} typically yields diffusion models that are very good when evaluated in terms of data likelihood. The likelihood of data under a model, however, does not always correspond well to the quality of samples from the model as perceived by a human.
 
-\subsection{Parameterizing the neural network} \label{sec:diffusion-architecture}
+For example, in the image domain, the log-likelihood of an image is dominated by high-frequency features rather than low-frequency features. To explain why, see that state-of-the-art lossless compression on the ImageNet dataset at $32\times32$ resolution yields an average of $3.67$ bits per dimension~\citep{sahoo2023diffusion}, or $3.67\times3\times32^2 / 8192 = 1.4$ kB per image, and at $64\times64$ resolution yields an average of 3.83 bits per dimension~\citep{finlay2020train}, or $3.83\times3\times64^2 / 8192 = 5.7$ kB per image. Therefore, $75\%$ of the bits present in the $64\times64$ images represent detail that is sufficiently high-frequency to be removed by downsampling by just a factor of 2. That is, most of the bits are spent modeling pixel-level detail rather than the semantically-important features that tend to be larger scale and are more obvious to humans.
 
+In the diffusion model context, \citet{yang2023diffusion} observed that adding Gaussian noise with even a small standard deviation tends to obscure high-frequency Fourier components of the image, while low-frequency components are not obscured until much more noise is added. This means that, as noise is added during the forward diffusion SDE, high-frequency components will be removed first and low-frequency components will remain until nearer the end. Conversely, while running the reverse SDE to sample from the model, the low-frequency Fourier components are sampled at first, while the amount of noise $\sigma$ is large. Then, as $\sigma$ decreases, increasingly high-frequency components are sampled until the process finishes. We can therefore relate values of $\sigma$ to roughly what Fourier features are sampled being by the diffusion model at that point in the reverse process. If, in order to make samples look perceptually better to humans, we want the diffusion model to be better at generating low-frequency features, we can focus on making the diffusion model obtain lower loss where $\sigma$ is large. This leads us to a common practice in the diffusion model literature: modifying the weighting function $\lambda(\sigma)$ so that it places relatively greater values on larger values of $\sigma$ than if we use the weighting function of ... suggested by our bound on the data likelihood in ... . We show some common choices of weighting function in ... and compare them to ..., the ELBO-based weighting function.
+
+% \subsection{Parameterizing the neural network} \label{sec:diffusion-architecture}
+% As discussed in \cref{eq:diffusion-equivalent-parameterisations}, the diffusion model can be trained to predict any of a selection of different quantities and then, at test-time, any of these can be used to estimate the desired score function. Recall that we described predicting the reparameterisation noise $\epsilon$, clean data $\rvx$, or the score $\nabla_{\rvx_\sigma} q(\rvx_\sigma|\rvy)$. All of these techniques have been used in the literature~\citep{ho2020denoising,karras2022elucidating,song2020score}. 
