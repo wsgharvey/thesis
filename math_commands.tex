@@ -2,6 +2,66 @@
 
 \usepackage{amsmath,amsfonts,bm}
 
+% extras for TDDM
+
+\newcommand{\ybase}{\y^{\textup{base}}}
+\newcommand{\Ybase}{\Y^{\textup{base}}}
+\newcommand{\yadd}{\y^{\textup{add}}}
+\newcommand{\xbase}{\x^{\textup{base}}}
+\newcommand{\xadd}{\x^{\textup{add}}}
+\newcommand{\autonet}{A}
+\newcommand{\pref}{p_{\textup{ref}}}
+\newcommand{\dimension}[1]{\mathbb{D}_{#1}}
+\newcommand{\trs}{\mathbf{z}} % time reversal state
+\newcommand{\delidxdist}{K^{\textup{del}}}
+\newcommand{\forwarddrift}{\overrightarrow{\drift}}
+\newcommand{\forwarddiffcoeff}{\overrightarrow{\diffcoeff}}
+\newcommand{\backwardrate}{\overleftarrow{\lambda}}
+\newcommand{\backwarddrift}{\overleftarrow{\drift}}
+\newcommand{\backwarddiffcoeff}{\overleftarrow{g}}
+\newcommand{\ftk}{\overrightarrow{K}} % forward transition kernel
+\newcommand{\btk}{\overleftarrow{K}} % backward 
+\newcommand{\brown}{\mathbf{w}}
+\newcommand{\drift}{\mathbf{b}}
+\newcommand{\diffcoeff}{g}
+\newcommand{\forwardrate}{%
+  \vbox{\offinterlineskip\ialign{%
+    \hfil##\hfil\cr
+    $\rightarrow$\cr
+    \noalign{\kern -.3ex}
+    $\lambda$\cr
+}}}
+\def \msb {\mathsf{B}}
+\newcommand{\expeLigne}[1]{\mathbb{E}[#1]}
+\newcommand{\CPELigne}[2]{\mathbb{E}[#1 \ | \ #2]}
+\newcommand{\coint}[1]{[ #1 )}
+\newcommand{\ccint}[1]{[ #1 ]}
+\newcommand{\ooint}[1]{( #1 )}
+\def \Jbb{\mathbb{J}}
+\def \Pbb{\mathbb{P}}
+\def \Kbb{\mathbb{K}}
+\def \rmd{\mathrm{d}}
+\def \msp{\mathsf{P}}
+\def \Jker{\mathbb{J}}
+\newcommand{\abs}[1]{|#1|}
+\def \msd{\mathsf{D}}
+\def \calA{\mathcal{A}}
+\def \calR{\mathcal{R}}
+\def \rset{\mathbb{R}}
+\def \msx{\mathsf{X}}
+\def \mcx{\mathcal{X}}
+\def \nset{\mathbb{N}}
+\def \dim{\mathrm{dim}}
+\def \rmc{\mathrm{C}}
+\newcommand{\normLigne}[1]{\| #1 \|}
+\def \bfX{\mathbf{X}}
+\def \bfY{\mathbf{Y}}
+\def \Pker{\mathrm{P}}
+\def \Qker{\mathrm{Q}}
+\def \Jker{\mathrm{J}}
+\newcommand{\condprobaLigne}[2]{\mathbb{P}(#1 \ | \ #2)}
+\def \msa{\mathsf{A}}
+
 % Mark sections of captions for referring to divisions of figures
 \newcommand{\figleft}{{\em (Left)}}
 \newcommand{\figcenter}{{\em (Center)}}

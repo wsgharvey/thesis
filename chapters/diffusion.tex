@@ -1,5 +1,5 @@
-\chapter{Review: Diffusion Models}
-\label{sec:diffusion}
+\chapter{Diffusion Models}
+\label{ch:diffusion}
 
 Diffusion models, or DMs~\citep{sohl2015deep,ho2020denoising,nichol2021improved,song2020score}, can be understood as hierarchical variational auto-encoders with a very simple encoder: rather than parameterising a distribution with a neural network, the encoder simply adds Gaussian noise to the data. This ``encoder'' is commonly then referred to as the ``forward'' (or ``noising'') process. The equivalent of the VAE's prior and decoder are then the ``reverse'' (or ``generative'') process, which uses a learned ``denoising'' function in the form of a neural network. Sampling from a DM begins with drawing a sample from a Gaussian distribution that approximates a heavily noised sample from the data distribution. Running the reverse/generative process on this sample then gradually removes noise from it, moving the sample closer to the data manifold. By the end of the generative process, if all is trained well, the samples from this process should match the data distribution. As we will show later, fitting the DM simply involves training a neural network to predict clean data give noisy data using a mean-squared error loss. This leads to more stable training than for a VAE, in which the prior, decoder, and encoder are all learned jointly, leading to a ``moving target'' problem as each component must keep compensating for changes to the others.
 
@@ -49,7 +49,7 @@ defined for all $t \geq 0$, with $\rvw$ being the standard Wiener process, also 
 
 For any finite set of times $t_1,\ldots,t_n$, the forward process defines a joint distribution over all of $\rvx_{t_1},\ldots,\rvx_{t_n}$, $\rvx$, and $\rvy$. We will denote such joint distributions as $q(\rvx,\rvy,\rvx_{t_1},\ldots,\rvx_{t_n})$, and similarly denote marginal or conditional distributions derived from them with $q$, with the specific distribution of interest being clear from variable names. Note that $q(\rvx_0,\rvy) = \pdata(\rvx_0,\rvy)$ is simply the data distribution. Many conditional distributions that follow from this are tractable, including the distribution over $\rvx_t$ conditioned on $\rvx$:
 \begin{equation}
-    q(\rvx_t|\rvx,\rvy) := \gN \left( \rvx_t; \rvx, \sigma(t)^2 \mI \right) \quad \text{where} \quad \sigma(t)^2 := \int_0^t g(t')^2 \mathrm{d}t'.
+    q(\rvx_t|\rvx,\rvy) = \gN \left( \rvx_t; \rvx, \sigma(t)^2 \mI \right) \quad \text{where} \quad \sigma(t)^2 := \int_0^t g(t')^2 \mathrm{d}t'.
 \end{equation}
 If we view the forward process as adding noise to clean data then $\sigma(t)$ can be viewed as the ``noise-to-signal ratio'' of $\rvx_t$ and, if we follow \citet{karras2022elucidating} by setting $g(t) := \sqrt{2t}$ then we have the simple relationship that $\sigma(t) = t$ for all $t\geq0$.
 
@@ -89,7 +89,7 @@ where $\det \mJ_{f^{T:0}_\theta}(\rvx_T)$ is the determinant of the Jacobian of 
     \text{Tr}\left( \frac{\partial}{\partial \rvx_t} \left( - \frac{1}{2} g(t)^2 \nabla_\rvx s_\theta(\rvx_t, \rvy, t) \right)
     \right)
 \end{equation}
-of the Jacobian of the ``drift'' term in \cref{eq:diffusion-ode-with-nn} along the path of $\rvx_t$ while simulating the ODE. \citet{song2020score} showed that diffusion models can yield statae-of-the-art data log likelihoods when evaluated in this way.
+of the Jacobian of the ``drift'' term in \cref{eq:diffusion-ode-with-nn} along the path of $\rvx_t$ while simulating the ODE. \citet{song2020score} showed that diffusion models can yield state-of-the-art data log likelihoods when evaluated in this way.
 
 % A downside is that it has been observed empirically that not adding noise during integration can lead to more error build up if the approximation of $\nabla_\rvx \log q(\rvx_t|\rvy)$ is imperfect~\citep{karras2022elucidating}. We will describe in \cref{TODO} more advanced techniques which can combine the advantages of adding noise during sampling with those of this deterministic approach.
 
@@ -98,7 +98,7 @@ of the Jacobian of the ``drift'' term in \cref{eq:diffusion-ode-with-nn} along t
 
 \section{Learning the score function} \label{sec:diffusion-training}
 
-\subsection{Training is agnostic to the specific mapping between $t$ and $\sigma$}
+\subsection{Training is agnostic to the mapping between $t$ and $\sigma$}
 The objective, when training a diffusion model, is to obtain a good estimate of the score function, $s_\theta(\rvx_t, \rvy, t) \approx \nabla_{\rvx_t} \log q(\rvx_t)$ for all $t$ of interest so that we can use it to parameterise our SDE or ODE. Given that $q(\rvx_t) = \int q(\rvx) \gN(\rvx_t; \rvx, \sigma_t^2\mI) \mathrm{d}\rvx$, we can equivalently state our objective as obtaining a good estimate of 
 \begin{equation}
 \nabla_{\rvx_t} \log q(\rvx_t) = \nabla_{\rvx_t} \log \int q(\rvx) \gN(\rvx_t; \rvx, \sigma_t^2\mI) \mathrm{d}\rvx
@@ -151,31 +151,42 @@ Substituting this identity into $\mathcal{L}_\text{SM}(\theta, \sigma)$, and let
 Introducing the analytic score of the Gaussian $\rvx$, and defining our implicit score-matching loss as $\mathcal{L}_\text{ISM}(\theta, \sigma) := \mathcal{L}_\text{SM}(\theta, \sigma) - C_2$, we get
 \begin{align} \label{eq:ism-loss}
     \mathcal{L}_\text{ISM}(\theta, \sigma) &= \EX_{q(\rvx, \rvx_\sigma, \rvy)} \left[ 
+    || \rvs_\theta(\rvx_\sigma, \rvy, \sigma) - \nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvx) ||_2^2 \right] \\
+    &= \EX_{q(\rvx, \rvx_\sigma, \rvy)} \left[  \label{eq:ism-loss-ve}
     || \rvs_\theta(\rvx_\sigma, \rvy, \sigma) - \frac{\rvx-\rvx_\sigma}{\sigma^2} ||_2^2 \right]
 \end{align}
 We can therefore train a diffusion model with the simple objective of a mean-squared error loss between the neural network's output and $\frac{\rvx-\rvx_\sigma}{\sigma^2}$.
 
 Recall that, for sampling, we need the score function estimate to be accurate for a range of $\sigma$. In particular, we will consider a range $\sigma_\text{min}$ to $\sigma_\text{max}$, chosen such that $\sigma_\text{min}$ is sufficiently close to zero.\footnote{Setting $\sigma_\text{min}$ to exactly zero would cause problems when we divide by $\sigma$, but we can allow it to get arbitrarily close to zero so that $q(\rvx_{\sigma_\text{min}})$ is arbitrarily close to the data distribution.} We need $s_\theta(\rvx_\sigma, \rvy, \sigma)$ to be a good approximation of the score for all $\sigma$ within this range. We therefore make the loss an integral of \cref{eq:ism-loss} over $\sigma$:
 \begin{align} \label{eq:diffusion-loss-all-sigma}
-    \mathcal{L}_\text{ISM}(\theta) &= \int_{\sigma_\text{min}}^{\sigma_\text{max}} \lambda(\sigma) \EX_{q(\rvx, \rvx_\sigma, \rvy)} \left[ 
+    \mathcal{L}_\text{ISM}(\theta) &= \int_{\sigma_\text{min}}^{\sigma_\text{max}} \lambda^\rvs(\sigma) \EX_{q(\rvx, \rvx_\sigma, \rvy)} \left[ 
     || \rvs_\theta(\rvx_\sigma, \rvy, \sigma) - \frac{\rvx-\rvx_\sigma}{\sigma^2} ||_2^2 \right] \mathrm{d}\sigma
 \end{align}
-where $\lambda(\sigma)$ is a weighting function that controls how much network capacity is spent modelling the score function at each noise level. In the following we will describes how $\lambda(\sigma)$ can be set to yield a lower-bound on the data likelihood, or to maximise perceptual quality.
+where $\lambda^\rvs(\sigma)$ is a weighting function that controls how much network capacity is spent modelling the score function at each noise level. In order to cheaply obtain a stochastic but unbiased estimate of \cref{eq:diffusion-loss-all-sigma} we can rewrite the integral with an expectation
+\begin{align} \label{eq:exp-diffusion-loss-all-sigma}
+    \mathcal{L}_\text{ISM}(\theta) &= \EX_{u(\sigma)q(\rvx, \rvx_\sigma, \rvy)} \left[ \frac{\lambda^\rvs(\sigma)}{u(\sigma)} 
+    || \rvs_\theta(\rvx_\sigma, \rvy, \sigma) - \frac{\rvx-\rvx_\sigma}{\sigma^2} ||_2^2 \right] \mathrm{d}\sigma
+\end{align}
+where $u(\sigma)$ is a distribution over values of $\sigma$ to use during training that should assign positive density to values between $\sigma_\text{min}$ and $\sigma_\text{max}$ and zero to values outside this range. In the following we will describes how $\lambda^\rvs(\sigma)$ can be set to yield a lower-bound on the data likelihood, or to maximise perceptual quality.
 
-\subsection{Equivalence of score function prediction and data reconstruction} \label{eq:diffusion-equivalent-parameterisations}
+\subsection{Score function estimation as denoising} \label{eq:diffusion-equivalent-parameterisations}
 In the previous section we described an objective that trains the neural network to predict the score function $\nabla_{\rvx_\sigma} q(\rvx_\sigma|\rvx,\rvy) = \frac{\rvx-\rvx_\sigma}{\sigma^2}$ given $\rvx_\sigma$ and $\sigma$ in a way that is optimal in terms of mean-squared error, and showed that the same estimate is also an optimal prediction of $\nabla_{\rvx_\sigma} q(\rvx_\sigma|\rvy)$. In this section, we show that this estimate can be used to derive estimates of several other quantities that are also optimal in terms of mean-squared error. First, consider the problem of estimating the clean data $\rvx$. To do so, we can rewrite \cref{eq:diffusion-loss-all-sigma} as
 \begin{align} \label{eq:x0-diffusion-loss}
-    \mathcal{L}_\text{ISM}(\theta) &= \int_{\sigma_\text{min}}^{\sigma_\text{max}} \frac{\lambda(\sigma)}{\sigma^4} \EX_{q(\rvx_0, \rvx_\sigma, \rvy)} \left[ 
-    || (\rvx_\sigma + \sigma^2 \cdot \rvs_\theta(\rvx_\sigma, \rvy, \sigma)) - \rvx ||_2^2 \right] \mathrm{d}\sigma.
+    \mathcal{L}_\text{ISM}(\theta) &= \int_{\sigma_\text{min}}^{\sigma_\text{max}} \lambda^\rvx(\sigma) \EX_{q(\rvx_0, \rvx_\sigma, \rvy)} \left[ 
+    || (\rvx_\sigma + \sigma^2 \cdot \rvs_\theta(\rvx_\sigma, \rvy, \sigma)) - \rvx ||_2^2 \right] \mathrm{d}\sigma \\
+    &= \int_{\sigma_\text{min}}^{\sigma_\text{max}} \lambda^\rvx(\sigma) \EX_{q(\rvx_0, \rvx_\sigma, \rvy)} \left[ 
+    || \rvx_\theta(\rvx_\sigma, \rvy, \sigma) - \rvx ||_2^2 \right] \mathrm{d}\sigma
 \end{align}
-This reveals that, while optimising the mean-squared error estimate of the score function in \cref{eq:diffusion-loss-all-sigma}, we are implicitly also optimising a mean-squared error estimate of $\rvx$ which is given by $\rvx_\sigma + \sigma^2 \cdot \rvs_\theta(\rvx_\sigma, \rvy, \sigma)$. We will from now on denote such an estimator $\rvx_\theta(\rvx_\sigma, \rvy, \sigma) := \rvx_\sigma + \sigma^2 \cdot \rvs_\theta(\rvx_\sigma, \rvy, \sigma)$.
+where $\lambda^\rvx(\sigma) := \frac{\lambda^\rvs(\sigma)}{\sigma^4}$ and we define $\rvx_\theta(\rvx_\sigma, \rvy, \sigma) := \rvx_\sigma + \sigma^2 \cdot \rvs_\theta(\rvx_\sigma, \rvy, \sigma)$. This reveals that, while optimising the mean-squared error estimate of the score function in \cref{eq:diffusion-loss-all-sigma}, we are implicitly also optimising a mean-squared error estimate of $\rvx$ which is given by $\rvx_\sigma + \sigma^2 \cdot \rvs_\theta(\rvx_\sigma, \rvy, \sigma)$.
 
 Another quantity that is often of interest is $\epsilon$, which can be understood as the unit Gaussian-distributed noise used during reparameterised sampling of $\rvx_\sigma$ given $\rvx$ as $\rvx_\sigma = \rvx + \sigma \cdot \epsilon$. We can therefore write $\epsilon$ as $\frac{\rvx_\sigma-\rvx}{\sigma}$. To obtain the optimal estimate of $\epsilon$, we can rewrite \cref{eq:diffusion-loss-all-sigma} as
 \begin{align} \label{eq:epsilon-diffusion-loss}
-    \mathcal{L}_\text{ISM}(\theta) &= \int_{\sigma_\text{min}}^{\sigma_\text{max}} \frac{\lambda(\sigma)}{\sigma^2} \EX_{q(\rvx, \rvx_\sigma, \rvy)} \left[ 
-    || -\sigma \cdot \rvs_\theta(\rvx_\sigma, \rvy, \sigma) - \frac{\rvx_\sigma-\rvx}{\sigma} ||_2^2 \right] \mathrm{d}\sigma.
+    \mathcal{L}_\text{ISM}(\theta) &= \int_{\sigma_\text{min}}^{\sigma_\text{max}} \lambda^\epsilon(\sigma) \EX_{q(\rvx, \rvx_\sigma, \rvy)} \left[ 
+    || -\sigma \cdot \rvs_\theta(\rvx_\sigma, \rvy, \sigma) - \frac{\rvx_\sigma-\rvx}{\sigma} ||_2^2 \right] \mathrm{d}\sigma \\
+    &= \int_{\sigma_\text{min}}^{\sigma_\text{max}} \lambda^\epsilon(\sigma) \EX_{q(\rvx, \rvx_\sigma, \rvy)} \left[ 
+    || \mathbf{\epsilon}_\theta(\rvx_\sigma, \rvy, \sigma) - \epsilon ||_2^2 \right] \mathrm{d}\sigma
 \end{align}
-It is therefore clear that we can obtain an estimate of $\epsilon$ from a learned score function as $-\sigma \cdot \rvs_\theta(\rvx_\sigma, \rvy, \sigma)$. We will from now on denote such an estimator $\mathbf{\epsilon}_\theta(\rvx_\sigma, \rvy, \sigma) := -\sigma \cdot \rvs_\theta(\rvx_\sigma, \rvy, \sigma)$.
+where $\lambda^\epsilon(\sigma) := \frac{\lambda^\rvs(\sigma)}{\sigma^2}$ and $\mathbf{\epsilon}_\theta(\rvx_\sigma, \rvy, \sigma) := -\sigma \cdot \rvs_\theta(\rvx_\sigma, \rvy, \sigma)$. It is therefore clear that we can obtain an estimate of $\epsilon$ from a learned score function as $-\sigma \cdot \rvs_\theta(\rvx_\sigma, \rvy, \sigma)$.
 
 While we have described the perspective of learning an estimator for the score function and then using it to predict these other quantities if required, the problem of training a diffusion model can equally be framed as one of learning an estimator for e.g. $\rvx$ or $\epsilon$ using \cref{eq:x0-diffusion-loss} or \cref{eq:epsilon-diffusion-loss} and then, if required, deriving an estimate of the score function from it. This is equivalent as long as the weighting function is scaled appropriately as in \cref{eq:x0-diffusion-loss,eq:epsilon-diffusion-loss} and the parameterisation of the neural network's output is handled appropriately as we will discuss in 
 \cref{sec:diffusion-architecture}. In the remainder of this chapter we will describe the loss as an L2 distance between $\rvx$ and $\rvx_\theta(\rvx_\sigma, \rvy, \sigma)$ as it will simplify some derivations. In ... we will consider prediction of $\epsilon$. In ... we will ...
@@ -245,7 +256,7 @@ We can then express the KL divergence as:
     = &\frac{1}{2 \sigma_Q^2(\rho, \sigma)} || \mathbf{\mu}_Q(\rvx_\sigma, \rvx; \rho, \sigma) - \mathbf{\mu}_Q(\rvx_\sigma, \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma); \rho, \sigma) ||_2^2 \\
     = &\frac{1}{2 \sigma_Q^2(\rho, \sigma)} || \frac{\sigma^2-\rho^2}{\sigma^2} ( \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ) ||_2^2 \\
     = &\frac{\sigma^2-\rho^2}{2 \sigma^2 \rho^2} || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \\
-    = &\frac{\sigma^2 - \rho^2}{2 \rho^2 \sigma^2} || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \\
+    % = &\frac{\sigma^2 - \rho^2}{2 \rho^2 \sigma^2} || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \\
     = &\frac{1}{2} \left( \frac{1}{\rho^2} - \frac{1}{\sigma^2} \right) || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2.
 \end{align}
 Following \citet{kingma2021variational}, we will proceed by introducing the signal-to-noise ratio defined as $\text{SNR}(\sigma) = \frac{1}{\sigma^2}$. We can then write the KL divergence as
@@ -258,15 +269,18 @@ and so
 \end{align}
 This reveals that the contribution of each denoising step to the log-likelihood is closely related its change to the signal-to-noise ratio. The squared-error term reveals that it is also strongly dependent on the accuracy of the prediction of $\rvx$ given $\rvx_t$ and $\rvy$. A better lower-bound will be obtained by taking more steps, and changing the signal-to-noise ratio by less in each step. To make this lower-bound agnostic to the number of steps, we can consider the limit where infinitely many steps are taken. To do so, we  follow \citet{kingma2021variational} and replace $\rho$ with $\sigma-\frac{\sigma_\text{diff}}{N}$, where $\sigma_\text{diff} = \sigma_\text{max}-\sigma_\text{min}$. Then, taking the limit as $N \rightarrow \infty$ gives 
 \begin{align}
-    \mathcal{L}_\infty(\rvx) &= \lim_{N\rightarrow\infty} \frac{1}{2} \sum_{i=1}^N \left[ \left( \frac{SNR(\sigma-\frac{\sigma_\text{diff}}{N}) - SNR(\sigma)}{\frac{\sigma_\text{diff}}{N}} \right) || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \right] \\
-    &= \frac{1}{2} \int_{\sigma_\text{min}}^{\sigma_\text{max}} -\text{SNR}'(\sigma) || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \mathrm{d}\sigma \label{eq:difusion-elbo} \\
-    &= \frac{1}{2} \int_{\text{SNR}(\sigma_\text{min})}^{\text{SNR}(\sigma_\text{max})} - || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \mathrm{d}\text{SNR} \\
+    \mathcal{L}_\infty(\rvx) &= \lim_{N\rightarrow\infty} \frac{1}{2} \sum_{i=1}^N \left[ \left( \frac{\text{SNR}(\sigma-\frac{\sigma_\text{diff}}{N}) - \text{SNR}(\sigma)}{\frac{\sigma_\text{diff}}{N}} \right) || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \right] \\
+    &= \frac{1}{2} \int_{\sigma_\text{min}}^{\sigma_\text{max}} -\text{SNR}'(\sigma) || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \mathrm{d}\sigma \label{eq:diffusion-elbo}
+\end{align}
+which is the same as the $\rvx$-prediction loss in \cref{eq:x0-diffusion-loss} if $\lambda^\rvx(\sigma) := - \text{SNR}'(\sigma) = \frac{2}{\sigma^3}$. We can simplify this equation further if we then use the change-of-variables rule to convert it to an integral over the signal-to-noise ratio:
+\begin{align}
+    % &= \frac{1}{2} \int_{\text{SNR}(\sigma_\text{min})}^{\text{SNR}(\sigma_\text{max})} - || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \mathrm{d}\text{SNR} \\
     &= \frac{1}{2} \int_{\text{SNR}(\sigma_\text{max})}^{\text{SNR}(\sigma_\text{min})} || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \mathrm{d}\text{SNR}. \label{eq:diffusion-integral-dsnr}
 \end{align}
-\Cref{eq:diffusion-integral-dsnr} leads to the interpretation of the diffusion loss shown in TODO. We can obtain an unbiased estimate of the integral in \cref{eq:difusion-elbo} with importance sampling from a proposal distribution $q(\sigma)$: 
+\Cref{eq:diffusion-integral-dsnr} leads to the interpretation of the diffusion loss shown in TODO. We can obtain an unbiased estimate of the integral in \cref{eq:diffusion-elbo} with importance sampling from a proposal distribution $q(\sigma)$: 
 \begin{align}
     \mathcal{L}_\infty(\rvx) &= \EX_{\sigma \sim q(\cdot)} \left[ \frac{-\text{SNR}'(\sigma)}{2 \cdot q(\sigma)} || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \right]  \\
-    &= \EX_{\sigma \sim q(\cdot)} \left[ \frac{1}{\sigma^3 \cdot q(\sigma)} || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \right]. \label{eq:diffusion-loss}
+    &= \EX_{\sigma \sim q(\cdot)} \left[ \frac{1}{q(\sigma)\sigma^3} || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma) ||_2^2 \right]. \label{eq:diffusion-loss}
 \end{align}
 It is common to estimate this objective with a single Monte Carlo sample of $\sigma$ per data point during training.
 
@@ -279,3 +293,76 @@ In the diffusion model context, \citet{yang2023diffusion} observed that adding G
 
 % \subsection{Parameterizing the neural network} \label{sec:diffusion-architecture}
 % As discussed in \cref{eq:diffusion-equivalent-parameterisations}, the diffusion model can be trained to predict any of a selection of different quantities and then, at test-time, any of these can be used to estimate the desired score function. Recall that we described predicting the reparameterisation noise $\epsilon$, clean data $\rvx$, or the score $\nabla_{\rvx_\sigma} q(\rvx_\sigma|\rvy)$. All of these techniques have been used in the literature~\citep{ho2020denoising,karras2022elucidating,song2020score}. 
+
+\section{Using more general diffusion processes}
+Many diffusion papers use variations of the forward diffusion SDE we presented in \cref{eq:forward-diffusion} to include a ``drift'' term. In particular, they modify
+\begin{equation}
+    \mathrm{d}\rvx = g(t) \mathrm{d}\rvw
+\end{equation}
+by including the drift term $b_t: \mathbb{R}^n \rightarrow \mathbb{R}^n$, which in general can depend on the value of the current state $\rvx$:
+\begin{align} \label{eq:forward-diffusion-with-drift}
+    \mathrm{d}\rvx = b(t) \rvx \mathrm{d}t + g(t) \mathrm{d}\rvw.
+\end{align}
+If $b(t)$ is defined to be zero for all $t$, this diffusion process is equivalent to that described previously in this chapter. If $b(t)$ is chosen to be negative, there is a negative feedback loop which prevents the value of $\rvx$ from growing unboundedly with $t$. In particular, a common choice is to use $b(t) := - \frac{1}{2}g(t)^2$ which results in what is known as a ``variance-preserving'' diffusion process. The reason for this is that if we assume that $\rvx_0$ (i.e. the data distribution) has unit variance, using $b(t) := - \frac{1}{2}g(t)^2$ will cause all marginals $q(\rvx_t)$ to similarly have unit variance. See Appendix B of \citet{song2020score} for a proof. Correspondingly, the process that we have described with $b(t) := 0$ is sometimes called a ``variance-exploding'' diffusion process. The variance of $q(t)$ is simply the sum of the variance of the data distribution and the variance of the added noise $\sigma_t^2 = \int_0^t g(t') \mathrm{d}t'$, and so ``explodes'' as the variance of the added noise grows as $t \rightarrow \infty$.
+
+\paragraph{Fitting score functions, $\rvx$-prediction, and $\epsilon$-prediction with a drift term}
+The practical implications of using a diffusion process with or without a drift term are minor. One is that, when there is a drift term to ensure that the process is variance-preserving, the process of normalising neural network inputs is simplified. This is because neural networks are usually designed to take inputs that are normalised to have roughly zero mean and unit variance. All $\rvx_t$ will naturally have properties similar to these with a variance-preserving process, as long as the original data distribution had these properties. With a variance-exploding process, care needs to be taken to normalise the inputs to the neural network so that they have roughly unit variance at any time $t$. 
+
+When a non-zero drift term is used, some of the equations derived so far must be modified to account for it. We stuck to the case of a variance-preserving process previously in this chapter to simplify the derivations but analogous results would hold as with a variance-exploding process. In particular, \citet{song2020score} show that our reverse SDE in \cref{eq:reverse-diffusion} becomes
+\begin{equation} \label{eq:reverse-diffusion-with-drift}
+    \mathrm{d}\rvx = \left( b(t)\rvx - g(t)^2 \nabla_\rvx \log q(\rvx_t|\rvy) \right) \mathrm{d}t + g(t) \mathrm{d}\bar{\rvw}
+\end{equation}
+and our reverse ODE becomes
+\begin{align}
+    \mathrm{d}\rvx &= \left( b(t)\rvx - \frac{1}{2} g(t)^2 \nabla_\rvx \log q(\rvx_t|\rvy) \right) \mathrm{d}t.
+\end{align}
+
+Our expression for $q(\rvx_t|\rvx,\rvy)$ becomes
+\begin{align}
+    q(\rvx_t|\rvx,\rvy) = q(\rvx_t|\rvx) = \gN(\rvx_t; \alpha(t)\rvx, \sigma(t)^2)
+\end{align}
+where $\alpha(t) := e^{\int_{0}^t b(t) \mathrm{d}t}$ and $\sigma(t)^2 := \int_0^t g(t')^2 e^{2\int_{t'}^{t} b(t'') \mathrm{d}t''} \mathrm{d}t'$.
+
+In a variance-exploding process, with $b(t) := 0$, we will have that $\alpha(t) = 1$ and $\sigma(t)^2 = \int_0^t g(t)^2 \mathrm{d}t$, so $q(\rvx_t|\rvx,\rvy)$ takes the same form as earlier in the chapter. In a variance-preserving process, with $b(t) := -\frac{1}{2} g(t)^2$, ... it must be possible to show what $\alpha(t)^2 + \sigma(t)^2 = 1$.
+
+The score function of a Gaussian with mean $\mathbf{\mu}$ and covariance $\sigma^2\mI$ evaluated at $\rvx$ is $\frac{\mathbf{\mu} - \rvx}{\sigma^2}$ and so the score function of $q(\rvx_t|\rvx)$ becomes
+\begin{equation} \label{eq:general-score-function}
+    \nabla_{\rvx_t} \log q(\rvx_t|\rvx) = \frac{\alpha(t)\rvx - \rvx_t}{\sigma(t)^2}.
+\end{equation}
+As earlier in this chapter, when we use a variance-exploding process with $\alpha(t) := 1$ the score function simplifies to the expression $\frac{\rvx-\rvx_t}{\sigma(t)}$ used previously. The derivation of the implicit score-matching loss in \cref{eq:ism-loss} did not rely on the specific properties of the diffusion process to prove
+\begin{align}
+    \mathcal{L}_\text{ISM}(\theta, t) &= \EX_{q(\rvx, \rvx_t, \rvy)} \left[ 
+    || \rvs_\theta(\rvx_t, \rvy, \sigma(t)) - \nabla_{\rvx_t} \log q(\rvx_t | \rvx) ||_2^2 \right]
+\end{align}
+and so, with the score function from \cref{eq:general-score-function},
+\begin{align}
+    \mathcal{L}_\text{ISM}(\theta, t) &= \EX_{q(\rvx, \rvx_\sigma, \rvy)} \left[
+    || \rvs_\theta(\rvx_\sigma, \rvy, \sigma) - \frac{\alpha(t) \rvx-\rvx_\sigma}{\sigma(t)^2} ||_2^2 \right].
+\end{align}
+We can integrate over a range of timesteps, similarly to integrating over noise standard deviations in \cref{sec:diffusion-training}, to give 
+\begin{align} \label{eq:general-score-diffusion-loss}
+    \mathcal{L}_\text{ISM}(\theta) &= \int_{t_\text{min}}^{t_\text{max}} \EX_{q(\rvx, \rvx_t, \rvy)} \left[
+    \lambda^\rvs(t) || \rvs_\theta(\rvx_t, \rvy, t) - \frac{\alpha(t) \rvx-\rvx_t}{\sigma(t)^2} ||_2^2 \right].
+\end{align}
+
+We can also modify the loss as before to compute the squared error with a prediction of $\rvx$ or a prediction of $\epsilon$. Rearranging the above to have a mean-squared error to $\rvx$ gives
+\begin{align} \label{eq:general-x0-diffusion-loss}
+    \mathcal{L}_\text{ISM}(\theta) &= \int_{t_\text{min}}^{t_\text{max}} \lambda^\rvx(t) \EX_{q(\rvx, \rvx_t, \rvy)} \left[ 
+    || \frac{\rvx_t + \sigma(t)^2 \cdot \rvs_\theta(\rvx_t, \rvy, t)}{\alpha(t)} - \rvx ||_2^2 \right] \mathrm{d}t \\
+    &= \int_{t_\text{min}}^{t_\text{max}} \lambda^\rvx(t) \EX_{q(\rvx_0, \rvx_t, \rvy)} \left[ 
+    || \rvx_\theta(\rvx_t, \rvy, t) - \rvx ||_2^2 \right] \mathrm{d}t
+\end{align}
+where $\lambda^\rvx(t) := \frac{\alpha(t)^2}{\sigma(t)^4}\lambda^\rvs(t)$ and $\rvx_\theta(\rvx_t, \rvy, t) := \frac{\rvx_t + \sigma(t)^2 \cdot \rvs_\theta(\rvx_t, \rvy, t)}{\alpha(t)}$. Similarly, given the definition $\epsilon := \frac{\rvx_t - \alpha(t) \rvx}{\sigma(t)}$, we can rearrange the right-hand-side of the squared error term in \cref{eq:general-score-diffusion-loss} to this:
+\begin{align} \label{eq:general-epsilon-diffusion-loss}
+    \mathcal{L}_\text{ISM}(\theta) &= \int_{t_\text{min}}^{t_\text{max}} \lambda^\epsilon(t) \EX_{q(\rvx, \rvx_t, \rvy)} \left[ 
+    || -\sigma(t) \cdot \rvs_\theta(\rvx_t, \rvy, t) - \frac{\rvx_t-\alpha(t)\rvx}{\sigma(t)} ||_2^2 \right] \mathrm{d}t \\
+    &= \int_{t_\text{min}}^{t_\text{max}} \lambda^\epsilon(t) \EX_{q(\rvx, \rvx_t, \rvy)} \left[ 
+    || \mathbf{\epsilon}_\theta(\rvx_t, \rvy, t) - \epsilon ||_2^2 \right] \mathrm{d}t
+\end{align}
+where $\lambda^\epsilon(t) := \frac{1}{\sigma^2} \lambda^\rvs(t)$.
+
+\paragraph{Sampling from a diffusion model with a drift term}
+There are also differences in the dynamics of the forward SDE, reverse SDE, and reverse ODE that affect the numerical properties of simulated trajectories \citet{karras2022elucidating} advocate for using a variance-exploding process as it tends to make the trajectories of $\rvx_t$ straighter as $t$ varies. This can reduce the numerical error when simulating the ODE or SDE with few steps.
+
+\paragraph{Other properties of more general diffusion SDEs}
+It is equally possible to lower-bound the data likelihood with a diffusion process that includes a non-zero drift term. We defer to the derivation in \citet{kingma2021variational} since computing the data likelihood is not a core component of this dissertation.

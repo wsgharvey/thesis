@@ -1,0 +1,25 @@
+\chapter{Our goal: Flexible Diffusion for Arbitrary Conditioning}
+\label{ch:flexible-diffusion}
+
+% so far we've looked at conditioning on a fixed input
+% for a lot of applications, it is more useful to be able to vary what we condition on
+% in general this is very hard
+% a minimal version is to be able to condition on anything that you're able to generate
+
+% discuss test-time conditioning and its pitfalls
+% so we will use an approach based on the learned conditional diffusion models from \cref{ch:conditional-diffusion}
+
+So far in this thesis we have introduced both the diffusion models in both the conditional and unconditional forms. We've discussed the applications of conditional diffusion models to tasks including text-to-image, text-based image editing, and matrix factorisation. A similarity between these tasks is that we always knew in advance which data we wanted to condition on at test-time: for text-to-image we always condition on a text string; for text-based image editing we always condition on a text string and an input image; for matrix factorisation we always condition on the observed product matrix. In other words, we always knew during training what form the conditioning information $\rvy$ would take at test-time.
+
+Our thesis in this work is that diffusion models can be made robust to cases where we do not know exactly what form $\rvy$ will take at test-time. There are many applications where this may be the case. For image inpainting, it is desirable to have a single inpainting model that can inpaint any pixels in an image depending on a user's requirements at test time. For video editing (or video generation from keyframes), a user might want to condition on every second frame, every tenth frame, only the first few frames, or so on. In the world modeling and planning example in \cref{fig:fdm-example-tasks}, we showed that conditioning a world model in different ways unlocked completely different capabilities and the ability to flexibly choose between these capabilities without retraining would be desirable.
+
+In this chapter we propose the \textit{flexible} diffusion framework. Flexible diffusion models are trained to perform well on a variety of different tasks, where different tasks require conditioning on a different type of conditioning information $\rvy$. 
+
+We will write the flexible diffusion objective in the same way as the conditional diffusion objective in \cref{eq:cond-diffusion-loss},
+\begin{align} \label{eq:flexible-diffusion-loss}
+    \mathcal{L}_\text{ISM}(\theta) &= \int_{\sigma_\text{min}}^{\sigma_\text{max}} \lambda^\rvx(\sigma) \EX_{q(\rvx, \rvx_\sigma,\rvy)} \left[ 
+    || \rvx_\theta(\rvx_\sigma, \rvy, \sigma) - \rvx ||_2^2 \right] \mathrm{d}\sigma,
+\end{align}
+with the primary difference being that we now consider that each $\rvy$ may now take on a diverse and task-dependent form. For example, if we are training an image inpainting model to work on many different inpainting masks, different $\rvy$ may contain the values of different pixels, and even contain the values of different numbers of pixels. When we mention $\rvy$, we will implicitly assume that it also contains information about what observations are in it. In the inpainting example, this would mean that the object $\rvy$ contains not just pixel values, but also the pixel coordinate associated with each value. Similarly, the training data distribution $q(\rvx, \rvy)$ must now incorporate some form of ``task distribution''. In the case of inpainting, that means that different $(\rvx, \rvy)$ pairs we sample should include different image pixels in the conditioning information. The specific choice of this distribution is very domain- and task-specific, and we will touch on it in more detail in the video domain in \cref{ch:fdm} and for image inpainting in \cref{ch:cigcvae}.
+
+(TODO) Examples of inpainting and Sudoku.
