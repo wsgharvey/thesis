@@ -1,3 +1,13 @@
 \chapter{Conclusions}  \label{ch:conclusion}
 
 We have demonstrated the power of deep generative models, and especially diffusion models, to achieve good performance even when trained over a very broad task distribution. Training over such a task distribution allows for ``flexible conditioning'' at test-time. Delving further in the direction of adding flexibility, we showed that, in the case of video diffusion models, frames can be ``dropped out'' and letting us learn a plausible model of the world with smaller computational budgets than would otherwise be necessary. While we have focused on models in the vision domain primarily due to the easily accessible datasets in this domain and well-studied benchmarks, related work suggests that such flexible conditioning is likely to work similarly well in other domains~\citep{weilbach2022graphically}. Applying such models in more domains is an exciting area for future research. Another exciting avenue, we believe, is simply to exploit the capabilities of the models we have presented. For example, our video model could be leveraged as a world model, with the additional capability of being able to condition on desired future states as well as on the current world state.
+
+
+We have presented IPA, a method to adapt an unconditional VAE into a conditional model. Image completions generated with IPA are close to the state-of-the-art in terms of visual fidelity, and improve on all baselines in terms of their coverage of the posterior as measured by LPIPS-GT. This high-fidelity coverage of the posterior makes IPA ideal for use in Bayesian optimal experimental design, as demonstrated. Our theoretical results suggest that, for the applications presented, using the weights of an unconditional VAE is approximately as good as training a conditional VAE from scratch. We note, however, that there are applications for which these results will not hold (e.g.~super-resolution).
+They also provide no guarantees when pretraining is performed on a different dataset, although we show empirically that IPA can still be effective in this
+case. Future work may look more rigorously at these settings or further improve the
+image samples by, e.g., using a conditional prior with more expressive
+distributions.
+%
+Preliminary experiments using normalizing flows helped improve the ELBO, but
+with little impact on the FID scores.
