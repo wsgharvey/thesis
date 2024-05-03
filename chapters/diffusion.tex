@@ -9,7 +9,7 @@ Diffusion models, or DMs~\citep{sohl2015deep,ho2020denoising,nichol2021improved,
 \begin{figure}
     \centering
     \includegraphics[scale=1]{figs/thesis/diffusion_process.pdf}
-    \caption{An example diffusion process for the data distribution $q(\rvx_0)$ shown at the top left. We use $g(t) := \sqrt{2t}$ so that $\sigma_t = t$. \textbf{Top row:} The data distribution $q(\rvx_0)$ and marginals $q(\rvx_t)$ for $t=0.3$ and $t=2$. These marginals are the convolution of the data distribution with a Gaussian distribution of standard deviation $\sigma = t$. For $t=2$, the distribution looks near-Gaussian. \textbf{Middle row:} The distributions from the top row shown in log-space. The green tangent arrows represent $\nabla_{\rvx_t} \log q(\rvx_t)$, the score functions that a neural network would be trained to estimate. \textbf{Bottom row:} The continuous evolution of the forward process for all $t$ between $0$ and $2$. The marginals plotted in the top rows correspond to the ``slices'' made by the dashed green lines. Each faded white line marks a percentile of the $q(\rvx_t)$. The red lines are stochastic trajectories sampled with the SDE described in \cref{sec:diffusion-forward-sde}. The blue line is sampled with the ODE described in \cref{sec:diffusion-forward-ode} and parameterized with the score estimates from the second row.}
+    \caption{An example diffusion process for the data distribution $q(\rvx_0)$ shown at the top left. We use $g(t) := \sqrt{2t}$ so that $\sigma_t = t$. \textbf{Top row:} The data distribution $q(\rvx_0)$ and marginals $q(\rvx_t)$ for $t=0.3$ and $t=2$. These marginals are the convolution of the data distribution with a Gaussian distribution of standard deviation $\sigma = t$. For $t=2$, the distribution looks near-Gaussian. \textbf{Middle row:} The distributions from the top row shown in log-space. The green tangent arrows represent $\nabla_{\rvx_t} \log q(\rvx_t)$, the score functions that a neural network would be trained to estimate. \textbf{Bottom row:} The continuous evolution of the forward process for all $t$ between $0$ and $2$. The marginals plotted in the top rows correspond to the ``slices'' made by the dashed green lines. Each faded white line marks a percentile of the $q(\rvx_t)$. The red lines are stochastic trajectories sampled with the SDE described in \cref{sec:diffusion-forward-sde}. The blue line is sampled with the ODE described in \cref{sec:diffusion-ode} and parameterized with the score estimates from the second row.}
     \label{fig:diffusion-overview}
 \end{figure}
 
@@ -18,7 +18,7 @@ Diffusion models, or DMs~\citep{sohl2015deep,ho2020denoising,nichol2021improved,
   \caption{Definitions for symbols used.}
   \label{tab:notation}
   \centering
-  \begin{tabular}{rp{9cm}}
+  \begin{tabular}{rp{8cm}}
     \toprule
     Symbol    & Definition   \\
     \midrule
@@ -40,6 +40,7 @@ Diffusion models, or DMs~\citep{sohl2015deep,ho2020denoising,nichol2021improved,
   \end{tabular}
 \end{table*}
 
+% \todo[inline]{change $g(t)$ to $g_t$ ???}
 \subsection{The forward process as an SDE} \label{sec:diffusion-forward-sde}
 This forward process is defined through a combination of the initial condition $\rvx_0 \sim \pdata(\cdot|\rvy)$ and the stochastic differential equation (SDE):\footnote{We describe here the ``variance-exploding'' diffusion process. We generalise to a broader family of forward processes in ..., which require more complex notation.}
 \begin{equation} \label{eq:forward-diffusion}
@@ -47,6 +48,7 @@ This forward process is defined through a combination of the initial condition $
 \end{equation}
 defined for all $t \geq 0$, with $\rvw$ being the standard Wiener process, also known as Brownian motion. The rate at which noise is added, $g(t)$, is a hyperparameter. We will keep this exposition general by not assuming any value for it, but note that \citet{karras2022elucidating} show that setting $g(t) := \sqrt{2t}$ yields good performance.
 
+Given a time $t$, the forward process defines a marginal $q_t(\rvx_t)$, which can be viewed as a version of the data distribution corrupted by Gaussian noise. We will refer to this marginal as simply
 For any finite set of times $t_1,\ldots,t_n$, the forward process defines a joint distribution over all of $\rvx_{t_1},\ldots,\rvx_{t_n}$, $\rvx$, and $\rvy$. We will denote such joint distributions as $q(\rvx,\rvy,\rvx_{t_1},\ldots,\rvx_{t_n})$, and similarly denote marginal or conditional distributions derived from them with $q$, with the specific distribution of interest being clear from variable names. Note that $q(\rvx_0,\rvy) = \pdata(\rvx_0,\rvy)$ is simply the data distribution. Many conditional distributions that follow from this are tractable, including the distribution over $\rvx_t$ conditioned on $\rvx$:
 \begin{equation}
     q(\rvx_t|\rvx,\rvy) = \gN \left( \rvx_t; \rvx, \sigma(t)^2 \mI \right) \quad \text{where} \quad \sigma(t)^2 := \int_0^t g(t')^2 \mathrm{d}t'.
@@ -59,7 +61,7 @@ If $t$ is large and correspondingly $\sigma(t)$ is large, $q(\rvx_t|\rvx,\rvy)$ 
 \end{equation}
 diminishes with $\sigma(t)^2$. This forward process can therefore be used to map from clean data $\rvx$ to data that is arbitrarily well-approximated by a simple distribution. In the next section we will discuss how to do the more challenging counterpart: transforming samples from a simple distribution into samples from the data distribution.
 
-\subsection{The reverse SDE} \label{sec:diffusion-forward-sde}
+\subsection{The reverse SDE} \label{sec:diffusion-reverse-sde}
 Our aim in this section is to ``invert'' the forward process from the previous section, yielding a way to create clean data from noise. To do so we refer to a result  derived by \citet{anderson1982reverse}, and recalled in the diffusion modelling context by \citet{song2020score}, showing that the reverse of a diffusion process is also a diffusion process. A straightforward application of this result to the diffusion SDE in \cref{eq:forward-diffusion} reveals that the corresponding reverse-time diffusion SDE is
 \begin{equation} \label{eq:reverse-diffusion}
     \mathrm{d}\rvx = -g(t)^2 \nabla_\rvx \log q(\rvx_t|\rvy) \mathrm{d}t + g(t) \mathrm{d}\bar{\rvw}
@@ -188,13 +190,11 @@ Another quantity that is often of interest is $\epsilon$, which can be understoo
 \end{align}
 where $\lambda^\epsilon(\sigma) := \frac{\lambda^\rvs(\sigma)}{\sigma^2}$ and $\mathbf{\epsilon}_\theta(\rvx_\sigma, \rvy, \sigma) := -\sigma \cdot \rvs_\theta(\rvx_\sigma, \rvy, \sigma)$. It is therefore clear that we can obtain an estimate of $\epsilon$ from a learned score function as $-\sigma \cdot \rvs_\theta(\rvx_\sigma, \rvy, \sigma)$.
 
-While we have described the perspective of learning an estimator for the score function and then using it to predict these other quantities if required, the problem of training a diffusion model can equally be framed as one of learning an estimator for e.g. $\rvx$ or $\epsilon$ using \cref{eq:x0-diffusion-loss} or \cref{eq:epsilon-diffusion-loss} and then, if required, deriving an estimate of the score function from it. This is equivalent as long as the weighting function is scaled appropriately as in \cref{eq:x0-diffusion-loss,eq:epsilon-diffusion-loss} and the parameterisation of the neural network's output is handled appropriately as we will discuss in 
-\cref{sec:diffusion-architecture}. In the remainder of this chapter we will describe the loss as an L2 distance between $\rvx$ and $\rvx_\theta(\rvx_\sigma, \rvy, \sigma)$ as it will simplify some derivations. In ... we will consider prediction of $\epsilon$. In ... we will ...
+While we have described the perspective of learning an estimator for the score function and then using it to predict these other quantities if required, the problem of training a diffusion model can equally be framed as one of learning an estimator for e.g. $\rvx$ or $\epsilon$ using \cref{eq:x0-diffusion-loss} or \cref{eq:epsilon-diffusion-loss} and then, if required, deriving an estimate of the score function from it. This is equivalent as long as the weighting function is scaled appropriately as in \cref{eq:x0-diffusion-loss,eq:epsilon-diffusion-loss} and the parameterisation of the neural network's output is handled appropriately. In the remainder of this chapter we will describe the loss as an L2 distance between $\rvx$ and $\rvx_\theta(\rvx_\sigma, \rvy, \sigma)$ as it will simplify some derivations. In ... we will consider prediction of $\epsilon$. In ... we will ...
 
 \subsection{Weighting the loss to lower-bound data likelihood} \label{sec:diffusion-likelihood}
-% In \cref{sec:diffusion-ode} we describe how to compute the likelihoods of data with respect to our diffusion model. One may ask why, then, we derive the $\gL_\text{ISM}$ objective in \cref{eq:diffusion-loss-all-sigma} instead of directly optimising the likelihood of the training data. One reason is that the exact likelihood is expensive to compute since it requires an entire simulation of the ODE trajectory. In this section we show, however, that an appropriate choice of $\lambda(\sigma)$ turns the objective proposed in \cref{eq:diffusion-loss-all-sigma} into a lower bound on the data likelihood. This enables likelihood-based training with a cheap-to-evaluate training objective.
 
-We now see how the score-matching objective proposed previously can be used to construct a lower-bound on the data likelihood. To do so, we consider a technique to sample trajectories from the SDE in \cref{eq:reverse-diffusion} by simulating it from a time corresponding to $\sigma_\text{max}$ to a time corresponding to some $\sigma_\text{min}$ close to zero. To do so, we discretise time into points $N,\ldots,0$. Similarly to the previous section, we will define only the signal-to-noise ratio and not consider the time itself. In particular, we define the points such that the noise standard deviation for point $i$ is
+We now see how the score-matching objective proposed previously can be used to construct a lower-bound on the data likelihood. To do so, we consider a technique to sample trajectories from the SDE in \cref{eq:reverse-diffusion-with-nn} by simulating it from a time corresponding to $\sigma_\text{max}$ to a time corresponding to some $\sigma_\text{min}$ close to zero. To do so, we discretise time into points $N,\ldots,0$. Similarly to the previous section, we will define only the signal-to-noise ratio and not consider the time itself. In particular, we define the points such that the noise standard deviation for point $i$ is
 \begin{equation}
     \sigma(i) = \frac{i}{N}(\sigma_\text{max} - \sigma_\text{min}) + \sigma_\text{min}.
 \end{equation}
@@ -203,17 +203,6 @@ Then, to simulate the reverse SDE, we perform steps $N,\ldots,1$ and at each ste
     p_\theta(\rvx,\rvx_{\sigma(0)},\ldots,\rvx_{\sigma(N)}) = p(\rvx_{\sigma(N)}) \left( \prod_{i=1}^N p_\theta(\rvx_{\rho(i)} | \rvx_{\sigma(i)}) \right) p_\theta(\rvx|\rvx_{\sigma(0)})
 \end{align}
 where $p(\rvx_{(N)})$ is the Gaussian approximation of $q(\rvx_{t(N)})$ with no learnable parameters; $p_\theta(\rvx_{\rho(i)} | \rvx_{\sigma(i)})$ is a step parameterised by our score function estimate; and $p_\theta(\rvx|\rvx_{\sigma(0)})$ is a final ``likelihood'' to remove all noise from data which may also make use of the score function. The ``data likelihood'' is then a marginal of this joint distribution, $p_\theta(\rvx)$, evaluated on our training data. In the following we describe how we can use \cref{eq:diffusion-reverse-joint-prob} to construct a lower-bound on $p_\theta(\rvx)$, before expanding on the form of each $p_\theta(\rvx_{\rho(i)}|\rvx_{\sigma(i)})$.
-
-% To construct the lower bound, we consider sampling from the SDE in \cref{eq:reverse-diffusion} by simulating it from time $t_\text{max}$ corresponding to noise-to-signal ratio $\sigma_\text{max}$ to a time $t_\text{min}$ which is close to zero.
-% A simple method for simulation is to discretise it into $N$ steps. At each step $i = N,\ldots,1$ we then morph $\rvx_{t(i)}$ into $\rvx_{s(i)}$, where
-% \begin{equation}\nonumber
-% t(i) := \frac{i}{N} (t_\text{max} - t_\text{min}) + t_\text{min} \quad \text{and} \quad s(i) := t(i-1).
-% \end{equation}
-% For brevity we will from now on write $t(i)$ as simply $t$ and $s(i)$ as simply $s$ when the index is clear from the context. We can write the joint probability of a trajectory
-% \begin{align} \label{eq:diffusion-reverse-joint-prob}
-%     p_\theta(\rvx,\rvx_{t(0)},\ldots,\rvx_{t(N)}) = p(\rvx_{t_N}) \left( \prod_{i=1}^N p_\theta(\rvx_{s(i)} | \rvx_{t(i)}) \right) p_\theta(\rvx|\rvx_{t(0)})
-% \end{align}
-% where $p(\rvx_{(N)})$ is the Gaussian approximation of $q(\rvx_{t(N)})$ with no learnable parameters, while $p_\theta(\rvx_{s(i)} | \rvx_{t(i)})$ is parameterised by our score function estimate. We would like to match a marginal of this, $p_\theta(\rvx_{t_\text{min}})$, to the data distribution, by fitting $\theta$ to maximise $p_\theta(\rvx_0)$ for $\rvx_0$ sampled from the data distribution. We next describe how we use this joint distribution to construct a lower-bound on $p_\theta(\rvx_0)$, before expanding on the form of each $p_\theta(\rvx_{s(i)}|\rvx_{t(i)})$.
 
 We start by noting that the forward process yields an analytically tractable form of $q(\rvx_{\sigma(0)},\ldots,\rvx_{\sigma(N)}|\rvx)$ which we can express as
 \begin{equation}
@@ -240,13 +229,14 @@ We can exploit the conjugacy of Gaussians to simplify \cref{eq:q-step-pdf} to th
     q(\rvx_\rho|\rvx_\sigma,\rvx) = \gN( \rvx_\rho; \mathbf{\mu}_Q(\rvx_\sigma, \rvx; \rho, \sigma), \sigma_Q^2(\rho, \sigma) \mathbf{I})
 \end{align}
 where
-\begin{align}
+\begin{align} \label{eq:mu-q}
     \mathbf{\mu}_Q(\rvx_\sigma, \rvx; \rho, \sigma) &:= \frac{\rho^2}{\sigma^2} \rvx_\sigma + \frac{\sigma^2-\rho^2}{\sigma^2} \rvx, \\
+    \label{eq:sigma-q}
     \text{and}\quad 
-    \sigma_Q(s, t) &:= \frac{\rho^2 (\sigma^2-\rho^2)}{\sigma^2}.
+    \sigma_Q(\rho, \sigma) &:= \frac{\rho^2 (\sigma^2-\rho^2)}{\sigma^2}.
 \end{align}
 
-Recall that our objective is minimised by minimising the KL divergence between $q(\rvx_\rho|\rvx_\sigma,\rvx)$ and $p_\theta(\rvx_{\rho}|\rvx_{\sigma})$, so intuitively a sensible parameterisation for $p_\theta(\rvx_\rho|\rvx_\sigma)$ would be as close as possible to the form of $q(\rvx_\rho|\rvx_\sigma,\rvx)$. Since $p_\theta(\rvx_{\rho}|\rvx_{\sigma})$ cannot be a function of $\rvx$, we cannot make them exactly equal. We instead define $p_\theta(\rvx_\rho|\rvx_\sigma)$ so that they are close by copying the form of $q(\rvx_\rho|\rvx_\sigma,\rvx)$ but approximating $\rvx$ using our estimate $\hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma)$, obtained as described in \cref{eq:diffusion-equivalent-parameterisations}.\footnote{With non-zero integration step size, this form of $p_\theta(\rvx_{\sigma} | \rvx_{\rho})$ is not exactly the same as that obtained by performing e.g. an Euler integration step on the reverse SDE in \cref{eq:reverse-diffusion-with-nn}, but will become so if we let the integration step size tend to zero\todo{show this in appendix}.}:
+Recall that our objective is minimised by minimising the KL divergence between $q(\rvx_\rho|\rvx_\sigma,\rvx)$ and $p_\theta(\rvx_{\rho}|\rvx_{\sigma})$, so intuitively a sensible parameterisation for $p_\theta(\rvx_\rho|\rvx_\sigma)$ would be as close as possible to the form of $q(\rvx_\rho|\rvx_\sigma,\rvx)$. Since $p_\theta(\rvx_{\rho}|\rvx_{\sigma})$ cannot be a function of $\rvx$, we cannot make them exactly equal. We instead define $p_\theta(\rvx_\rho|\rvx_\sigma)$ so that they are close by copying the form of $q(\rvx_\rho|\rvx_\sigma,\rvx)$ but approximating $\rvx$ using our estimate $\hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma)$, obtained as described in \cref{eq:diffusion-equivalent-parameterisations}.\footnote{With non-zero integration step size, this form of $p_\theta(\rvx_{\sigma} | \rvx_{\rho})$ is not exactly the same as that obtained by performing e.g. an Euler integration step on the reverse SDE in \cref{eq:reverse-diffusion-with-nn}, but will become so if we let the integration step size tend to zero. TODO SHOW IN APPENDIX}:
 \begin{align}
     p_\theta(\rvx_{\rho} | \rvx_{\sigma}) &= \gN( \rvx_{\rho}; \mathbf{\mu}_Q(\rvx_\sigma, \hat{\rvx}_\theta(\rvx_\sigma, \rvy, \sigma); \rho, \sigma), \sigma_Q^2(\rho, \sigma) \mI ).
 \end{align}
@@ -284,47 +274,43 @@ which is the same as the $\rvx$-prediction loss in \cref{eq:x0-diffusion-loss} i
 \end{align}
 It is common to estimate this objective with a single Monte Carlo sample of $\sigma$ per data point during training.
 
-\subsection{Weighting the loss for perceptual quality}
+\subsection{Weighting the loss for perceptual quality} \label{sec:diffusion-perceptual-quality}
 Optimising the loss in \cref{eq:diffusion-loss} typically yields diffusion models that are very good when evaluated in terms of data likelihood. The likelihood of data under a model, however, does not always correspond well to the quality of samples from the model as perceived by a human.
 
 For example, in the image domain, the log-likelihood of an image is dominated by high-frequency features rather than low-frequency features. To explain why, see that state-of-the-art lossless compression on the ImageNet dataset at $32\times32$ resolution yields an average of $3.67$ bits per dimension~\citep{sahoo2023diffusion}, or $3.67\times3\times32^2 / 8192 = 1.4$ kB per image, and at $64\times64$ resolution yields an average of 3.83 bits per dimension~\citep{finlay2020train}, or $3.83\times3\times64^2 / 8192 = 5.7$ kB per image. Therefore, $75\%$ of the bits present in the $64\times64$ images represent detail that is sufficiently high-frequency to be removed by downsampling by just a factor of 2. That is, most of the bits are spent modeling pixel-level detail rather than the semantically-important features that tend to be larger scale and are more obvious to humans.
 
 In the diffusion model context, \citet{yang2023diffusion} observed that adding Gaussian noise with even a small standard deviation tends to obscure high-frequency Fourier components of the image, while low-frequency components are not obscured until much more noise is added. This means that, as noise is added during the forward diffusion SDE, high-frequency components will be removed first and low-frequency components will remain until nearer the end. Conversely, while running the reverse SDE to sample from the model, the low-frequency Fourier components are sampled at first, while the amount of noise $\sigma$ is large. Then, as $\sigma$ decreases, increasingly high-frequency components are sampled until the process finishes. We can therefore relate values of $\sigma$ to roughly what Fourier features are sampled being by the diffusion model at that point in the reverse process. If, in order to make samples look perceptually better to humans, we want the diffusion model to be better at generating low-frequency features, we can focus on making the diffusion model obtain lower loss where $\sigma$ is large. This leads us to a common practice in the diffusion model literature: modifying the weighting function $\lambda(\sigma)$ so that it places relatively greater values on larger values of $\sigma$ than if we use the weighting function of ... suggested by our bound on the data likelihood in ... . We show some common choices of weighting function in ... and compare them to ..., the ELBO-based weighting function.
 
-% \subsection{Parameterizing the neural network} \label{sec:diffusion-architecture}
-% As discussed in \cref{eq:diffusion-equivalent-parameterisations}, the diffusion model can be trained to predict any of a selection of different quantities and then, at test-time, any of these can be used to estimate the desired score function. Recall that we described predicting the reparameterisation noise $\epsilon$, clean data $\rvx$, or the score $\nabla_{\rvx_\sigma} q(\rvx_\sigma|\rvy)$. All of these techniques have been used in the literature~\citep{ho2020denoising,karras2022elucidating,song2020score}. 
-
 \section{Using more general diffusion processes}
 Many diffusion papers use variations of the forward diffusion SDE we presented in \cref{eq:forward-diffusion} to include a ``drift'' term. In particular, they modify
 \begin{equation}
     \mathrm{d}\rvx = g(t) \mathrm{d}\rvw
 \end{equation}
-by including the drift term $b_t: \mathbb{R}^n \rightarrow \mathbb{R}^n$, which in general can depend on the value of the current state $\rvx$:
+by including the drift term $\rvb_t: \mathbb{R}^n \rightarrow \mathbb{R}^n$, which is a function of the current state $\rvx$:
 \begin{align} \label{eq:forward-diffusion-with-drift}
-    \mathrm{d}\rvx = b(t) \rvx \mathrm{d}t + g(t) \mathrm{d}\rvw.
+    \mathrm{d}\rvx = \rvb_t(\rvx) \mathrm{d}t + g(t) \mathrm{d}\rvw.
 \end{align}
-If $b(t)$ is defined to be zero for all $t$, this diffusion process is equivalent to that described previously in this chapter. If $b(t)$ is chosen to be negative, there is a negative feedback loop which prevents the value of $\rvx$ from growing unboundedly with $t$. In particular, a common choice is to use $b(t) := - \frac{1}{2}g(t)^2$ which results in what is known as a ``variance-preserving'' diffusion process. The reason for this is that if we assume that $\rvx_0$ (i.e. the data distribution) has unit variance, using $b(t) := - \frac{1}{2}g(t)^2$ will cause all marginals $q(\rvx_t)$ to similarly have unit variance. See Appendix B of \citet{song2020score} for a proof. Correspondingly, the process that we have described with $b(t) := 0$ is sometimes called a ``variance-exploding'' diffusion process. The variance of $q(t)$ is simply the sum of the variance of the data distribution and the variance of the added noise $\sigma_t^2 = \int_0^t g(t') \mathrm{d}t'$, and so ``explodes'' as the variance of the added noise grows as $t \rightarrow \infty$.
+If $\rvb_t(\rvx_t)$ is defined to be zero for all $t$ and $\rvx_t$, this diffusion process is equivalent to that described previously in this chapter. If $\rvb_t(\rvx_t)$ is chosen to be $b_t \cdot \rvx_t$ for some negative scalar $b_t$, there is a negative feedback loop which prevents the value of $\rvx_t$ from growing unboundedly with $t$. In particular, a common choice is to use $\rvb_t(\rvx_t) := - \frac{1}{2}g(t)^2\rvx_t$ which results in what is known as a ``variance-preserving'' diffusion process. The reason for this is that if we assume that $\rvx_0$ (i.e. the data distribution) has unit variance, using $\rvb_t(\rvx_t) := - \frac{1}{2}g(t)^2\rvx_t$ will cause all marginals $q(\rvx_t)$ to similarly have unit variance. See Appendix B of \citet{song2020score} for a proof. Correspondingly, the process that we have described with $\rvb_t(\rvx_t) := 0$ is sometimes called a ``variance-exploding'' diffusion process. The variance of $q(t)$ is simply the sum of the variance of the data distribution and the variance of the added noise $\sigma_t^2 = \int_0^t g(t') \mathrm{d}t'$, and so ``explodes'' as the variance of the added noise grows as $t \rightarrow \infty$.
 
 \paragraph{Fitting score functions, $\rvx$-prediction, and $\epsilon$-prediction with a drift term}
 The practical implications of using a diffusion process with or without a drift term are minor. One is that, when there is a drift term to ensure that the process is variance-preserving, the process of normalising neural network inputs is simplified. This is because neural networks are usually designed to take inputs that are normalised to have roughly zero mean and unit variance. All $\rvx_t$ will naturally have properties similar to these with a variance-preserving process, as long as the original data distribution had these properties. With a variance-exploding process, care needs to be taken to normalise the inputs to the neural network so that they have roughly unit variance at any time $t$. 
 
 When a non-zero drift term is used, some of the equations derived so far must be modified to account for it. We stuck to the case of a variance-preserving process previously in this chapter to simplify the derivations but analogous results would hold as with a variance-exploding process. In particular, \citet{song2020score} show that our reverse SDE in \cref{eq:reverse-diffusion} becomes
 \begin{equation} \label{eq:reverse-diffusion-with-drift}
-    \mathrm{d}\rvx = \left( b(t)\rvx - g(t)^2 \nabla_\rvx \log q(\rvx_t|\rvy) \right) \mathrm{d}t + g(t) \mathrm{d}\bar{\rvw}
+    \mathrm{d}\rvx = \left( \rvb_t(\rvx) - g(t)^2 \nabla_\rvx \log q(\rvx_t|\rvy) \right) \mathrm{d}t + g(t) \mathrm{d}\bar{\rvw}
 \end{equation}
 and our reverse ODE becomes
 \begin{align}
-    \mathrm{d}\rvx &= \left( b(t)\rvx - \frac{1}{2} g(t)^2 \nabla_\rvx \log q(\rvx_t|\rvy) \right) \mathrm{d}t.
+    \mathrm{d}\rvx &= \left( \rvb_t(\rvx) - \frac{1}{2} g(t)^2 \nabla_\rvx \log q(\rvx_t|\rvy) \right) \mathrm{d}t.
 \end{align}
 
+If $\rvb_t(\rvx_t)$ has the form $\rvb_t(\rvx_t) := b_t \cdot \rvx_t$ then we can
 Our expression for $q(\rvx_t|\rvx,\rvy)$ becomes
 \begin{align}
     q(\rvx_t|\rvx,\rvy) = q(\rvx_t|\rvx) = \gN(\rvx_t; \alpha(t)\rvx, \sigma(t)^2)
 \end{align}
 where $\alpha(t) := e^{\int_{0}^t b(t) \mathrm{d}t}$ and $\sigma(t)^2 := \int_0^t g(t')^2 e^{2\int_{t'}^{t} b(t'') \mathrm{d}t''} \mathrm{d}t'$.
-
-In a variance-exploding process, with $b(t) := 0$, we will have that $\alpha(t) = 1$ and $\sigma(t)^2 = \int_0^t g(t)^2 \mathrm{d}t$, so $q(\rvx_t|\rvx,\rvy)$ takes the same form as earlier in the chapter. In a variance-preserving process, with $b(t) := -\frac{1}{2} g(t)^2$, ... it must be possible to show what $\alpha(t)^2 + \sigma(t)^2 = 1$.
-
+% In a variance-exploding process, with $b(t) := 0$, we will have that $\alpha(t) = 1$ and $\sigma(t)^2 = \int_0^t g(t)^2 \mathrm{d}t$, so $q(\rvx_t|\rvx,\rvy)$ takes the same form as earlier in the chapter. In a variance-preserving process, with $b(t) := -\frac{1}{2} g(t)^2$, ... it must be possible to show what $\alpha(t)^2 + \sigma(t)^2 = 1$.
 The score function of a Gaussian with mean $\mathbf{\mu}$ and covariance $\sigma^2\mI$ evaluated at $\rvx$ is $\frac{\mathbf{\mu} - \rvx}{\sigma^2}$ and so the score function of $q(\rvx_t|\rvx)$ becomes
 \begin{equation} \label{eq:general-score-function}
     \nabla_{\rvx_t} \log q(\rvx_t|\rvx) = \frac{\alpha(t)\rvx - \rvx_t}{\sigma(t)^2}.

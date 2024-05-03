@@ -311,6 +311,13 @@
 % added cleveref after hyperref
 \usepackage[capitalise]{cleveref}
 
+% chatgpt's suggestions for fixing missing float error
+% \usepackage{float}
+% \restylefloat{figure}
+% \restylefloat{table}
+% \floatplacement{figure}{htbp}
+% \floatplacement{table}{htbp}
+
 %% The following uses most defaults, which causes hyperlinks to be
 %% surrounded by colourful boxes; the colours are only visible in
 %% PDFs and don't show up when printed:
@@ -477,21 +484,26 @@
 
 %    1. Introduction
 \include{chapters/intro}
-
-%    2. Main body
-% Generally recommended to put each chapter into a separate file
+\clearpage
 \include{chapters/diffusion}
+\clearpage
 \include{chapters/conditional-diffusion}
+\clearpage
 \include{chapters/flexible-diffusion}
+\clearpage
 \include{chapters/fdm}
+\clearpage
 \include{chapters/tddm}
+\clearpage
 \include{chapters/vae}
+\clearpage
 \include{chapters/cigcvae}
 %\include{relatedwork}
 %\include{model}
 %\include{impl}
 %\include{discussion}
 %\include{conclusions}
+\clearpage
 \include{chapters/conclusions}
 
 %    3. Notes
