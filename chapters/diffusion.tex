@@ -100,7 +100,7 @@ of the Jacobian of the ``drift'' term in \cref{eq:diffusion-ode-with-nn} along t
 
 \section{Learning the score function} \label{sec:diffusion-training}
 
-\subsection{Training is agnostic to the mapping between $t$ and $\sigma$}
+\subsection{Training is agnostic to the mapping between timestep and noise-to-signal ratio}
 The objective, when training a diffusion model, is to obtain a good estimate of the score function, $s_\theta(\rvx_t, \rvy, t) \approx \nabla_{\rvx_t} \log q(\rvx_t)$ for all $t$ of interest so that we can use it to parameterise our SDE or ODE. Given that $q(\rvx_t) = \int q(\rvx) \gN(\rvx_t; \rvx, \sigma_t^2\mI) \mathrm{d}\rvx$, we can equivalently state our objective as obtaining a good estimate of 
 \begin{equation}
 \nabla_{\rvx_t} \log q(\rvx_t) = \nabla_{\rvx_t} \log \int q(\rvx) \gN(\rvx_t; \rvx, \sigma_t^2\mI) \mathrm{d}\rvx

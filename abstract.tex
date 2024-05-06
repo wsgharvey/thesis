@@ -13,6 +13,7 @@
 % \paragraph{Option 3}
 
 
+
 A deep generative model (DGM) uses a neural network to parameterize a probability distribution. In this thesis, the distributions of interest are over images and video. Deep generative models are often trained to work well for a single generation task. For the video domain these may be e.g. unconditional video generation; video generation conditioned on the first few frames (\ie video continuation); or video generation conditioned on every $n$th frame (\ie temporal super-resolution). We posit that modern DGMs can achieve spectacular performance without being restricted to a single task and aim to develop generative models that can be \textit{flexibly conditioned}. That is, we want to train a single neural network which will allow us to, at test-time, select any of these tasks, or think of a new task, and approximate the appropriate conditional distribution to solve it.
 
 We take a first step in this direction within the hierarchical variational auto-encoder (HVAE) framework. Training an HVAE from scratch is costly and so, rather than training a flexibly conditional HVAE scratch, we present a method to adapt pretrained unconditional HVAEs for conditional generation. Our method of adaptation is fast and cheap, yet produces an artifact that outperforms all previous inpainting methods in terms of image realism and diversity. The possibility of fast adaptation hints at the similarity and transferability between the representations required for different kinds of conditional generation.
