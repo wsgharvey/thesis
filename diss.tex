@@ -54,6 +54,8 @@
 %% NFSS font specification (New Font Selection Scheme)
 \usepackage{times,mathptmx,courier}
 \usepackage[scaled=.92]{helvet}
+\usepackage[dvipsnames]{xcolor}
+
 
 %% Math or theory people may want to include the handy AMS macros
 %\usepackage{amssymb}
@@ -152,6 +154,7 @@
 \newcommand{\citeeg}[1]{\citep[e.g.,][]{#1}}
 % list citation in text
 \usepackage{bibentry}
+\nobibliography*
 
 %things I've added: ------------------------------------------------------------------------
 % Optional math commands from https://github.com/goodfeli/dlbook_notation.
@@ -419,7 +422,6 @@
 %\includeonly{discussion}
 
 \begin{document}
-% \nobibliography{biblio}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% From Thesis Components: Tradtional Thesis

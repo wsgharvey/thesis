@@ -1,7 +1,7 @@
 \chapter{Supporting Materials for \cref{ch:fdm}}
 
 \section{Experimental details}
-\begin{table*}[h]
+\begin{table*}[t]
   \tiny
   \caption{Experimental details for all results reported. The GPUs referenced are all either NVIDIA RTX A5000s or NVIDIA A100s. In rows where GPU-hours are given as a range, different runs with identical settings took varying times due to varying performance of our computational infrastructure.}
   \label{tab:fdm-experimental-details}
@@ -85,7 +85,7 @@ We train TATS using the official implementation\footnote{\url{https://github.com
 We train CWVAE using the official implementation\footnote{\url{https://github.com/vaibhavsaxena11/cwvae}} and use hyperparameters as close as possible to those used in the implementation by \citet{saxena2021clockwork}. We use 600 epochs to train CWVAE on MineRL, as suggested by \citet{saxena2021clockwork}, and train it for more iterations on both other datasets. On CARLA Town01, since CWVAE is not implemented for $128\times128$ images, we downsample all train and test data to $64\times64$.
 
 \subsection{Additional evaluation metrics}
-We report additional evaluation metrics in \cref{tab:fdm-extra-metrics}. The ``Loss'' refers to the average DDPM loss (\cref{eq:ddpm-loss}) over the test set, such that an appropriate choice of $\lambda(t)$ would yield the ELBO of the test videos under each model and sampling scheme although, as in our training loss, we use $\lambda(t):=1$ to de-emphasise pixel-level detail. The commonly-used~\citep{saxena2021clockwork,babaeizadeh2021fitvid} LPIPS, SSIM and PSNR metrics measure frame-wise distances between each generated frame around the ground-truth. To account for stochasticity in the task, $k$ video completions are generated for each test video and the smallest distance to the ground-truth is reported. We report them for completeness, but do not believe that SSIM and PSNR correlate well with video quality due to the stochastic nature of our datasets. For example, see the CWVAE videos on MineRL at \url{https://www.cs.ubc.ca/~wsgh/fdm} which obtain higher SSIM and PSNR than other methods despite being much blurrier. Since SSIM and PSNR are related to the mean-squared error in pixel space, they favor blurry samples over more realistic samples. While increasing $k$ should counteract this effect, the effectiveness of this scales poorly with video length and and so this made little difference in the datasets we consider.
+We report additional evaluation metrics in \cref{tab:fdm-extra-metrics}. The ``Loss'' refers to the average DDPM loss (\cref{eq:diffusion-loss}) over the test set, such that an appropriate choice of $\lambda(t)$ would yield the ELBO of the test videos under each model and sampling scheme although, as in our training loss, we use $\lambda(t):=1$ to de-emphasise pixel-level detail. The commonly-used~\citep{saxena2021clockwork,babaeizadeh2021fitvid} LPIPS, SSIM and PSNR metrics measure frame-wise distances between each generated frame around the ground-truth. To account for stochasticity in the task, $k$ video completions are generated for each test video and the smallest distance to the ground-truth is reported. We report them for completeness, but do not believe that SSIM and PSNR correlate well with video quality due to the stochastic nature of our datasets. For example, see the CWVAE videos on MineRL at \url{https://www.cs.ubc.ca/~wsgh/fdm} which obtain higher SSIM and PSNR than other methods despite being much blurrier. Since SSIM and PSNR are related to the mean-squared error in pixel space, they favor blurry samples over more realistic samples. While increasing $k$ should counteract this effect, the effectiveness of this scales poorly with video length and and so this made little difference in the datasets we consider.
 
 
 \subsection{Ablation on training task distribution} \label{ap:fdm-training-task-distribution-ablation}
@@ -98,23 +98,8 @@ We sample from the baseline ``uniform'' task distribution as follows (where $\te
     \item Sample $n_{obs} \sim \text{Uniform}(0, n_{total}-1)$.
     \item Assign the first $n_{obs}$ entries in $\mathcal{Z}$ to $\obsindices$ and the remainder to $\latindices$.
 \end{enumerate}
-This leads to a much less structured distribution than that described in \cref{fig:fdm-training-distribution}. The network trained using our proposed task distribution obtains a better FVD than our ablation on all tested combinations of dataset and sampling scheme. Note that all networks in this experiment use the hyperparameters reported in the bottom two rows of \cref{tab:fdm-experimental-details}, explaining the disparity between FVDs here and in \cref{tab:fdm-results-completion}.
-% \begin{table*}[h]
-%   \small
-%   \caption{Ablation for our training task distribution.}
-%   \label{tab:fdm-task-dist-ablation}
-%   \centering
-%   \begin{tabular}{lllll}
-%     \toprule
-%      & GQN-Mazes  & MineRL  \\
-%     \hline
-%     \multirow{1}{*}{FDM w/ uniform task distribution}     & $279$          & $902$       \\
-%     \multirow{1}{*}{FDM}  & $235$          & $586$    \\
-%     \bottomrule
-%   \end{tabular}
-%   \vspace{-1em}
-% \end{table*}
-\begin{table}[h]
+This leads to a much less structured distribution than that described in \cref{fig:training-distribution}. The network trained using our proposed task distribution obtains a better FVD than our ablation on all tested combinations of dataset and sampling scheme. Note that all networks in this experiment use the hyperparameters reported in the bottom two rows of \cref{tab:fdm-experimental-details}, explaining the disparity between FVDs here and in \cref{tab:fdm-results-completion}.
+\begin{table}[t]
     \centering
     \small
     \caption{Ablation for our training task distribution.}
@@ -199,7 +184,7 @@ An alternative approach to our RPE network described by \citet{wu2021rethinking}
 % \end{algorithm}
 
 \section{Explanation of our training task distribution} \label{app:training-task-dist-exp}
-Here we provide our motivation, design choices and more explanation of our training task distribution, as visualized in \cref{fig:fdm-training-distribution} and implemented in \cref{alg:training-distribution}. Since we train our model to work with any custom sampling scheme at test time, our training distribution should be broad enough to assign some probability to any feasible choices of frames to sample and observe. At the same time, we want to avoid purely random sampling of frame positions (as in e.g. the ablation in \cref{ap:fdm-training-task-distribution-ablation}) as this will impair performance in realistic sampling schemes. Taking these considerations in mind, our design considerations for \cref{alg:training-distribution} are simple:
+Here we provide our motivation, design choices and more explanation of our training task distribution, as visualized in \cref{fig:training-distribution} and implemented in \cref{alg:training-distribution}. Since we train our model to work with any custom sampling scheme at test time, our training distribution should be broad enough to assign some probability to any feasible choices of frames to sample and observe. At the same time, we want to avoid purely random sampling of frame positions (as in e.g. the ablation in \cref{ap:fdm-training-task-distribution-ablation}) as this will impair performance in realistic sampling schemes. Taking these considerations in mind, our design considerations for \cref{alg:training-distribution} are simple:
 \begin{enumerate}
     \item The model should sample frames at multiple timescales, so we sample the spacing between frames (as on line 4 of \cref{alg:training-distribution}). A log-uniform distribution is a natural fit since events in a video sequence can happen over timescales in, e.g., seconds, minutes, or hours, and the differences between these are best captured by a log scale. The parameters of this log-uniform distribution are chosen to be the broadest possible (given the video length and the frame rate).
     \item The user may wish to jointly sample multiple disparate sections of a video. We therefore make it possible to sample multiple groups of frames, potentially with different timescales (this is the purpose of the while loop in \cref{alg:training-distribution}).
@@ -210,7 +195,7 @@ The remainder of the algorithm is boilerplate, gathering the indexed frames (lin
 
 \section{Sampling schemes}
 \Cref{fig:fdm-sampling-schemes} illustrates each of the sampling schemes for which we reported results. We show the versions adapted to completing 300-frame GQN-Mazes videos from 36 initial observations, but all can be extended to e.g. different video lengths.
-\begin{figure}[h]
+\begin{figure}[t]
     \centering
     \begin{subfigure}[t]{\textwidth}
         \includegraphics[width=\textwidth]{figs/fdm/inference-modes/sample_vis_autoreg_T=300_sampling_10_out_of_20_red_blue_flipped.png}
@@ -260,7 +245,7 @@ We now describe in detail our procedure for optimizing the choice of indices to 
 This procedure begins by initializing this set of indices, $\obsindices$. In general $\obsindices$ can be initialized as an empty set, but it can also be initialized with indices that the algorithm is ``forced'' to condition on. We initialize it to contain the closest observed/previously sampled indices before and after each latent index. In other words, we initialize it so that there is a red pixel between any blue and gray pixel in each row of \cref{fig:fdm-opt-autoreg,fig:fdm-opt-hierarchy-2}.
 
 \paragraph{Appending to $\obsindices$}
-On each iteration of the procedure, we estimate the DDPM loss in \cref{eq:ddpm-loss} (with uniform weighting) for every possible next choice of index to condition on. That is, we compute the DDPM loss when conditioning on frames at indices ${\obsindices \oplus [i]}$ for every ${i\in\{1,\ldots,N\}\setminus\latindices\setminus\obsindices}$. We estimate the loss by iterating over timesteps ${t \in \{100,200,\ldots,1000\}}$ and, for each timestep, estimating the expectation over $\rvx_0$ with 10 different training images. We found that the iteration over a grid of timesteps, rather than random sampling, helped to reduce the variance in our loss estimates. We then select the index resulting in the lowest loss, append it to $\obsindices$, and repeat until $\obsindices$ is at the desired length. We repeat the entire procedure for every stage of the sampling scheme.
+On each iteration of the procedure, we estimate the DDPM loss in \cref{eq:diffusion-loss} (with uniform weighting) for every possible next choice of index to condition on. That is, we compute the DDPM loss when conditioning on frames at indices ${\obsindices \oplus [i]}$ for every ${i\in\{1,\ldots,N\}\setminus\latindices\setminus\obsindices}$. We estimate the loss by iterating over timesteps ${t \in \{100,200,\ldots,1000\}}$ and, for each timestep, estimating the expectation over $\rvx_0$ with 10 different training images. We found that the iteration over a grid of timesteps, rather than random sampling, helped to reduce the variance in our loss estimates. We then select the index resulting in the lowest loss, append it to $\obsindices$, and repeat until $\obsindices$ is at the desired length. We repeat the entire procedure for every stage of the sampling scheme.
 
 \section{CARLA Town01}
 The CARLA Town01 dataset was created by recording a simulated car driving programatically around the CARLA simulator's Town01~\cite{dosovitskiy2017carla}. The car is driven so as to stay close to the speed limit of roughly $3$m/s where possible, stopping at traffic lights. The simulations run for 10\,000 frames and we split each into 10 1000-frame videos.\footnote{Due to technical glitches, not all simulations finished. When these occur, we simply save however many 1000-frame videos have been generated.} Within each simulation, the weather and other world state (e.g. state of the traffic lights) is sampled randomly. The car begins each simulation in a random position, and navigates to randomly selected waypoints around the town. As soon as it reaches one, another is randomly sampled so that it continues moving. We use a 120 degree field of view and render frames at $128\times128$ resolution.
