@@ -39,7 +39,6 @@ Diffusion models, or DMs~\citep{sohl2015deep,ho2020denoising,nichol2021improved,
   \end{tabular}
 \end{table*}
 
-% \todo[inline]{change $g(t)$ to $g_t$ ???}
 \subsection{The forward process as an SDE} \label{sec:diffusion-forward-sde}
 This forward process is defined through a combination of the initial condition $\rvx_0 \sim \pdata(\cdot)$ and the stochastic differential equation (SDE):\footnote{We describe here the ``variance-exploding'' diffusion process. We generalise to a broader family of forward processes in ..., which require more complex notation.}
 \begin{equation} \label{eq:forward-diffusion}
@@ -96,9 +95,11 @@ We have seen that it is possible to sample from a diffusion model using either a
 
 \citet{karras2022elucidating} suggest a family of SDEs which ``interpolate'' between the discussed ODE and the discussed SDE~\citep{karras2022elucidating}, making it possible to find an optimal trade-off in this regard. To do so, they suggest the following sum of the ODE from \cref{eq:diffusion-ode} with a distribution-preserving Langevin diffusion term, proving that it maintains the same marginal distributions $\{q(\rvx_t)\}_t$ as the SDE and ODE presented so far:
 \begin{align}
-    \mathrm{d}\rvx = \underbrace{- \frac{1}{2} g(t)^2 \nabla_\rvx \log q(\rvx_t) \mathrm{d}t}_\text{Diffusion ODE from \cref{eq:diffusion-ode}} - \underbrace{\beta(t) \sigma(t)^2 \nabla_\rvx \log q(\rvx_t) \mathrm{d}t + \sqrt{2\beta(t)}\sigma(t)\mathrm{d}\bar{\rvw}}_\text{Langevin diffusion}
+    \mathrm{d}\rvx &= \underbrace{- \frac{1}{2} g(t)^2 \nabla_\rvx \log q(\rvx) \mathrm{d}t}_\text{Diffusion ODE from \cref{eq:diffusion-ode}} - \underbrace{\beta(t) \sigma(t)^2 \nabla_\rvx \log q(\rvx) \mathrm{d}t + \sqrt{2\beta(t)}\sigma(t)\mathrm{d}\bar{\rvw}}_\text{Langevin diffusion}  \label{eq:diffusion-edm-sde-exact} \\
+    &\approx \underbrace{- \frac{1}{2} g(t)^2 \rvs_\theta(\rvx_t, t) \mathrm{d}t}_\text{Diffusion ODE from \cref{eq:diffusion-ode}} - \underbrace{\beta(t) \sigma(t)^2 \rvs_\theta(\rvx_t, t) \mathrm{d}t + \sqrt{2\beta(t)}\sigma(t)\mathrm{d}\bar{\rvw}}_\text{Langevin diffusion} \label{eq:diffusion-edm-sde-approx}
 \end{align}
-where $\beta(t)$ is a hyperparameter and $\sigma(t) = \int_0^t g(t') \mathrm{d}t'$ is the standard deviation of $q(\rvx_t|\rvx)$ as defined earlier. If $\beta(t) = 0$, we recover the ODE from \cref{eq:diffusion-ode}. If $\beta(t) = \frac{1}{2 \sigma(t)^2}$, we recover the SDE from \cref{eq:reverse-diffusion}. TODO - check and finish the above
+where $\beta(t)$ is a hyperparameter and $\sigma(t) = \int_0^t g(t') \mathrm{d}t'$ is the standard deviation of $q(\rvx_t|\rvx)$ as defined earlier. 
+If $\beta(t) = 0$, we recover the ODE from \cref{eq:diffusion-ode}. The Langevin diffusion part of the SDE, active when $\beta(t) > 0$, can be understood as playing a role similar to running a Markov chain Monte Carlo process~\citep{bishop2006pattern} in that it causes the value of $\rvx_t$ to gradually while staying distributed according to $q(\rvx_t)$. The hyperparameter $\beta(t)$ then controls how ``quickly'' these Langevin dynamics are taking place at each time $t$. \citet{karras2022elucidating} posit that the noise added with $\beta(t) > 0$ helps to compensate for inaccuracies of the ODE from the score function estimate. Using values of $\beta(t)$ that are too large, however, will lead to greater inaccuracies since the Langevin dynamics are also only approximate thanks to the imperfect SDE solver and imperfect score function estimates. If $\beta(t) = \frac{g(t)^2}{2 \sigma(t)^2}$, we recover the SDE from \cref{eq:reverse-diffusion}. In practice, \citet{karras2022elucidating} suggest using values that are tuned through experiments for a given diffusion model.
 
 
 \section{Learning the score function} \label{sec:diffusion-training}
@@ -110,7 +111,7 @@ The objective, when training a diffusion model, is to obtain a good estimate of 
 \end{equation}
 for all $\sigma(t)$ of interest. We can state this objective purely in terms of $\sigma(t)$ without considering $t$ itself. Therefore, for the rest of this chapter we will consider the problem of learning a score function for given values of $\sigma$ without considering how they relate to $t$. This means that we can re-use the same learned score function estimator even if we decide to change the relationship between $\sigma$ and $t$ by changing the value of $g(t)$ in the forward SDE (\cref{eq:forward-diffusion}). We can therefore disentangle the learning of a diffusion model from the definition of the ODEs and SDEs used to sample from it. To make this clear, in the remainder of this section when we have in mind a particular noise-to-signal ratio $\sigma=\sigma(t)$ and wish to refer to the corresponding variable $\rvx_t$, we will do so without reference to $t$ by simply writing $\rvx_\sigma$. We will also now write the score estimate as $s_\theta(\rvx_\sigma, \sigma)$ so that it takes $\sigma$ as an argument instead of $t$. In the following, we derive an objective for matching $s_\theta(\rvx_\sigma, \sigma)$ to $\nabla_{\rvx_\sigma} \log q(\rvx_\sigma)$~\citep{vincent2011connection,song2019generative}. These scores are the gradients depicted by arrows in \cref{fig:diffusion-overview}.
 
-\subsection{An objective for learning to estimate the score function}
+\subsection{An objective for learning to estimate the score function} \label{sec:score-function-training-objective}
 
 In \cref{sec:diffusion-ode} we described how to compute the likelihoods of data with respect to our diffusion model. One solution to training the diffusion model would be to explicitly optimise this objective. Doing so would maximise the data likelihood under $p_\theta^\text{ODE}$ without necessarily matching $\rvs_\theta(\rvx_t, t)$ to the score function and has been explored in the past, yielding models called continuous normalising flows~\cite{chen2018neural}. Doing so has some downsides, however; one is that we would need to perform sufficiently many sequential network evaluations to accurately integrate the ODE on every training iteration, potentially making training expensive. Another is that training with this objective has previously been found to be unstable on high-dimensional data~\citep{weilbach2020structured}. 
 
@@ -124,14 +125,14 @@ To learn to estimate the score function, an ideal objective would be the mean-sq
     \mathcal{L}_\text{SM}(\theta, \sigma) &= \EX_{q(\rvx_\sigma)} \left[ || \nabla_{\rvx_\sigma} \log q(\rvx_\sigma) - \rvs_\theta(\rvx_\sigma, \sigma) ||_2^2 \right],
 \end{align}
 but in general $\gL_\text{SM}$ is intractable because we do not have access to $\nabla_{\rvx_\sigma} \log q(\rvx_\sigma)$. We can, however, obtain an unbiased estimate of $\gL_\text{SM}$. To do so we begin by breaking it down as
-\begin{align}
+\begin{align} \label{eq:lsm-expanded}
     \EX_{q(\rvx_\sigma)} \big[ 
     || \rvs_\theta(\rvx_\sigma, \sigma) ||_2^2
     - 2 \left\langle \nabla_{\rvx_\sigma} \log q(\rvx_\sigma),
     \rvs_\theta(\rvx_\sigma, \sigma) \right\rangle \big]
     + C_1
 \end{align}
-where $C_1 = \EX_{q(\rvx_\sigma)} \left[ || \nabla_{\rvx_\sigma} q(\rvx_\sigma) ||_2^2 \right]$ does not depend on $\theta$. We prove the following in \cref{sec:proof-that-diffusion-does-score-matching}, letting us rewrite the second term in terms of the tractable score of the Gaussian $q_{\sigma}(\rvx_\sigma|\rvx)$ instead of the intractable score of $q_{\sigma}(\rvx_\sigma)$:
+where $C_1 = \EX_{q(\rvx_\sigma)} \left[ || \nabla_{\rvx_\sigma} q(\rvx_\sigma) ||_2^2 \right]$ does not depend on $\theta$. We prove the following in \cref{sec:proof-that-diffusion-does-score-matching}, letting us rewrite the second term of \cref{eq:lsm-expanded} in terms of the tractable score of the Gaussian $q_{\sigma}(\rvx_\sigma|\rvx)$ instead of the intractable score of $q_{\sigma}(\rvx_\sigma)$:
 \begin{align}
 \allowdisplaybreaks
     &\EX_{q(\rvx_\sigma)} \left[ - 2 \left\langle \nabla_{\rvx_\sigma} \log q(\rvx_\sigma), \rvs_\theta(\rvx_\sigma, \sigma) \right\rangle \right] \nonumber \\
@@ -206,33 +207,31 @@ While we have described the perspective of learning an estimator for the score f
 
 We now see how the score-matching objective proposed previously can be used to construct a lower-bound on the data likelihood. To do so, we simulate trajectories from the reverse SDE in \cref{eq:reverse-diffusion-with-nn} as follows. We will simulate trajectories from a time corresponding to $\sigma_\text{max}$ to a time corresponding to some $\sigma_\text{min}$ close to zero by discretising this time interval into points labelled $N,\ldots,0$. As in the rest of \cref{sec:diffusion-training}, we will consider only the noise standard deviation and not time itself so we define the points such that the noise standard deviation for point $i$ is
 \begin{equation}
-    \sigma(i) = \frac{i}{N}(\sigma_\text{max} - \sigma_\text{min}) + \sigma_\text{min}.
+    \Sigma[i] = \frac{i}{N}(\sigma_\text{max} - \sigma_\text{min}) + \sigma_\text{min}.
 \end{equation}
-Then, to simulate the reverse SDE, we perform steps $N,\ldots,1$ and at each step $i$ transition from a state with noise standard deviation $\sigma(i)$ to one with noise standard deviation $\rho(i) := \sigma(i-1)$. For brevity in the remainder of this section we will write $\sigma(i)$ as simply $\sigma$ and $\rho(i)$ as $\rho$ when the index is clear from the context. This simulation results in a joint distribution over trajectories of
+such that $\Sigma[0] = \sigma_\text{min}$ and $\Sigma[N] = \sigma_\text{max}$. Then, to simulate the reverse SDE, we perform steps $N,\ldots,1$ and at each step $i$ transition from a state with noise standard deviation $\Sigma[i]$ to one with noise standard deviation $P[i] := \Sigma[i-1]$. For brevity in the remainder of this section we will write $\Sigma[i]$ as simply $\sigma$ and $P[i]$ as $\rho$ when the index is clear from the context. This simulation results in a joint distribution over trajectories of
 \begin{align} \label{eq:diffusion-reverse-joint-prob}
-    p_\theta(\rvx,\rvx_{\sigma(0)},\ldots,\rvx_{\sigma(N)}) = p(\rvx_{\sigma(N)}) \left( \prod_{i=1}^N p_\theta(\rvx_{\rho(i)} | \rvx_{\sigma(i)}) \right) p_\theta(\rvx|\rvx_{\sigma(0)})
+    p_\theta(\rvx,\rvx_{\Sigma[0]},\ldots,\rvx_{\Sigma[N]}) = p(\rvx_{\Sigma[N]}) \left( \prod_{i=1}^N p_\theta(\rvx_{\rho} | \rvx_{\sigma}) \right) p_\theta(\rvx|\rvx_{\Sigma[0]})
 \end{align}
-where $p(\rvx_{(N)})$ is the Gaussian approximation of $q(\rvx_{t(N)})$ with no learnable parameters; $p_\theta(\rvx_{\rho(i)} | \rvx_{\sigma(i)})$ is a step parameterised by our score function estimate; and $p_\theta(\rvx|\rvx_{\sigma(0)})$ is a final ``likelihood'' to remove all noise from data which may also make use of the score function. The ``data likelihood'' is then a marginal of this joint distribution, $p_\theta(\rvx)$, evaluated on our training data. In the following we describe how we can use \cref{eq:diffusion-reverse-joint-prob} to construct a lower-bound on $p_\theta(\rvx)$, before expanding on the form of each $p_\theta(\rvx_{\rho(i)}|\rvx_{\sigma(i)})$.
+where $p(\rvx_{\Sigma[N]}) = p(\rvx_{\sigma_\text{max}}) = \gN(\rvx_{\sigma_\text{max}}; \mathbf{0}; \sigma_\text{max}^2\mI)$ is a Gaussian approximation of $q(\rvx_{\sigma_\text{max}})$ with no learnable parameters; $p_\theta(\rvx_{\rho} | \rvx_{\sigma})$ is a step parameterised by our score function estimate; and $p_\theta(\rvx|\rvx_{\Sigma[0]}) = p_\theta(\rvx|\rvx_{\sigma_\text{min}})$ is a final ``likelihood'' to remove all noise from data. If the data values are discrete, as image pixel values are, then reducing $\sigma_\text{min}$ can make the contribution of $\log p_\theta(\rvx|\rvx_{\sigma_\text{min}})$ to the log-likelihood arbitrarily close to zero. The ``data likelihood'' is then a marginal of this joint distribution, $p_\theta(\rvx)$, evaluated on our training data. In the following we describe how we can use \cref{eq:diffusion-reverse-joint-prob} to construct a lower-bound on $p_\theta(\rvx)$, before expanding on the form of each $p_\theta(\rvx_{\rho}|\rvx_{\sigma})$.
 
-We start by noting that the forward process yields an analytically tractable form of $q(\rvx_{\sigma(0)},\ldots,\rvx_{\sigma(N)}|\rvx)$ which we can express as
+We start by noting that the forward process yields an analytically tractable form of $q(\rvx_{\Sigma[0]},\ldots,\rvx_{\Sigma[N]}|\rvx)$ which we can express as
 \begin{equation}
-    q(\rvx_{\sigma(0)},\ldots,\rvx_{\sigma(N)}|\rvx) = q(\rvx_{\sigma(N)}|\rvx) \prod_{i=1}^N q(\rvx_{\rho(i)} | \rvx_{\sigma(i)}, \rvx).
+    q(\rvx_{\Sigma[0]},\ldots,\rvx_{\Sigma[N]}|\rvx) = q(\rvx_{\Sigma[N]}|\rvx) \prod_{i=1}^N q(\rvx_{\rho} | \rvx_{\sigma}, \rvx).
 \end{equation}We combine it with \cref{eq:diffusion-reverse-joint-prob} to construct the following lower-bound of $p_\theta(\rvx)$:
 \begin{align}
     &\log p_\theta(\rvx) \\
-    \geq &\log p_\theta(\rvx) - \kl{q(\rvx_{\sigma(0)},\ldots,\rvx_{\sigma(N)}|\rvx)}{p_\theta(\rvx_{\sigma(0)},\ldots,\rvx_{\sigma(N)}|\rvx)} \\
-    = &\EX_{q(\rvx_{\sigma(0)},\ldots,\rvx_{\sigma(N)}|\rvx)} \left[ \log \frac{p(\rvx_{\sigma(N)}) p_\theta(\rvx|\rvx_{\sigma(0)} \prod_{i=1}^N p_\theta(\rvx_{\rho} | \rvx_{\sigma}) ) }{q(\rvx_{\sigma(N)}|\rvx) \prod_{i=1}^N q(\rvx_{\rho} | \rvx_{\sigma}, \rvx)} \right] \\
-    = & -\underbrace{\kl{q(\rvx_{\rho(N)}|\rvx)}{p(\rvx_{\sigma(N)})}}_\text{prior loss} - \underbrace{\EX_{q(\rvx_{\sigma(0)}|\rvx)} \left[ - \log p_\theta(\rvx|\rvx_{\sigma(0)}) \right]}_\text{reconstruction loss} - \underbrace{\mathcal{L}_N(\theta, \rvx)}_\text{diffusion loss} \label{eq:full-diffusion-elbo}
+    \geq &\log p_\theta(\rvx) - \kl{q(\rvx_{\Sigma[0]},\ldots,\rvx_{\Sigma[N]}|\rvx)}{p_\theta(\rvx_{\Sigma[0]},\ldots,\rvx_{\Sigma[N]}|\rvx)} \\
+    = &\EX_{q(\rvx_{\Sigma[0]},\ldots,\rvx_{\Sigma[N]}|\rvx)} \left[ \log \frac{p(\rvx_{\Sigma[N]}) p_\theta(\rvx|\rvx_{\Sigma[0]}) \prod_{i=1}^N p_\theta(\rvx_{\rho} | \rvx_{\sigma}) ) }{q(\rvx_{\Sigma[N]}|\rvx) \prod_{i=1}^N q(\rvx_{\rho} | \rvx_{\sigma}, \rvx)} \right] \\
+    = & -\underbrace{\kl{q(\rvx_{\Sigma[N]}|\rvx)}{p(\rvx_{\Sigma[N]})}}_\text{prior loss} - \underbrace{\EX_{q(\rvx_{\Sigma[0]}|\rvx)} \left[ - \log p_\theta(\rvx|\rvx_{\Sigma[0]}) \right]}_\text{reconstruction loss} - \underbrace{\mathcal{L}_N(\theta, \rvx)}_\text{diffusion loss} \label{eq:full-diffusion-elbo}
 \end{align}
 where
 \begin{align}
-    \mathcal{L}_N(\theta, \rvx) = \sum_{i=1}^N \EX_{q(\rvx_{\sigma}|\rvx)} \left[ \kl{q(\rvx_{\rho} | \rvx_{\sigma}, \rvx)}{p_\theta(\rvx_{\rho} | \rvx_{\sigma})} \right].
+    \mathcal{L}_D(\rvx, \theta; N) = \sum_{i=1}^N \EX_{q(\rvx_{\sigma}|\rvx)} \left[ \kl{q(\rvx_{\rho} | \rvx_{\sigma}, \rvx)}{p_\theta(\rvx_{\rho} | \rvx_{\sigma})} \right].
 \end{align}
-Following \citet{kingma2021variational}, we will call the first term of \cref{eq:full-diffusion-elbo} the ``prior loss''; the second term the ``reconstruction loss''; and the third term the ``diffusion loss''. The prior loss is not improved by optimising $\theta$ but can be made arbitrarily small by choosing large $\sigma_\text{max}$. The reconstruction loss can similarly be made arbitrarily small by choosing small $\sigma_\text{min}=\sigma(0)$, even with a simple parameterisation of $p_\theta(\rvx|\rvx_{\sigma(0)})$. Therefore, given appropriate choices of $\sigma_\text{min}$ and $\sigma_\text{max}$, the lower-bound will be dominated by the diffusion loss $\mathcal{L}_t(\rvx)$. For the remainder of this section we will focus on estimating $\mathcal{L}_N(\theta, \rvx)$.
+Following \citet{kingma2021variational}, we will call the first term of \cref{eq:full-diffusion-elbo} the ``prior loss''; the second term the ``reconstruction loss''; and the third term the ``diffusion loss''. The prior loss is not improved by optimising $\theta$ but can be made arbitrarily small by choosing large $\sigma_\text{max}$. The reconstruction loss can similarly be made arbitrarily small on discrete data by choosing small $\sigma_\text{min}$. Therefore, given appropriate choices of $\sigma_\text{min}$ and $\sigma_\text{max}$, the lower-bound will be dominated by the diffusion loss $\mathcal{L}_D(\rvx, \theta; N)$. For the remainder of this section we will focus on estimating $\mathcal{L}_N(\theta, \rvx)$.
 
-TODO - change $\sigma(t)$ to $\sigma_t$ outside of this subsection
-
-To evaluate $\mathcal{L}_N(\theta, \rvx)$, we first make explicit the form of each of $q(\rvx_{\rho} | \rvx_{\sigma}, \rvx)$ and $p_\theta(\rvx_{\rho} | \rvx_{\sigma})$. From the definition of the forward process, we have that
+To evaluate $\mathcal{L}_D(\rvx, \theta; N)$, we first make explicit the form of each of $q(\rvx_{\rho} | \rvx_{\sigma}, \rvx)$ and $p_\theta(\rvx_{\rho} | \rvx_{\sigma})$. From the definition of the forward process, we have that
 \begin{align} \label{eq:q-step-pdf}
     q(\rvx_{\rho} | \rvx_{\sigma}, \rvx) &= \frac{q(\rvx_{\rho} | \rvx) q(\rvx_{\sigma} | \rvx_{\rho})}{q(\rvx_{\sigma}|\rvx)} = \frac{\gN(\rvx_{\rho}; \rvx, \sigma_{\rho}^2 \mI) \gN(\rvx_{\sigma}; \rvx_{\rho}, \sigma^2-\rho^2 \mI) }{\gN(\rvx_{\sigma}; \rvx, \sigma_{\sigma}^2 \mI)}
 \end{align}
@@ -267,24 +266,24 @@ Following \citet{kingma2021variational}, we will proceed by introducing the sign
 \end{align}
 and so
 \begin{align}
-    \mathcal{L}_\infty(\rvx) = \frac{1}{2} \sum_{i=1}^N \left( SNR(\rho) - SNR(\sigma) \right) || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \sigma) ||_2^2.
+    \mathcal{L}_D(\rvx, \theta; N) = \frac{1}{2} \sum_{i=1}^N \left( SNR(\rho) - SNR(\sigma) \right) || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \sigma) ||_2^2.
 \end{align}
 This reveals that the contribution of each denoising step to the log-likelihood is closely related its change to the signal-to-noise ratio. The squared-error term reveals that it is also strongly dependent on the accuracy of the prediction of $\rvx$ given $\rvx_t$. A better lower-bound will be obtained by taking more steps, and changing the signal-to-noise ratio by less in each step. To make this lower-bound agnostic to the number of steps, we can consider the limit where infinitely many steps are taken. To do so, we  follow \citet{kingma2021variational} and replace $\rho$ with $\sigma-\frac{\sigma_\text{diff}}{N}$, where $\sigma_\text{diff} = \sigma_\text{max}-\sigma_\text{min}$. Then, taking the limit as $N \rightarrow \infty$ gives 
 \begin{align}
-    \mathcal{L}_\infty(\rvx) &= \lim_{N\rightarrow\infty} \frac{1}{2} \sum_{i=1}^N \left[ \left( \frac{\text{SNR}(\sigma-\frac{\sigma_\text{diff}}{N}) - \text{SNR}(\sigma)}{\frac{\sigma_\text{diff}}{N}} \right) || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \sigma) ||_2^2 \right] \\
+    \mathcal{L}_D(\rvx, \theta; \infty) &= \lim_{N\rightarrow\infty} \frac{1}{2} \sum_{i=1}^N \left[ \left( \frac{\text{SNR}(\sigma-\frac{\sigma_\text{diff}}{N}) - \text{SNR}(\sigma)}{\frac{\sigma_\text{diff}}{N}} \right) || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \sigma) ||_2^2 \right] \\
     &= \frac{1}{2} \int_{\sigma_\text{min}}^{\sigma_\text{max}} -\text{SNR}'(\sigma) || \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \sigma) ||_2^2 \mathrm{d}\sigma \label{eq:diffusion-elbo}.
 \end{align}
-We can rewrite this similarly to the $\rvx$-prediction loss in \cref{eq:x0-diffusion-loss},
+We can take an expectation of this loss over $q(\rvx)=\pdata(\rvx)$ and then rewrite it similarly to the $\rvx$-prediction loss in \cref{eq:x0-diffusion-loss}, which gives
 \begin{align} \label{eq:diffusion-loss-likelihood}
-    \mathcal{L}_\infty(\theta) &= \EX_{u(\sigma)q(\rvx_0, \rvx_\sigma)} \left[ 
+    \mathcal{L}_D(\theta; \infty) &= \EX_{u(\sigma)q(\rvx_0, \rvx_\sigma)} \left[ 
     \frac{-\frac{1}{2}\text{SNR}'(\sigma)}{u(\sigma)}
-    || \rvx_\theta(\rvx_\sigma, \sigma) - \rvx ||_2^2 \right],
+    || \rvx_\theta(\rvx_\sigma, \sigma) - \rvx ||_2^2 \right].
 \end{align}
-which makes it clear that the $\rvx$-prediction loss in \cref{eq:x0-diffusion-loss} is equal to this lower bound on the data log likelihood if we set $\lambda^\rvx(\sigma) := - \frac{1}{2} \text{SNR}'(\sigma) = \frac{1}{\sigma^3}$. For this reason we will define $\lambda^\rvx_{ELBO}(\sigma) := \frac{1}{\sigma^3}$, and similarly define $\lambda^\rvs_{ELBO}(\sigma) := \sigma$ and $\lambda^\epsilon_{ELBO}(\sigma) := \frac{1}{\sigma}$ as the weighting functions for score prediction and $\epsilon$-prediction objectives which correspond to lower-bounds on the data likelihood.
+This form makes it clear that the $\rvx$-prediction loss in \cref{eq:x0-diffusion-loss} is equal to this lower bound on the data log likelihood if we set $\lambda^\rvx(\sigma) := - \frac{1}{2} \text{SNR}'(\sigma) = \frac{1}{\sigma^3}$. For this reason we will define $\lambda^\rvx_{ELBO}(\sigma) := \frac{1}{\sigma^3}$, and similarly define $\lambda^\rvs_{ELBO}(\sigma) := \sigma$ and $\lambda^\epsilon_{ELBO}(\sigma) := \frac{1}{\sigma}$ as the weighting functions for score prediction and $\epsilon$-prediction objectives which correspond to lower-bounds on the data likelihood.
 
-In the interest of presenting as simple a form of the maximum-likelihood objective, we end this section by demonstrating that a change of variables can be used to rewrite $\gL_\infty(\rvx)$ as an integral over the signal-to-noise ratio itself. Defining $\text{SNR}_\text{min} = \frac{1}{\sigma_\text{max}}$ and $\text{SNR}_\text{max} = \frac{1}{\sigma_\text{min}}$,
+In the interest of presenting as simple a form of the maximum-likelihood objective, we end this section by demonstrating that a change of variables can be used to rewrite our data likelihood $\mathcal{L}_D(\rvx, \theta; \infty)$ more simply as an integral over the signal-to-noise ratio itself. Defining $\text{SNR}_\text{min} = \frac{1}{\sigma_\text{max}}$ and $\text{SNR}_\text{max} = \frac{1}{\sigma_\text{min}}$,
 \begin{align}
-    \gL_\infty(\rvx) &= \frac{1}{2} \int_{\text{SNR}_\text{min}}^{\text{SNR}_\text{max}} || \rvx - \hat{\rvx}_\theta(\rvx_\text{SNR}, \text{SNR}) ||_2^2 \mathrm{d}\text{SNR}. \label{eq:diffusion-integral-dsnr}
+    \mathcal{L}_D(\rvx, \theta; \infty) &= \frac{1}{2} \int_{\text{SNR}_\text{min}}^{\text{SNR}_\text{max}} || \rvx - \hat{\rvx}_\theta(\rvx_\text{SNR}, \text{SNR}) ||_2^2 \mathrm{d}\text{SNR}. \label{eq:diffusion-integral-dsnr}
 \end{align}
 In this equation, we use $\rvx_\text{SNR}$ to denote $\rvx_\sigma$ with $\sigma = \frac{1}{\sqrt{SNR}}$ and redefined the function $\hat{\rvx}_\theta$ to take $\text{SNR}$ as an input instead of $\sigma$.
 
@@ -338,7 +337,7 @@ Our expression for $q(\rvx_t|\rvx)$ becomes
     q(\rvx_t|\rvx) = \gN(\rvx_t; \alpha(t)\rvx, \sigma(t)^2)
 \end{align}
 where $\alpha(t) := e^{\int_{0}^t b(t) \mathrm{d}t}$ and $\sigma(t)^2 := \int_0^t g(t')^2 e^{2\int_{t'}^{t} b(t'') \mathrm{d}t''} \mathrm{d}t'$. The score function of a Gaussian with mean $\mathbf{\mu}$ and covariance $\sigma^2\mI$ evaluated at $\rvx$ is $\frac{\mathbf{\mu} - \rvx}{\sigma^2}$ and so the score function of $q(\rvx_t|\rvx)$ becomes $\nabla_{\rvx_t} \log q(\rvx_t|\rvx) = \frac{\alpha(t)\rvx - \rvx_t}{\sigma(t)^2}$. As earlier in this chapter, when we use a variance-exploding process with $\alpha(t) := 1$ the score function simplifies to the expression $\frac{\rvx-\rvx_t}{\sigma(t)^2}$ used previously. We now re-consider our loss function for estimating this score function. We did not rely on the specific properties of the diffusion process to derive the implicit score matching objective from \cref{eq:ism-loss},
-\begin{align} \label{eq:ism-loss}
+\begin{align} \label{eq:ism-loss-with-drift}
     \mathcal{L}_\text{ISM}(\theta, \sigma) &= \EX_{q(\rvx, \rvx_\sigma)} \left[ 
     || \rvs_\theta(\rvx_\sigma, \sigma) - \nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvx) ||_2^2 \right],
 \end{align}
@@ -347,13 +346,13 @@ and so the same derivation still applies. Substituting in the generalised expres
     \mathcal{L}_\text{ISM}(\theta, t) &= \EX_{q(\rvx, \rvx_t)} \left[ || \rvs_\theta(\rvx_t, t) - \frac{\alpha(t)\rvx - \rvx_t}{\sigma(t)^2} ||_2^2 \right].
 \end{align}
 As before, we can integrate $\gL_\text{ISM}$ over a range of $t$ to obtain
-\begin{align}
-    \mathcal{L}_\text{ISM}(\theta) &= \EX_{u(t)q(\rvx, \rvx_t)} \left[ \frac{\lambda^\rvs(t)}{u(t)} || \rvs_\theta(\rvx_t, t) - \frac{\alpha(t) \rvx-\rvx_t}{\sigma(t)^2} ||_2^2 \right].
+\begin{align} \label{eq:general-dm-loss}
+    \mathcal{L}_\text{DM}(\theta) &= \EX_{u(t)q(\rvx, \rvx_t)} \left[ \frac{\lambda^\rvs(t)}{u(t)} || \rvs_\theta(\rvx_t, t) - \frac{\alpha(t) \rvx-\rvx_t}{\sigma(t)^2} ||_2^2 \right].
 \end{align}
-And again we can rewrite the loss with a mean-squared error to $\rvx$ or to $\epsilon$, now definde as $\epsilon := \frac{\rvx_t-\alpha(t)\rvx}{\sigma(t)}$:
+And again we can rewrite the loss with a mean-squared error to $\rvx$ or to $\epsilon$, now defined as $\epsilon := \frac{\rvx_t-\alpha(t)\rvx}{\sigma(t)}$:
 \begin{align}
-    \mathcal{L}_\text{ISM}(\theta) &= \EX_{u(t)q(\rvx, \rvx_t)} \left[ \frac{\lambda^\rvx(t)}{u(t)} || \rvx_\theta(\rvx_t, t) - \rvx ||_2^2 \right] \label{eq:diffusion-general-x-prediction} \\
-     &= \EX_{u(t)q(\rvx, \rvx_t)} \left[ \frac{\lambda^\epsilon(t)}{u(t)} || \epsilon_\theta(\rvx_t, t) - \frac{\rvx_t-\alpha(t)\rvx}{\sigma(t)} ||_2^2 \right] \label{eq:diffusion-general-epsilon-prediction}
+    \mathcal{L}_\text{DM}(\theta) &= \EX_{u(t)q(\rvx, \rvx_t)} \left[ \frac{\lambda^\rvx(t)}{u(t)} || \rvx_\theta(\rvx_t, t) - \rvx ||_2^2 \right] \label{eq:diffusion-general-x-prediction} \\
+     &= \EX_{u(t)q(\rvx, \rvx_t)} \left[ \frac{\lambda^\epsilon(t)}{u(t)} || \epsilon_\theta(\rvx_t, t) - \epsilon ||_2^2 \right] \label{eq:diffusion-general-epsilon-prediction}
 \end{align}
 where $\lambda^\rvx(t) := \frac{\alpha(t)^2}{\sigma(t)^4}\lambda^\rvs(t)$; $\rvx_\theta(\rvx_t, t) := \frac{\rvx_t + \sigma(t)^2 \cdot \rvs_\theta(\rvx_t, t)}{\alpha(t)}$; $\lambda^\epsilon(t) := \frac{1}{\sigma(t)^2} \lambda^\rvs(t)$ and $\mathbf{\epsilon}_\theta(\rvx_t, t) = - \sigma(t) \cdot \rvs_\theta(\rvx_t, t)$.
 

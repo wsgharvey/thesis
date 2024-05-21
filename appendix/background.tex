@@ -1,16 +1,18 @@
-\chapter{Diffusion models}
+\chapter{Supplementary material for diffusion model background}
 
-\chapter{Score-matching objective derivation} \label{sec:proof-that-diffusion-does-score-matching}
+\section{Score-matching objective derivation} \label{sec:proof-that-diffusion-does-score-matching}
 
+In \cref{sec:score-function-training-objective} we asserted that $\EX_{q(\rvx_\sigma)} \left[ - 2 \left\langle \nabla_{\rvx_\sigma} \log q(\rvx_\sigma), \rvs_\theta(\rvx_\sigma, \sigma) \right\rangle \right]$ is equal to $\EX_{q(\rvx, \rvx_\sigma)} \left[ -2 \left\langle \nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvx), \rvs_\theta(\rvx_\sigma, \sigma) \right\rangle  \right]$.
+We can prove this assertion as follows:
 \begin{align}
 \allowdisplaybreaks
-S(\theta, t) &= \EX_{q(\rvx_t, \rvy)} \left[ - 2 \left\langle \nabla_{\rvx_t} \log q(\rvx_t|\rvy)^\top, \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \right] \\
-    &= \EX_{\pdata(\rvy)}\left[  - 2 \int q(\rvx_t | \rvy) \left\langle \nabla_{\rvx_t} \log q(\rvx_t | \rvy), \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \mathrm{d} \rvx_t \right] \\
-    &= \EX_{\pdata(\rvy)}\left[ - 2 \int q(\rvx_t | \rvy) \left\langle \frac{\nabla_{\rvx_t} q(\rvx_t|\rvy)}{q(\rvx_t | \rvy)}, \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \mathrm{d} \rvx_t \right] \\
-    &= \EX_{\pdata(\rvy)}\left[  - 2 \int \left\langle \nabla_{\rvx_t} q(\rvx_t | \rvy), \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \mathrm{d} \rvx_t \right] \\
-    &= \EX_{\pdata(\rvy)}\left[  - 2 \int \left\langle \nabla_{\rvx_t} \int \pdata(\rvx_0|\rvy) q(\rvx_t|\rvx_0) \mathrm{d}\rvx_0, \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \mathrm{d} \rvx_t \right] \\
-    &= \EX_{\pdata(\rvy)}\left[  - 2 \int \left\langle \int \pdata(\rvx_0|\rvy) \nabla_{\rvx_t} q(\rvx_t|\rvx_0) \mathrm{d}\rvx_0, \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \mathrm{d} \rvx_t \right] \\
-    &= \EX_{\pdata(\rvy)}\left[  - 2 \int \left\langle \int \pdata(\rvx_0|\rvy) q(\rvx_t|\rvx_0) \nabla_{\rvx_t} \log q(\rvx_t|\rvx_0) \mathrm{d}\rvx_0, \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle \mathrm{d} \rvx_t \right] \\
-    &= \EX_{\pdata(\rvy)}\left[  - 2 \int q(\rvx_0, \rvx_t|\rvy) \left\langle \nabla_{\rvx_t} \log q(\rvx_t|\rvx_0), \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle  \mathrm{d}\rvx_0 \mathrm{d} \rvx_t \right] \\
-    &= \EX_{q(\rvx_0, \rvx_t, \rvy)} \left[ -2 \left\langle \nabla_{\rvx_t} \log q(\rvx_t|\rvx_0), \rvs_\theta(\rvx_t, \rvy, \sigma) \right\rangle  \right]
+    & \EX_{q(\rvx_\sigma)} \left[ - 2 \left\langle \nabla_{\rvx_\sigma} \log q(\rvx_\sigma)^\top, \rvs_\theta(\rvx_\sigma, \sigma) \right\rangle \right] \\
+    &= - 2 \int q(\rvx_\sigma) \left\langle \nabla_{\rvx_\sigma} \log q(\rvx_\sigma ), \rvs_\theta(\rvx_\sigma, \sigma) \right\rangle \mathrm{d} \rvx_\sigma  \\
+    &= - 2 \int q(\rvx_\sigma ) \left\langle \frac{\nabla_{\rvx_\sigma} q(\rvx_\sigma)}{q(\rvx_\sigma )}, \rvs_\theta(\rvx_\sigma, \sigma) \right\rangle \mathrm{d} \rvx_\sigma  \\
+    &= - 2 \int \left\langle \nabla_{\rvx_\sigma} q(\rvx_\sigma ), \rvs_\theta(\rvx_\sigma, \sigma) \right\rangle \mathrm{d} \rvx_\sigma  \\
+    &= - 2 \int \left\langle \nabla_{\rvx_\sigma} \int \pdata(\rvx_0) q(\rvx_\sigma|\rvx_0) \mathrm{d}\rvx_0, \rvs_\theta(\rvx_\sigma, \sigma) \right\rangle \mathrm{d} \rvx_\sigma  \\
+    &= - 2 \int \left\langle \int \pdata(\rvx_0) \nabla_{\rvx_\sigma} q(\rvx_\sigma|\rvx_0) \mathrm{d}\rvx_0, \rvs_\theta(\rvx_\sigma, \sigma) \right\rangle \mathrm{d} \rvx_\sigma  \\
+    &= - 2 \int \left\langle \int \pdata(\rvx_0) q(\rvx_\sigma|\rvx_0) \nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvx_0) \mathrm{d}\rvx_0, \rvs_\theta(\rvx_\sigma, \sigma) \right\rangle \mathrm{d} \rvx_\sigma  \\
+    &= - 2 \int q(\rvx_0, \rvx_\sigma) \left\langle \nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvx_0), \rvs_\theta(\rvx_\sigma, \sigma) \right\rangle  \mathrm{d}\rvx_0 \mathrm{d} \rvx_\sigma  \\
+    &= \EX_{q(\rvx_0, \rvx_\sigma)} \left[ -2 \left\langle \nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvx_0), \rvs_\theta(\rvx_\sigma, \sigma) \right\rangle  \right].
 \end{align}
