@@ -48,7 +48,7 @@ Broadly speaking, our approach will follow the same framework as previous diffus
 We then learn an approximation to the time-reversal giving a backward generative process that simultaneously denoises whilst also progressively adding dimensions back until a synthetic datapoint of appropriate dimensionality has been constructed.
 
 \subsection{Forward Process}
-\label{sec:jump-diff-proc}
+\label{sec:tddm-jump-diff-proc}
 
 Our forward and backward processes will be defined through jump diffusions. A jump diffusion process has two components, the diffusion part and the jump part. Between jumps, the process evolves according to a standard SDE. When a jump occurs, the process transitions to a different dimensional space with the new value for the process being drawn from a transition kernel $K_t(\mV | \mX): \gX \times \gX \rightarrow  \mathbb{R}_{\geq 0}$. Letting $\mV = (m, \rvy)$, the transition kernel satisfies $\sum_m \int_\rvy K_t(m, \rvy | \mX) \rmd \rvy = 1$ and $\int_\rvy K_t(m=n, \rvy | \mX) \rmd \rvy = 0$. The rate at which jumps occur (jumps per unit time) is given by a rate function $\lambda_t(\mX): \mathcal{X} \rightarrow \mathbb{R}_{\geq 0}$. 
 We can describe a jump diffusion in terms of an infinitesimal timestep $\rmd t$. For the forward process we call the transition kernel $\ftk_t(\mV|\mX)$ and rate function $\forwardrate_t(\mX_t)$. We will give their precise definitions shortly. Given this notation, we write the forward jump diffusion as
@@ -128,7 +128,7 @@ The true $\backwarddrift_t^*$, $\backwardrate_t^*$ and $\autonet_t^*$ are unknow
 To parameterise the diffusion component of the reverse process, we can follow the procedure used in a standard diffusion model to learn the score function $\rvs_\theta(\mX, t) \approx \nabla_{\rvx_t} \log q(\mX_t)$. To parameterise the jump component, which relies on an unknown optimal rate $\backwardrate_t^*$ and unknown distribution $\autonet_t^*$, we will need a novel objective to learn approximations to $\backwardrate_t^\theta$ and $\autonet_t^\theta$.
 
 As we showed in \cref{ch:diffusion}, the standard diffusion score matching loss can be derived from maximising an evidence lower bound on the model probability for $ \mathbb{E}_{\pdata(\rvx_0)} [ \log p_\theta(\rvx_0) ]$ \cite{song2021maximum}.
-We derive here an equivalent loss to learn all of $\rvs_\theta$, $\smash{\backwardrate_t^\theta}$ and $\autonet_t^\theta$ for our jump diffusion process by leveraging the results of \cite{benton2022denoising} and \cite{cheridito2005equivalent}. Before presenting this loss, we first introduce some notation. Our objective for $s_\theta(\mX_t, t)$ will resemble denoising score matching (as in \ref{eq:diffusion-loss}) but instead involve the conditional score $\nabla_{\rvx_t} \log q(\mX_t | \mX_0) = \nabla_{\rvx_t} \log q(\rvx_t | \mX_0, n_t)$. This is difficult to calculate directly due to a combinatorial sum over the different ways the components of $\mX_0$ can be deleted to get to $\mX_t$. We avoid this problem by equivalently conditioning on a mask variable $M_t \in \{0, 1\}^{n_0}$ that is 0 for components of $\mX_0$ that have been deleted to get to $\mX_t$ and 1 for components that remain in $\mX_t$. This makes our denoising score matching target easy to calculate: $\nabla_{\rvx_t} \log q(\rvx_t | \mX_0, n_t, M_t) = \frac{\sqrt{\alpha_t} M_t(\rvx_0) - \rvx_t}{1 - \alpha_t}$ where $\alpha_t = \text{exp} ( - \int_{0}^t g(t)^2 \rmd s )$ \cite{song2020score}. Here $M_t(\rvx_0)$ is the vector removing any components in $\rvx_0$ for which $M_t$ is $0$, thus $M_t(\rvx_0)$ and $\rvx_t$ have the same dimensionality. We now state our full objective.
+We derive here an equivalent loss to learn all of $\rvs_\theta$, $\smash{\backwardrate_t^\theta}$ and $\autonet_t^\theta$ for our jump diffusion process by leveraging the results of \cite{benton2022denoising} and \cite{cheridito2005equivalent}. Before presenting this loss, we first introduce some notation. Our objective for $s_\theta(\mX_t, t)$ will resemble denoising score matching (as in \cref{eq:exp-diffusion-loss-all-sigma} of \cref{sec:diffusion-training}) but instead involve the conditional score $\nabla_{\rvx_t} \log q(\mX_t | \mX_0) = \nabla_{\rvx_t} \log q(\rvx_t | \mX_0, n_t)$. This is difficult to calculate directly due to a combinatorial sum over the different ways the components of $\mX_0$ can be deleted to get to $\mX_t$. We avoid this problem by equivalently conditioning on a mask variable $M_t \in \{0, 1\}^{n_0}$ that is 0 for components of $\mX_0$ that have been deleted to get to $\mX_t$ and 1 for components that remain in $\mX_t$. This makes our denoising score matching target easy to calculate: $\nabla_{\rvx_t} \log q(\rvx_t | \mX_0, n_t, M_t) = \frac{\sqrt{\alpha_t} M_t(\rvx_0) - \rvx_t}{1 - \alpha_t}$ where $\alpha_t = \text{exp} ( - \int_{0}^t g(t)^2 \rmd s )$ \cite{song2020score}. Here $M_t(\rvx_0)$ is the vector removing any components in $\rvx_0$ for which $M_t$ is $0$, thus $M_t(\rvx_0)$ and $\rvx_t$ have the same dimensionality. We now state our full objective.
 
 \begin{proposition}
 \label{prop:elbo}
@@ -172,14 +172,14 @@ We use neural networks to parameterise all of $s_\theta(\mX_t, t)$, $\autonet_t^
 \subsection{Sampling}
 
 \begin{algorithm}
-\caption{Sampling the Generative Process}
+\caption{Sampling with the generative process.}
 \begin{algorithmic}[1] % The [1] option enables line numbering
 \State $t \leftarrow T$
 \State $\mX \sim \pref(\mX) = \mathbb{I}\{ n=1\} \mathcal{N}(\rvx; 0, I_{d})$
 \While{$t > 0$}
     \State $u \sim \mathcal{U}(0, 1)$
     \If{$u < \backwardrate_{t}^\theta(\mX) \updelta t$}
-        \State Sample $\xadd, i \sim \autonet_{t}^\theta(\xadd, i | \mX)$
+        \State $\xadd, i \sim \autonet_{t}^\theta(\xadd, i | \mX)$
         \State $\mX \leftarrow \text{ins}(\mX, \xadd, i)$
     \EndIf
     \State $\epsilon \sim \mathcal{N}(0, I_{nd})$
@@ -222,7 +222,7 @@ We visualise sampling from our learned generative process in \cref{fig:tddm-unco
 \end{figure}
 
 
-\begin{table}[tb]
+\begin{table}[t]
 \caption{Sample quality metrics for unconditional molecule generation. An atom is stable if it has the correct valency whilst a molecule is considered stable if all of its atoms are stable. Molecular validity is measured using RDKit \cite{rdkit}. All methods use 1000 simulation steps and draw 10000 samples.}
 \label{tab:uncond_mol}
 \centering

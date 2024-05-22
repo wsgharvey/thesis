@@ -42,7 +42,7 @@ introduced in the text
 \end{table*}
 
 
-\section{Expanded derivation of \cref{eq:forward-elbo}} \label{supp:cigcvae-forward-elbo-bound-deriv}
+\section{Expanded derivation of IPA's objective} \label{supp:cigcvae-forward-elbo-bound-deriv}
 Here we prove \cref{eq:forward-elbo}, which states that IPA's training
 objective is a lower bound on $\EX_{\pdata (\rvx, \rvy)} \left[ \log
   p_{\theta,\psi}(\tildeI{}|\rvy) \right]$.
@@ -82,7 +82,7 @@ maximise $\mathcal{O}_\mathrm{for}(\theta, \phi, \psi)$ will therefore also
 minimise $\EX_{\pdata (\rvy)} \left[ \kl[\big]{ q_\phi(\rvz|\rvy) }{p_\psi(\rvz|\rvy) } \right]$ for the same values of $\theta$ and $\phi$,
 which proves the theorem.
 
-\subsection{Bound on $\tildeI{}$-space divergence}
+\subsection{Bound on data-space divergence}
 The mass-covering KL divergence in \Cref{theorem:forward-kl} indicates that
 samples $\rvz\sim p_\psi(\cdot|\rvy)$ will be diverse (when $q_\phi(\rvz|\rvy)$ is
 diverse/uncertain). One would expect that samples of $\tildeI{}$ conditioned on these
@@ -237,7 +237,7 @@ therefore both zero, so we have the final result that ${\max_{\psi }
 \max_{\theta, \phi, \psi } \mathcal{O}_\mathrm{for}(\theta, \phi,
 \psi )}$.
 
-\subsection{Discussion of the assumption that $\mutinf{}=0$}
+\subsection{Discussion of the assumption of zero mutual information}
 The above proof of \cref{theorem:joint-training} relies on the assumption that
 $\mutinf{} = \EX_{\unp{}(\tildeI{}, \rvy, \rvz)} \left[ \log
   \frac{\unp{}(\tildeI{}|\rvz, \rvy) }{ \unp{}(\tildeI{}|\rvz) } \right] = 0$.
@@ -668,7 +668,7 @@ two higher values and two lower values.
 \end{figure}
 
 \begin{figure}
-  \includegraphics[scale=1]{figs/cigcvae/fwv_sigma}
+  \includegraphics[width=\textwidth]{figs/cigcvae/fwv_sigma}
   \caption{The faithfulness weighted variance for inpainting on CIFAR-10,
     FFHQ-256, and ImageNet-64, for various values of $\sigma$. IPA obtains the
     best performance on almost all datasets and values of $\sigma$, only being
@@ -761,7 +761,7 @@ AVP-CNN acting on observations of each image at locations $\coord{}_1,\ldots,\co
 
 \begin{figure}[t]
   \centering
-  \includegraphics[scale=1]{figs/cigcvae/table-AUROC-boed}
+  \includegraphics[width=\textwidth]{figs/cigcvae/table-AUROC-boed}
   \caption{AUROC scores when performing one classification task with scan
     locations chosen for a different classification task. The intensity of the
     colour of each cell is proportional to the difference between its value and
