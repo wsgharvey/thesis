@@ -1,4 +1,4 @@
-\chapter{Flexible Variational Auto-Encoders}
+\chapter{Flexible variational auto-encoders}
 \label{ch:cigcvae}
 
 So far in this dissertation we have now demonstrated the flexible diffusion framework, building upon the diffusion modelling framework to construct flexible generative models that are capable of a wide variety of different conditioning tasks at test-time without retraining.
@@ -20,7 +20,7 @@ We will demonstrate flexible variational auto-encoders on the image inpainting p
 We will continue this chapter by reviewing background material on variational auto-encoders. We will then further motivate and explain our proposed method in \cref{sec:ipa} before reporting experimental results in \cref{sec:cigcvae-experiments} and describing a hypothetical application of an inpainting model with the capabilities ours exhibits in \cref{sec:cigcvae-boed}.
 
 
-\section{A Review of Variational Auto-Encoders}
+\section{A review of variational auto-encoders}
 \label{sec:vae}
 As with our review of diffusion models in \cref{ch:diffusion}, we will start by describing VAEs~\citep{kingma2013auto,rezende2014stochastic}, as unconditional generative models. We will then explain a conditional variant in \cref{sec:conditional-vae}. Like a diffusion model, a VAE is trained to approximate a data distribution $\pdata(\rvx)$ using samples from that data distribution. Given a VAE with parameters $\theta$, we will denote the distribution it parameterises $p_\theta(\rvx)$. The key feature of a VAE is that it breaks the process of generating data into two steps: in the first step a VAE samples a latent variable $\rvz$ from a ``prior'' distribution $p_\theta(\rvz)$. The prior distribution can be fixed, \eg a unit Gaussian, or can have learnable parameters that are included in $\theta$. In the second step, the VAE parameterises a ``likelihood'' $p_\theta(\rvx|\rvz)$. This can be, \eg, a Gaussian for continuous data~\citep{kingma2013auto} or a categorical for discrete data~\citep{child2020very}, with parameters output in either case by a neural network as a function of $\rvz$. We can therefore write the parameterised distribution $p_\theta(\rvx)$ as the marginal of $p_\theta(\rvx|\rvz)$ over the latent variable $\rvz$,
 % that is $p_\theta(\rvx) = \int p_\theta(\rvx|\rvz) p_\theta(\rvz) \mathrm{d}\rvz$.
@@ -49,7 +49,7 @@ This formulation reveals that the lower-bound is tight if and only if the propos
     \argmin_{\theta,\phi} \gL(\theta, \phi).
 \end{align}
 
-\subsection{Hierarchical Variational Auto-Encoders}
+\subsection{Hierarchical variational auto-encoders}
 \label{sec:hierarchical-vae}
 \begin{figure}
     \centering
@@ -73,7 +73,7 @@ A major advantage of VAEs, on the other hand, is the learnable encoder which mak
 
 Although diffusion models currently dominate at the core tasks of e.g. image and video generation~\citep{esser2024scaling,brooks2024video}, variants of VAEs are used for other purposes including as tools to compress data $\rvx$ into latent variables $\rvz$ that are then modelled with other techniques like diffusion models. We also note that the two-stage diffusion model~\cref{sec:2sdm-2sdm-method} could be interpreted as a form of variational auto-encoder in which the prior $p_\theta(\rvz)$ and decoder $p_\theta(\rvx|\rvz)$ are both parameterised by diffusion models and the encoder is frozen to a pretrained value. We believe that it is valuable to demonstrate that flexible generative modelling works within the variational auto-encoder framework and for these reasons, and to provide more reason to believe that it could apply to other generative modelling frameworks in addition.
 
-\subsection{Conditional Variational Auto-Encoders}
+\subsection{Conditional variational auto-encoders}
 \label{sec:conditional-vae}
 We now transport the VAE framework described above into the conditional generative modelling setting, where we want to train an approximation of the conditional distribution $\pdata(\rvx|\rvy)$ given a dataset of $(\rvx, \rvy)$ pairs sampled from $\pdata(\cdot,\cdot)$.
 
@@ -158,7 +158,7 @@ which is an expectation of the sum of layer-wise KL divergences. Each layer-wise
   \vspace{-2mm}
 \end{figure*}
 
-\section{Inference in a Pretrained Auto-Encoder}
+\section{Inference in a pretrained auto-encoder}
 \label{sec:ipa}
 
 We now describe our approach to training flexible VAEs. A key features of it is that we design it to be amenable to initialisation from a pretrained unconditional VAE to allow for fast and cheap training.  This is particularly important in the VAE setting because of VAE's typically slow training times. For example,
@@ -169,7 +169,7 @@ GPU-year, but a state-of-the-art generative adversarial network
 dataset in a matter of GPU-weeks. One hypothesis for the cause of this disparity
 is that, whereas the ``mass-covering'' training objective for a VAE forces it to
 assign probability mass over the entirety of the data distribution, a GAN can
-``cut corners'' by dropping modes~\citep{arora2017gans,arora2017generalization}. Conditional GANs~\citep{zheng2019pluralistic,zhao2021large} and conditional VAEs~\citep{sohn2015learning,ivanov2018variational} suffer from the same disparity in training times as their unconditional counterparts. We will show that re-using publicly available pretrained models to initialize our flexible VAEs can lead to training times and sample quality competitive with GAN-based appraoches while avoiding mode dropping.
+``cut corners'' by dropping modes~\citep{arora2017gans,arora2017generalization}. Conditional GANs~\citep{zheng2019pluralistic,zhao2021large} and conditional VAEs~\citep{sohn2015learning,ivanov2018variational} suffer from the same disparity in training times as their unconditional counterparts. We will show that re-using publicly available pretrained models to initialise our flexible VAEs can lead to training times and sample quality competitive with GAN-based appraoches while avoiding mode dropping.
 
 % We present an approach based on the conditional VAE framework but, to mitigate the associated slow training times, we design the architecture so that we can incorporate pretrained unconditional VAEs. 
 
@@ -343,7 +343,7 @@ the form of $\pdata$ implicit in the $\mathcal{O}_\mathrm{for}$ objective.
 However we find empirically that we can use unconditional VAE parameters trained
 on ImageNet~\citep{deng2009imagenet} with IPA on several other photo datasets.
 
-\subsection{Related Work}
+\subsection{Related work}
 \paragraph{Inference in pretrained VAEs}
 Several prior studies perform conditional generation using a previously trained
 unconditional VAE.
@@ -592,7 +592,7 @@ nonetheless provide a full description of IPA-R in \cref{supp:cigcvae-ipa-r}.
 
 
 
-\section{Inpainting for Bayesian Experimental Design} \label{sec:cigcvae-boed}
+\section{Inpainting for Bayesian experimental design} \label{sec:cigcvae-boed}
 
 In this section, we explore a potential application for stochastic image completion that
 requires a faithful representation of the posterior $\pdata(\rvx|\rvy)$.

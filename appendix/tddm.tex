@@ -1,4 +1,4 @@
-\chapter{Supporting Materials for TDDM}
+\chapter{Supporting materials for flexible diffusion on varying dimensionality data}
 
 % \label{sec:tddm-Proofs}
 % \label{sec:tddm-ObjTimeRevProof}
@@ -11,7 +11,7 @@ This chapter of the appendix is organised as follows.  In \cref{sec:tddm-Proofs}
 \section{Proofs}
 \label{sec:tddm-Proofs}
 
-\subsection{Notation and Setup}
+\subsection{Notation and setup}
 \label{sec:tddm-notation}
 
 \def \msb {\mathsf{B}}
@@ -45,11 +45,11 @@ This chapter of the appendix is organised as follows.  In \cref{sec:tddm-Proofs}
 \def \msa{\mathsf{A}}
 
 We here introduce a more rigorous notation for defining our trans-dimensional notation that will be used in a rigorous proof for the time-reversal of our jump diffusion. First, while it makes sense from a methodological and experimental point of
-view to present our setting as a \emph{transdimensional} one, we slightly change
+view to present our setting as a \emph{trans-dimensional} one, we slightly change
 the point of view in order to derive our theoretical results. We extend the
 space $\rset^d$ to $\hat{\rset}^d = \rset^d \cup \{\infty\}$ using the
 \emph{one-point compactification} of the space. We refer to
-\cite{kelley2017general} for details on this space. The point $\infty$ will be
+\citet{kelley2017general} for details on this space. The point $\infty$ will be
 understood as a mask. For instance, let $x_1, x_2, x_3 \in \rset^d$. Then
 $X = (x_1, x_2, x_3) \in (\hat{\rset}^d)^N$ with $N=3$ corresponds to a vector
 for which all components are \emph{observed} whereas
@@ -85,9 +85,9 @@ $f \in \rmc(\rset^d)$ and $f -f(\infty) \in \rmc_0(\rset^d)$ and that
 $f \in \rmc^k(\hat{\rset}^d)$ for any $k \in \nset$ if the restriction of $f$ to
 $\rset^d$ is in $\rmc^k(\rset^d)$ and $f \in \rmc(\hat{\rset}^d)$.
 
-\subsubsection{Transdimensional infinitesimal generator}
+\subsubsection{Trans-dimensional infinitesimal generator}
 
-To introduce rigorously the \emph{transdimensional} diffusion model defined in
+To introduce rigorously the \emph{trans-dimensional} diffusion model defined in
 Section \ref{sec:tddm-jump-diff-proc}, we will introduce its \emph{infinitesimal
   generator}. The infinitesimal generator of a stochastic process can be roughly
 defined as its ``probabilistic derivative''. More precisely, assume that a
@@ -138,7 +138,7 @@ $\alpha(\msd_0, \dots, \msd_M)$ corresponds to the probability to choose the
 The part
 $X \mapsto \langle b(X_i), \nabla_{x_i}f(X) \rangle + \tfrac{1}{2} \Delta_{x_i}f(X)$ is
 more classical and corresponds to the \emph{continuous part} of the diffusion
-process. We refer to \cite{ethier2009markov} for a thorough introduction on
+process. We refer to \citet{ethier2009markov} for a thorough introduction on
 infinitesimal generators. For simplicity, we omit the schedule coefficients in
 \eqref{eq:definition_generator}.
 
@@ -224,11 +224,11 @@ the case of the forward process).
 \subsection{Proof of Proposition \ref{prop:time_reversal}}
 For the proof of Proposition \ref{prop:time_reversal}, we first provide a rigorous proof using the notation introduced in \ref{sec:tddm-notation}. We then follow this with a second proof that aims to be more intuitive using the notation used in the main paper.
 
-\subsubsection{Time-reversal for the transdimensional infinitesimal generator and Proof of Proposition \ref{prop:time_reversal}}
+\subsubsection{Time-reversal for the trans-dimensional infinitesimal generator and proof of Proposition \ref{prop:time_reversal}}
 \label{sec:tddm-rigorousProofTimeReversal}
 
 We are now going to derive the formula for the time-reversal of the
-transdimensional infinitesimal generator $\gA$, see
+trans-dimensional infinitesimal generator $\gA$, see
 \eqref{eq:definition_generator}. This corresponds to a rigorous proof of
 Proposition \ref{prop:time_reversal}. We refer to Section
 \ref{sec:tddm-intuitive_time_reversal} for a more intuitive, albeit less-rigorous,
@@ -279,7 +279,7 @@ The following result will be key to establish the time-reversal formula.
 Lemma \ref{lemma:flux_equation} shows that $\Kbb^\msp$ verifies the \emph{flux
   equation} associated with $\Jbb^\msp$. The flux equation is the discrete
 state-space equivalent of the classical time-reversal formula for continuous
-state-space. We refer to \cite{conforti2022time} for a rigorous treatment of
+state-space. We refer to \citet{conforti2022time} for a rigorous treatment of
 time-reversal with jumps under entropic conditions. 
 
 We are also going to consider the following assumption which ensures that the
@@ -308,7 +308,7 @@ evolution equation.
   $g(u,X) = \CPELigne{g(\bfX_t)}{\bfX_u=X}$.
 \end{assumption}
 
-We refer to \cite{haussmann1986time} for conditions under A\ref{assum:ipp} and
+We refer to \citet{haussmann1986time} for conditions under A\ref{assum:ipp} and
 A\ref{assum:backward_kolmogorov} are valid in the setting of diffusion processes.
 
   \begin{proposition}
@@ -393,7 +393,7 @@ A\ref{assum:backward_kolmogorov} are valid in the setting of diffusion processes
 
 
 
-\subsubsection{Intuitive Proof of Proposition \ref{prop:time_reversal}}
+\subsubsection{Intuitive proof of Proposition \ref{prop:time_reversal}}
 \label{sec:tddm-intuitive_time_reversal}
 
 We recall Proposition \ref{prop:time_reversal}.
@@ -407,10 +407,10 @@ transition kernel $\sum_{i=1}^n
 \delidxdist(i | n)
 \updelta_{
 \textup{del}(\mX, i)
-}(\mY)$ 
+}(\mV)$ 
 is given by
 a jump diffusion process with drift $\backwarddrift_t^*(\mX)$, 
-diffusion coefficient $\backwarddiffcoeff_t^*$, rate $\backwardrate_t^*(\mX)$ and transition kernel $\int_{\yadd} \sum_{i=1}^{n+1}  \autonet^*_t(\yadd, i | \mX) \updelta_{\textup{ins}(\mX, \yadd, i)}(\mY) \rmd \yadd$ as defined below
+diffusion coefficient $\backwarddiffcoeff_t^*$, rate $\backwardrate_t^*(\mX)$ and transition kernel $\int_{\yadd} \sum_{i=1}^{n+1}  \autonet^*_t(\yadd, i | \mX) \updelta_{\textup{ins}(\mX, \yadd, i)}(\mV) \rmd \yadd$ as defined below
 \begin{align}
     &\backwarddrift_{t}^*(\mX) = \forwarddrift_{t}(\mX) - \forwarddiffcoeff_t^2 \nabla_{\rvx} \log p_{t}(\mX),~~\backwarddiffcoeff_{t}^* = \forwarddiffcoeff_{t},\\
     & \backwardrate_{t}^*(\mX) = \forwardrate_{t}(n+1) \frac{ \sum_{i=1}^{n+1} \delidxdist(i | n+1) \int_{\yadd} p_{t}( \textup{ins}(\mX, \yadd, i)) \rmd \yadd }{p_{t}(\mX)},\\
@@ -423,37 +423,37 @@ diffusion coefficient $\backwarddiffcoeff_t^*$, rate $\backwardrate_t^*(\mX)$ an
 
 
 \textbf{Diffusion part. } Using standard diffusion models arguments such as
-\cite{anderson1982reverse} \cite{conforti2022time}, we get
+\citet{anderson1982reverse,conforti2022time}, we get
 \begin{equation}
     \backwarddrift_{t}^*(\mX) = \forwarddrift_t(\mX) - \forwarddiffcoeff_t^2 \nabla_{\rvx} \log p_t(\mX | n) . 
 \end{equation}
 
 \textbf{Jump part.}
-We use the flux equation from \cite{conforti2022time} which intuitively relates the probability flow going in the forward direction with the probability flow going the backward direction with equality being achieved at the time reversal.
+We use the flux equation from \citet{conforti2022time} which intuitively relates the probability flow going in the forward direction with the probability flow going the reverse direction with equality being achieved at the time reversal.
 \begin{align}
-  &p_t(\mX) \backwardrate_t^*(\mX) \btk_t^*(\mY | \mX) = p_t(\mY) \forwardrate_t(\mY) \ftk_t(\mX | \mY)\\
-  &\textstyle p_t(\mX) \backwardrate_t^*(\mX) \int_{\yadd} \sum_{i=1}^{n+1} \autonet_t^*(\yadd, i | \mX) \updelta_{\text{ins}(\mX, \yadd, i)}(\mY) \rmd \yadd \\
-  & \qquad = \textstyle p_t(\mY) \forwardrate_t(\mY) \sum_{i=1}^{n+1} \delidxdist(i | n+1) \updelta_{\text{del}(\mY, i)}(\mX) . \label{eq:probflowfull}
+  &p_t(\mX) \backwardrate_t^*(\mX) \btk_t^*(\mV | \mX) = p_t(\mV) \forwardrate_t(\mV) \ftk_t(\mX | \mV)\\
+  &\textstyle p_t(\mX) \backwardrate_t^*(\mX) \int_{\yadd} \sum_{i=1}^{n+1} \autonet_t^*(\yadd, i | \mX) \updelta_{\text{ins}(\mX, \yadd, i)}(\mV) \rmd \yadd \\
+  & \qquad = \textstyle p_t(\mV) \forwardrate_t(\mV) \sum_{i=1}^{n+1} \delidxdist(i | n+1) \updelta_{\text{del}(\mV, i)}(\mX) . \label{eq:probflowfull}
 \end{align}
-To find $\backwardrate_t^*(\mX)$, we sum and integrate both sides over $m$ and $\y$, with $\mY = (m, \y)$,
+To find $\backwardrate_t^*(\mX)$, we sum and integrate both sides over $m$ and $\y$, with $\mV = (m, \y)$,
 \begin{align}
-    &\textstyle \sum_{m=1}^N \int_{\y \in \mathbb{R}^{md}} p_t(\mX) \backwardrate_t^*(\mX) \int_{\yadd} \sum_{i=1}^{n+1} \autonet_t^*(\yadd, i | \mX) \updelta_{\text{ins}(\mX, \yadd, i)}(\mY) \rmd \yadd \rmd \y \\
-    &\textstyle = \sum_{m=1}^N \int_{\y \in \mathbb{R}^{md}} p_t(\mY) \forwardrate_t(\mY) \sum_{i=1}^{n+1} \delidxdist(i | n+1) \updelta_{\text{del}(\mY, i)}(\mX) \rmd \y.
+    &\textstyle \sum_{m=1}^N \int_{\y \in \mathbb{R}^{md}} p_t(\mX) \backwardrate_t^*(\mX) \int_{\yadd} \sum_{i=1}^{n+1} \autonet_t^*(\yadd, i | \mX) \updelta_{\text{ins}(\mX, \yadd, i)}(\mV) \rmd \yadd \rmd \y \\
+    &\textstyle = \sum_{m=1}^N \int_{\y \in \mathbb{R}^{md}} p_t(\mV) \forwardrate_t(\mV) \sum_{i=1}^{n+1} \delidxdist(i | n+1) \updelta_{\text{del}(\mV, i)}(\mX) \rmd \y.
 \end{align}
-Now we use the fact that $\updelta_{\text{del}(\mY, i)}(\mX)$ is $0$ for any $m \neq n+1$,
+Now we use the fact that $\updelta_{\text{del}(\mV, i)}(\mX)$ is $0$ for any $m \neq n+1$,
 \begin{align}
-    p_t(\mX) \backwardrate_t^*(\mX) &\textstyle = \forwardrate_t(n+1) \int_{\y \in \mathbb{R}^{(n+1)d}} p_t(\mY) \sum_{i=1}^{n+1} \delidxdist(i | n+1) \updelta_{\text{del}(\mY, i)} (\mX) \rmd \y\\
-    &\textstyle = \forwardrate_t(n+1) \sum_{i=1}^{n+1} \delidxdist(i | n+1) \int_{\y \in \mathbb{R}^{(n+1)d}} p_t(\mY)  \updelta_{\text{del}(\mY, i)} (\mX) \rmd \y.
+    p_t(\mX) \backwardrate_t^*(\mX) &\textstyle = \forwardrate_t(n+1) \int_{\y \in \mathbb{R}^{(n+1)d}} p_t(\mV) \sum_{i=1}^{n+1} \delidxdist(i | n+1) \updelta_{\text{del}(\mV, i)} (\mX) \rmd \y\\
+    &\textstyle = \forwardrate_t(n+1) \sum_{i=1}^{n+1} \delidxdist(i | n+1) \int_{\y \in \mathbb{R}^{(n+1)d}} p_t(\mV)  \updelta_{\text{del}(\mV, i)} (\mX) \rmd \y.
 \end{align}
-Now letting $\mY = \text{ins}(\mX, \yadd, i)$,
+Now letting $\mV = \text{ins}(\mX, \yadd, i)$,
 \begin{align}
     p_t(\mX) \backwardrate_t^*(\mX) &\textstyle = \forwardrate_t(n+1) \sum_{i=1}^{n+1} \delidxdist(i | n+1) \int_{\yadd} p_t(\text{ins}(\mX, \yadd, i)) \rmd \yadd\\
     \backwardrate_t^*(\mX) &\textstyle x= \forwardrate_t(n+1) \frac{\sum_{i=1}^{n+1} \delidxdist(i | n+1) \int_{\yadd} p_t(\text{ins}(\mX, \yadd, i)) \rmd \yadd}{p_t(\mX)}.
 \end{align}
 \newcommand{\zadd}{\mathbf{z}^{\text{add}}}
-To find $\autonet_t^*(\yadd, i | \mX)$, we start from \eqref{eq:probflowfull} and set $\mY = \text{ins}(\mX, \zadd, j)$ to get
+To find $\autonet_t^*(\yadd, i | \mX)$, we start from \eqref{eq:probflowfull} and set $\mV = \text{ins}(\mX, \zadd, j)$ to get
 \begin{equation}
-    p_t(\mX) \backwardrate_t^*(\mX) \autonet_t^*(\zadd, j | \mX) = p_t(\mY) \forwardrate_t(n+1) \delidxdist(j | n+1) .
+    p_t(\mX) \backwardrate_t^*(\mX) \autonet_t^*(\zadd, j | \mX) = p_t(\mV) \forwardrate_t(n+1) \delidxdist(j | n+1) .
 \end{equation}
 By inspection, we see immediately that
 \begin{equation}
@@ -479,7 +479,7 @@ With a re-labeling of $\zadd$ and $j$ we achieve the desired form
 \newcommand{\LJ}{\hat{\mathcal{L}}^{\text{J}} }
 \newcommand{\aLJ}{\hat{\mathcal{L}}^{\text{J}*  } }
 
-In this section we prove Proposition \ref{prop:elbo} using the notation from the main paper by following the framework of \cite{benton2022denoising}.  We operate on a state
+In this section we prove Proposition \ref{prop:elbo} using the notation from the main paper by following the framework of \citet{benton2022denoising}.  We operate on a state
 space $\mathcal{X} = \bigcup_{n=1}^N \{n\} \times \mathbb{R}^{nd}$.  On this
 space the gradient operator
 $\nabla: \mathcal{C}(\mathcal{X}, \mathbb{R}) \rightarrow
@@ -497,26 +497,26 @@ p(n)p(\rvx | n) \rmd \rvx $ where, for $A \subset \mathbb{R}^{nd}$,
 $\int_{(n, A)} \mu(d\mX) = \int_{\rvx \in A} p(n)p(\rvx | n) \rmd \rvx$. We will write
 $p(\mX)$ as shorthand for $p(n)p(\rvx | n)$.
 
-Following, \cite{benton2022denoising}, we start by augmenting our space with a time variable so that operators become time inhomegeneous on the extended space. We write this as $\bar{\mX} = (\mX, t)$ where $\bar{\mX}$ lives in the extended space $\mathcal{S} = \mathcal{X} \times \mathbb{R}_{\geq 0}$. In the proof, we use the infinitesimal generators for the the forward and backward processes. An infinitesimal generator is defined as 
+Following, \citet{benton2022denoising}, we start by augmenting our space with a time variable so that operators become time inhomegeneous on the extended space. We write this as $\bar{\mX} = (\mX, t)$ where $\bar{\mX}$ lives in the extended space $\mathcal{S} = \mathcal{X} \times \mathbb{R}_{\geq 0}$. In the proof, we use the infinitesimal generators for the the forward and reverse processes. An infinitesimal generator is defined as 
 \begin{equation}
-    \mathcal{A}(f)(\bar{\mX}) = \underset{t \rightarrow 0}{\text{lim}} \frac{\mathbb{E}_{p_{t|0}(\bar{\mY} | \bar{\mX})} [ f(\bar{\mY}) ] - f(\bar{\mX}) }{t}
+    \mathcal{A}(f)(\bar{\mX}) = \underset{t \rightarrow 0}{\text{lim}} \frac{\mathbb{E}_{p_{t|0}(\bar{\mV} | \bar{\mX})} [ f(\bar{\mV}) ] - f(\bar{\mX}) }{t}
 \end{equation}
-and can be understood as a probabilistic version of a derivative. For our process on the augmented space $\mathcal{S}$, our generators decompose as $\mathcal{A} = \partial_t + \hat{\mathcal{A}}_t$ where $\hat{\mathcal{A}}_t$ operates only on the spatial components of $\bar{\mX}$ i.e. $\mX$ \cite{benton2022denoising}.
+and can be understood as a probabilistic version of a derivative. For our process on the augmented space $\mathcal{S}$, our generators decompose as $\mathcal{A} = \partial_t + \hat{\mathcal{A}}_t$ where $\hat{\mathcal{A}}_t$ operates only on the spatial components of $\bar{\mX}$ i.e. $\mX$ \citep{benton2022denoising}.
 
 
-We now define the spatial infinitesimal generators for our forward and backward process. We will change our treatment of the time variable compared to the main text. Both our forward and backward processes will run from $t=0$ to $t=T$, with the true time reversal of $\mX$ following the forward process satisfying $( \mY_t)_{t \in [0, T]} = (\mX_{T-t})_{t \in [0, T]}$. Further, we will write $\forwarddiffcoeff_t$ as $g_t$ and $\backwarddiffcoeff_t = g_{T-t}$ as we do not learn $g$ and this is the optimal relation from the time reversal. We define
+We now define the spatial infinitesimal generators for our forward and reverse process. We will change our treatment of the time variable compared to the main text. Both our forward and reverse processes will run from $t=0$ to $t=T$, with the true time reversal of $\mX$ following the forward process satisfying $( \mV_t)_{t \in [0, T]} = (\mX_{T-t})_{t \in [0, T]}$. Further, we will write $\forwarddiffcoeff_t$ as $g_t$ and $\backwarddiffcoeff_t = g_{T-t}$ as we do not learn $g$ and this is the optimal relation from the time reversal. We define
 \begin{equation}
-\textstyle    \hat{\mathcal{L}}_t(f)(\mX) = \forwarddrift_t(\mX) \cdot \nabla f(\mX) + \frac{1}{2} g_t^2 \Delta f (\mX) + \forwardrate_t(\mX) \inty f(\mY) ( \ftk_t( \mY | \mX) - \updelta_{\mX}(\mY) ) \rmd\y ,
+\textstyle    \hat{\mathcal{L}}_t(f)(\mX) = \forwarddrift_t(\mX) \cdot \nabla f(\mX) + \frac{1}{2} g_t^2 \Delta f (\mX) + \forwardrate_t(\mX) \inty f(\mV) ( \ftk_t( \mV | \mX) - \updelta_{\mX}(\mV) ) \rmd\y ,
 \end{equation}
 as well as 
 \begin{equation}
-    \textstyle \hat{\mathcal{K}}_t(f)(\mX) = \backwarddrift_t^\theta(\mX) \cdot \nabla f(\mX) + \frac{1}{2} g_{T-t}^2 \Delta f (\mX) + \backwardrate_t^\theta(\mX) \inty f(\mY) ( \btk_t^\theta(\mY | \mX) - \updelta_{\mX}(\mY) ) \rmd\y 
+    \textstyle \hat{\mathcal{K}}_t(f)(\mX) = \backwarddrift_t^\theta(\mX) \cdot \nabla f(\mX) + \frac{1}{2} g_{T-t}^2 \Delta f (\mX) + \backwardrate_t^\theta(\mX) \inty f(\mV) ( \btk_t^\theta(\mV | \mX) - \updelta_{\mX}(\mV) ) \rmd\y 
 \end{equation}
-where $\Delta = (\nabla \cdot \nabla)$ is the Laplace operator and $\updelta$ is a dirac delta on $\mathcal{X}$ i.e. $\inty \updelta_{\mX}(\mY) \rmd \y = 1$ and $\inty f(\mY) \updelta_{\mX} (\mY) \rmd \y = f(\mX)$. 
+where $\Delta = (\nabla \cdot \nabla)$ is the Laplace operator and $\updelta$ is a dirac delta on $\mathcal{X}$ i.e. $\inty \updelta_{\mX}(\mV) \rmd \y = 1$ and $\inty f(\mV) \updelta_{\mX} (\mV) \rmd \y = f(\mX)$. 
 
 
 \paragraph{Verifying Assumption 1.} The first step in the proof is to verify Assumption 1 in
-\cite{benton2022denoising}. Letting $\nu_t(\mX) = p_{T-t}(\mX)$, we assume we can
+\citet{benton2022denoising}. Letting $\nu_t(\mX) = p_{T-t}(\mX)$, we assume we can
 write $\partial_t p_t (\mX) = \hat{\mathcal{K}}_t^* p_t(\mX)$ in the form
 $\mathcal{M}\nu + c \nu = 0$ for some function
 $c : \mathcal{S} \rightarrow \mathbb{R}$, where $\mathcal{M}$ is the generator
@@ -529,7 +529,7 @@ $\langle \adjointK_t f, h \rangle = \langle f, \K_t h \rangle$ i.e.
 We now find $\hat{\mathcal{K}}_t^*$. We start by substituting in the form for $\hat{\mathcal{K}}_t$,
 \begin{align}
     \textstyle \intx f(\mX) \hat{\mathcal{K}}_t(h)(\mX) \rmd \rvx =&\textstyle \intx f(\mX) \{ (\backwarddrift_t^\theta(\rvx) \cdot \nabla h)(\mX) + \frac{1}{2} g_{T-t}^2 \Delta h (\mX) + \\
-    & \quad \textstyle \backwardrate_t^\theta(\mX) \inty h(\mY) ( \btk_t^\theta(\mY | \mX) - \updelta_{\mX}(\mY) ) \rmd\y \} \rmd \rvx 
+    & \quad \textstyle \backwardrate_t^\theta(\mX) \inty h(\mV) ( \btk_t^\theta(\mV | \mX) - \updelta_{\mX}(\mV) ) \rmd\y \} \rmd \rvx 
 \end{align}
 We first focus on the RHS terms corresponding to the diffusion part of the process
 \begin{align}
@@ -542,20 +542,20 @@ We first focus on the RHS terms corresponding to the diffusion part of the proce
 \end{align}
 where we apply integration by parts twice to arrive at the third line and once to arrive at the fourth line. We now focus on the RHS term corresponding to the jump part of the process
 \begin{align}
-    &\textstyle \intx f(\mX) \{ \backwardrate_t^\theta(\mX) \inty h(\mY) ( \btk_t^\theta(\mY | \mX) - \updelta_{\mX}(\mY) ) \rmd \y \} \rmd \rvx \\
-    &\textstyle =\inty h(\mY) \{ \intx f(\mX) \backwardrate_t^\theta(\mX) ( \btk_t^\theta(\mY | \mX) - \updelta_{\mX}(\mY) ) \rmd \rvx \} \rmd \y\\
-    &\textstyle =\intx h(\mX) \{ \inty f(\mY) \backwardrate_t^\theta(\mY) ( \btk_t^\theta(\mX | \mY) - \updelta_{\mY}(\mX) ) \rmd \y \} \rmd \rvx , 
+    &\textstyle \intx f(\mX) \{ \backwardrate_t^\theta(\mX) \inty h(\mV) ( \btk_t^\theta(\mV | \mX) - \updelta_{\mX}(\mV) ) \rmd \y \} \rmd \rvx \\
+    &\textstyle =\inty h(\mV) \{ \intx f(\mX) \backwardrate_t^\theta(\mX) ( \btk_t^\theta(\mV | \mX) - \updelta_{\mX}(\mV) ) \rmd \rvx \} \rmd \y\\
+    &\textstyle =\intx h(\mX) \{ \inty f(\mV) \backwardrate_t^\theta(\mV) ( \btk_t^\theta(\mX | \mV) - \updelta_{\mV}(\mX) ) \rmd \y \} \rmd \rvx , 
 \end{align}
-where on the last line we have relabelled $\mX$ to $\mY$ and $\mY$ to $\mX$. Putting both re-arranged forms for the RHS together, we obtain
+where on the last line we have relabelled $\mX$ to $\mV$ and $\mV$ to $\mX$. Putting both re-arranged forms for the RHS together, we obtain
 \begin{align}
     &\textstyle \intx h(\mX) \hat{\mathcal{K}}_t^*(f)(\mX) \rmd \rvx  = \\
     &\textstyle \hspace{2cm} \intx h(\mX) \{ -f(\mX) \nabla \cdot \backwarddrift_t^\theta(\mX) - \nabla f(\mX) \cdot \backwarddrift_t^\theta(\mX) + \frac{1}{2} g_{T-t}^2 \nabla \cdot \nabla f (\mX) + \\
-    &\textstyle  \hspace{2cm} \inty f(\mY) \backwardrate_t^\theta(\mY) ( \btk_t^\theta(\mX | \mY) - \updelta_{\mY}(\mX) ) \rmd \y  \} \rmd \rvx . 
+    &\textstyle  \hspace{2cm} \inty f(\mV) \backwardrate_t^\theta(\mV) ( \btk_t^\theta(\mX | \mV) - \updelta_{\mV}(\mX) ) \rmd \y  \} \rmd \rvx . 
 \end{align}
 We therefore have
 \begin{align}
     \adjointK_t(f)(\mX) =&\textstyle   -f(\mX) \nabla \cdot \backwarddrift_t^\theta(\mX) - \nabla f(\mX) \cdot \backwarddrift_t^\theta(\mX) + \frac{1}{2} g_{T-t}^2 \Delta f(\mX) + \\
-    &\textstyle  \hspace{2cm} \inty f(\mY) \backwardrate_t^\theta(\mY) ( \btk_t^\theta(\mX | \mY) - \updelta_{\mX}(\mY) ) \rmd \y . 
+    &\textstyle  \hspace{2cm} \inty f(\mV) \backwardrate_t^\theta(\mV) ( \btk_t^\theta(\mX | \mV) - \updelta_{\mX}(\mV) ) \rmd \y . 
 \end{align}
 Now we re-write $\partial_t p_t(\mX) = \adjointK_t p_t(\rvx)$ in the form $\mathcal{M}\nu + c \nu = 0$. We start by re-arranging
 \begin{equation}
@@ -564,41 +564,41 @@ Now we re-write $\partial_t p_t(\mX) = \adjointK_t p_t(\rvx)$ in the form $\math
 Substituting in our form for $\adjointK_t$ we obtain
 \begin{align}
     0 = &\textstyle \partial_t \nu_t(\mX) -  \nu_t(\mX) \nabla \cdot \backwarddrift_{T-t}^\theta(\mX) - \backwarddrift_{T-t}^\theta(\mX) \cdot \nabla \nu_t(\mX) + \frac{1}{2}g_{t}^2 \Delta \nu_t(\mX)\\
-    &\textstyle  + \inty \nu_t(\mY) \backwardrate_{T-t}^\theta(\mY) ( \btk_{T-t}^\theta(\mX | \mY) - \updelta_{\mX}(\mY) ) \rmd\y
+    &\textstyle  + \inty \nu_t(\mV) \backwardrate_{T-t}^\theta(\mV) ( \btk_{T-t}^\theta(\mX | \mV) - \updelta_{\mX}(\mV) ) \rmd\y
 \label{eq:assm1LHS}
 \end{align}
 
 We define our auxiliary process to have generator $\mathcal{M} = \partial_t + \hat{\mathcal{M}}_t$ with
 \begin{equation}
   \textstyle 
-    \hat{\mathcal{M}}_t(f)(\mX) = \mdrift_t (\mX) \cdot \nabla f(\mX) + \frac{1}{2} g_{t}^2 \Delta f (\mX) + \mrate_t(\mX) \inty f(\mY) ( \mtk_t(\mY | \mX) - \updelta_{\mX}(\mY) ) \rmd \y
+    \hat{\mathcal{M}}_t(f)(\mX) = \mdrift_t (\mX) \cdot \nabla f(\mX) + \frac{1}{2} g_{t}^2 \Delta f (\mX) + \mrate_t(\mX) \inty f(\mV) ( \mtk_t(\mV | \mX) - \updelta_{\mX}(\mV) ) \rmd \y
 \end{equation}
 which is a jump diffusion process with drift $\mdrift_t$, diffusion coefficient $g_{t}$, rate $\mrate_t$ and transition kernel $\mtk_t$. Then if we have $\mdrift_t = - \backwarddrift_{T-t}^\theta$,
 \begin{equation}
   \label{eq:def_mrate}
   \textstyle 
-    \mrate_t(\mX) = \inty \backwardrate_{T-t}^\theta(\mY) \btk_{T-t}^\theta(\mX | \mY) \rmd \y , 
+    \mrate_t(\mX) = \inty \backwardrate_{T-t}^\theta(\mV) \btk_{T-t}^\theta(\mX | \mV) \rmd \y , 
 \end{equation}
 and
 \begin{equation}
   \label{eq:def_mtkt}
   \textstyle 
-    \mtk_t (\mY | \mX) \propto \backwardrate_{T-t}^\theta(\mY) \btk_{T-t}^\theta(\mX | \mY) . 
+    \mtk_t (\mV | \mX) \propto \backwardrate_{T-t}^\theta(\mV) \btk_{T-t}^\theta(\mX | \mV) . 
 \end{equation}
 Then we have \eqref{eq:assm1LHS} can be rewritten as 
 \begin{align}
     0 = &\textstyle \partial_t \nu_t(\mX) - \nu_t(\mX) \nabla \cdot \backwarddrift_{T-t}^\theta(\mX) + \mdrift_t(\mX) \cdot \nabla \nu_t(\mX) + \frac{1}{2} g_{t}^2 \Delta \nu_t(\mX)\\
-    &\textstyle - \nu_t(\mX) \backwardrate_{T-t}^\theta(\mX) + \nu_t(\mX) \inty \backwardrate_{T-t}^\theta(\mY) \btk_{T-t}^\theta(\mX | \mY) \rmd \y + \\
-    &\textstyle  \mrate_t(\rvx) \inty \nu_t(\mY) ( \mtk_t(\mY | \mX) - \updelta_{\mX}(\mY) )\rmd \y
+    &\textstyle - \nu_t(\mX) \backwardrate_{T-t}^\theta(\mX) + \nu_t(\mX) \inty \backwardrate_{T-t}^\theta(\mV) \btk_{T-t}^\theta(\mX | \mV) \rmd \y + \\
+    &\textstyle  \mrate_t(\rvx) \inty \nu_t(\mV) ( \mtk_t(\mV | \mX) - \updelta_{\mX}(\mV) )\rmd \y
 \end{align}
 which is in the form $\mathcal{M}(\nu)(\bar{\mX}) + c(\bar{\mX}) \nu(\bar{\mX}) = 0$ if we let
 \begin{equation}
   \textstyle 
-    c(\bar{\mX}) = -\nabla \cdot \backwarddrift_{T-t}^\theta(\mX) - \backwardrate_{T-t}^\theta(\mX) + \inty \backwardrate_{T-t}^\theta(\mY) \btk_{T-t}^\theta(\mX | \mY) \rmd \y . 
+    c(\bar{\mX}) = -\nabla \cdot \backwarddrift_{T-t}^\theta(\mX) - \backwardrate_{T-t}^\theta(\mX) + \inty \backwardrate_{T-t}^\theta(\mV) \btk_{T-t}^\theta(\mX | \mV) \rmd \y . 
 \end{equation}
 
 \paragraph{Verifying Assumption 2.} Now that we have verified Assumption 1, the
-second step in the proof is Assumption 2 from \cite{benton2022denoising}. We
+second step in the proof is Assumption 2 from \citet{benton2022denoising}. We
 assume there is a bounded measurable function
 $\alpha : \mathcal{S} \rightarrow (0, \infty)$ such that
 $\alpha \mathcal{M} f = \mathcal{L}(f \alpha) - f \mathcal{L}\alpha$ for all
@@ -608,11 +608,11 @@ $f \in \mathcal{D}(\mathcal{M})$ and $f \alpha \in
 get
 \begin{align}
   &\textstyle \alpha_t(\mX) [ \partial_t f(\mX) - \backwarddrift_{T-t}^\theta(\mX) \cdot \nabla f(\mX) \\
-  & \qquad \textstyle + \frac{1}{2} g_{t}^2 \Delta f(\mX) + \mrate_t(\mX) \inty f(\mY) ( \mtk_t(\mY | \mX) - \updelta_{\mX}(\mY) ) \rmd \y ]\\
+  & \qquad \textstyle + \frac{1}{2} g_{t}^2 \Delta f(\mX) + \mrate_t(\mX) \inty f(\mV) ( \mtk_t(\mV | \mX) - \updelta_{\mX}(\mV) ) \rmd \y ]\\
   &\textstyle = \partial_t( f \alpha_t) (\mX) + \forwarddrift_t(\mX) \cdot \nabla (f \alpha_t)(\mX) + \frac{1}{2} g_t^2 \Delta (f \alpha_t) (\mX)\\
-  & \qquad \textstyle + \forwardrate_t(\mX) \inty f(\mY) \alpha_t(\mY) ( \ftk_t(\mY | \mX) - \updelta_{\mX}(\mY) ) \rmd \y\\
+  & \qquad \textstyle + \forwardrate_t(\mX) \inty f(\mV) \alpha_t(\mV) ( \ftk_t(\mV | \mX) - \updelta_{\mX}(\mV) ) \rmd \y\\
   &\textstyle  \quad - f(\mX) [ \partial_t \alpha_t(\mX) + \forwarddrift_t(\mX) \cdot \nabla \alpha_t(\mX) + \frac{1}{2} g_t^2 \Delta \alpha_t (\mX) \\
-  & \qquad \textstyle + \forwardrate_t(\mX) \inty \alpha_t(\mY) ( \ftk_t(\mY | \mX) - \updelta_{\mX}(\mY) ) \rmd \y ] 
+  & \qquad \textstyle + \forwardrate_t(\mX) \inty \alpha_t(\mV) ( \ftk_t(\mV | \mX) - \updelta_{\mX}(\mV) ) \rmd \y ] 
     \label{eq:assm2equality}
 \end{align}
 Since $f$ does not depend on time, $\partial_t f(\mX) = 0$ and $\partial_t(f \alpha_t) (\mX) = f(\mX) \partial_t \alpha_t (\mX)$ thus the $\partial_t$ terms on the RHS also cancel out. Comparing terms on the LHS and RHS relating to the diffusion part of the process we obtain
@@ -644,35 +644,35 @@ This implies that $\alpha_t(\mX)$ satisfies
 \end{equation}
 Comparing terms from the LHS and RHS of \eqref{eq:assm2equality} relating to the jump part of the process we obtain
 \begin{align}
-    &\textstyle \alpha_t(\mX) \mrate_t(\mX) \inty f(\mY) ( \mtk_t(\mY | \mX) - \updelta_{\mX}(\mY) ) \rmd \y = \\
-    &\textstyle  \hspace{1cm} \forwardrate_t(\mX) \inty f(\mY) \alpha_t(\mY) ( \ftk_t(\mY | \mX) - \updelta_{\mX}(\mY) ) \rmd \y\\
-    &\textstyle  \hspace{1cm} - f(\mX) \forwardrate_t(\mX) \inty \alpha_t(\mY) ( \ftk_t(\mY | \mX) - \updelta_{\mX}(\mY) ) \rmd \y .
+    &\textstyle \alpha_t(\mX) \mrate_t(\mX) \inty f(\mV) ( \mtk_t(\mV | \mX) - \updelta_{\mX}(\mV) ) \rmd \y = \\
+    &\textstyle  \hspace{1cm} \forwardrate_t(\mX) \inty f(\mV) \alpha_t(\mV) ( \ftk_t(\mV | \mX) - \updelta_{\mX}(\mV) ) \rmd \y\\
+    &\textstyle  \hspace{1cm} - f(\mX) \forwardrate_t(\mX) \inty \alpha_t(\mV) ( \ftk_t(\mV | \mX) - \updelta_{\mX}(\mV) ) \rmd \y .
 \end{align}
 Hence, we have 
 \begin{align}
-    &\textstyle \alpha_t(\mX)  \inty f(\mY) \mrate_t(\mX) \mtk_t(\mY | \mX) \rmd \y - \alpha_t(\mX) \mrate_t(\mX) f(\mX) = \\
-    &\textstyle  \hspace{1cm} \forwardrate_t(\mX) \inty f(\mY) \alpha_t(\mY) \ftk_t(\mY | \mX) \rmd \y \\
-  & \qquad \quad \textstyle - f(\mX) \forwardrate_t(\mX) \inty \alpha_t(\mY) \ftk_t(\mY | \mX) \rmd \y . 
+    &\textstyle \alpha_t(\mX)  \inty f(\mV) \mrate_t(\mX) \mtk_t(\mV | \mX) \rmd \y - \alpha_t(\mX) \mrate_t(\mX) f(\mX) = \\
+    &\textstyle  \hspace{1cm} \forwardrate_t(\mX) \inty f(\mV) \alpha_t(\mV) \ftk_t(\mV | \mX) \rmd \y \\
+  & \qquad \quad \textstyle - f(\mX) \forwardrate_t(\mX) \inty \alpha_t(\mV) \ftk_t(\mV | \mX) \rmd \y . 
 \end{align}
-Recalling the definitions of $\mrate_t(\mX)$ and $\mtk(\mY | \mX)$, \eqref{eq:def_mrate} and \eqref{eq:def_mtkt}, we get 
+Recalling the definitions of $\mrate_t(\mX)$ and $\mtk(\mV | \mX)$, \eqref{eq:def_mrate} and \eqref{eq:def_mtkt}, we get 
 \begin{align}
-  &\textstyle \alpha_t(\mX) \inty f(\mY) \backwardrate_{T-t}^\theta(\mY) \btk_{T-t}^\theta(\mX | \mY) \rmd \y \\
-  & \qquad \qquad \textstyle - \alpha_t(\mX) f(\mX) \inty \backwardrate_{T-t}^\theta(\mY) \btk_{T-t}^\theta(\mX | \mY) \rmd \y = \\
-  &\textstyle  \hspace{1cm} \forwardrate_t(\mX) \inty f(\mY) \alpha_t(\mY) \ftk_t(\mY | \mX) \rmd \y \\
-  & \qquad \textstyle - f(\mX) \forwardrate_t(\mX) \inty \alpha_t(\mY) \ftk_t(\mY | \mX) \rmd \y .
+  &\textstyle \alpha_t(\mX) \inty f(\mV) \backwardrate_{T-t}^\theta(\mV) \btk_{T-t}^\theta(\mX | \mV) \rmd \y \\
+  & \qquad \qquad \textstyle - \alpha_t(\mX) f(\mX) \inty \backwardrate_{T-t}^\theta(\mV) \btk_{T-t}^\theta(\mX | \mV) \rmd \y = \\
+  &\textstyle  \hspace{1cm} \forwardrate_t(\mX) \inty f(\mV) \alpha_t(\mV) \ftk_t(\mV | \mX) \rmd \y \\
+  & \qquad \textstyle - f(\mX) \forwardrate_t(\mX) \inty \alpha_t(\mV) \ftk_t(\mV | \mX) \rmd \y .
 \end{align}
 This equality is satisfied if $\alpha_t(\mX)$ follows the following relation
 \begin{equation}
-    \alpha_t(\mY) = \alpha_t(\mX) \frac{\backwardrate_{T-t}^\theta(\mY) \btk_{T-t}^\theta(\mX | \mY)}{\forwardrate_t(\mX) \ftk_t(\mY | \mX)} \quad \text{for } n \neq m
+    \alpha_t(\mV) = \alpha_t(\mX) \frac{\backwardrate_{T-t}^\theta(\mV) \btk_{T-t}^\theta(\mX | \mV)}{\forwardrate_t(\mX) \ftk_t(\mV | \mX)} \quad \text{for } n \neq m
     \label{eq:alphaJumpRelation}
 \end{equation}
-We only require this relation to be satisfied for $n \neq m$ because both $\ftk_t(\mY | \mX)$ and $\btk_{T-t}^\theta(\mX | \mY)$ are $0$ for $n = m$.
-We note at this point, as in \cite{benton2022denoising}, that if we have $\alpha_t(\mX) = 1/p_t(\mX)$ and $\backwardrate_{T-t}^\theta$ and $\btk_{T-t}^\theta(\mX | \mY)$ equal to the true time-reversals, then both \eqref{eq:alphaDiffRelation}, and \eqref{eq:alphaJumpRelation} are satisfied. However, $\alpha_t(\mX) = 1/p_t(\mX)$ is not the only $\alpha_t$ to satisfy these equations. \eqref{eq:alphaDiffRelation} and \eqref{eq:alphaJumpRelation} can be thought of as enforcing a certain parameterization of the generative process in terms of $\alpha_t$ \cite{benton2022denoising}.
+We only require this relation to be satisfied for $n \neq m$ because both $\ftk_t(\mV | \mX)$ and $\btk_{T-t}^\theta(\mX | \mV)$ are $0$ for $n = m$.
+We note at this point, as in \citet{benton2022denoising}, that if we have $\alpha_t(\mX) = 1/p_t(\mX)$ and $\backwardrate_{T-t}^\theta$ and $\btk_{T-t}^\theta(\mX | \mV)$ equal to the true time-reversals, then both \eqref{eq:alphaDiffRelation}, and \eqref{eq:alphaJumpRelation} are satisfied. However, $\alpha_t(\mX) = 1/p_t(\mX)$ is not the only $\alpha_t$ to satisfy these equations. \eqref{eq:alphaDiffRelation} and \eqref{eq:alphaJumpRelation} can be thought of as enforcing a certain parameterization of the generative process in terms of $\alpha_t$~\citep{benton2022denoising}.
 
 
 \paragraph{Concluding the proof.} Now for the final part of the proof, we
 substitute our value for $\alpha$ into the $\mathcal{I}_{\text{ISM}}$ loss from
-\cite{benton2022denoising} which is equal to the negative of the evidence lower
+\citet{benton2022denoising} which is equal to the negative of the evidence lower
 bound on $\mathbb{E}_{\pdata(\mX_0)} [ \log p_0^\theta(\mX_0) ]$ up to
 a constant independent of $\theta$. Defining
 $\beta_t(\mX_t) = 1 / \alpha_t(\mX_t)$, we have
@@ -686,7 +686,7 @@ $\beta_t(\mX_t) = 1 / \alpha_t(\mX_t)$, we have
  \end{equation}
  and 
  \begin{equation}
-   \textstyle \LJ_t(f)(\mX) = \forwardrate_t(\mX) \inty f(\mY) ( \ftk_t(\mY | \mX) - \updelta_{\mX}(\mY) ) \rmd \y . 
+   \textstyle \LJ_t(f)(\mX) = \forwardrate_t(\mX) \inty f(\mV) ( \ftk_t(\mV | \mX) - \updelta_{\mX}(\mV) ) \rmd \y . 
  \end{equation}
  By comparison with the approach to find the adjoint $\adjointK_t$, we also have
  $\hat{\mathcal{L}}_t^* = \hat{\mathcal{L}}_t^{\text{diff}*} + \aLJ_t$ with
@@ -695,7 +695,7 @@ $\beta_t(\mX_t) = 1 / \alpha_t(\mX_t)$, we have
    \end{equation}
 In addition, we get 
  \begin{equation}
-     \textstyle \aLJ_t(f)(\mX) = \inty f(\mY) \forwardrate_t(\mY) ( \ftk_t(\mX | \mY) - \updelta_{\mX}(\mY) ) \rmd \y .
+     \textstyle \aLJ_t(f)(\mX) = \inty f(\mV) \forwardrate_t(\mV) ( \ftk_t(\mX | \mV) - \updelta_{\mX}(\mV) ) \rmd \y .
  \end{equation}
 Finally, $\mathcal{I}_{\text{ISM}}$ becomes
 \begin{align}
@@ -703,7 +703,7 @@ Finally, $\mathcal{I}_{\text{ISM}}$ becomes
     \int_{0}^T \mathbb{E}_{p_t(\mX_t)} [ \frac{\aLJ_t \beta_t(\mX_t)}{\beta_t(\mX_t)} + \LJ \log \beta_t(\mX_t) ] \rmd t \\
     &\textstyle = \mathcal{I}_{\text{ISM}}^{\text{diff}}(\beta) + \mathcal{I}_{\text{ISM}}^{\text{J}}(\beta) , 
 \end{align}
-where we have named the two terms corresponding to the diffusion and jump part of the process as $\mathcal{I}_{\text{ISM}}^{\text{diff}}$, $\mathcal{I}_{\text{ISM}}^{\text{J}}$ respectively. For the diffusion part of the loss, we use the denoising form of the objective proven in Appendix E of \cite{benton2022denoising} which is equivalent to $\mathcal{I}_{\text{ISM}}^{\text{diff}}$ up to a constant independent of $\theta$
+where we have named the two terms corresponding to the diffusion and jump part of the process as $\mathcal{I}_{\text{ISM}}^{\text{diff}}$, $\mathcal{I}_{\text{ISM}}^{\text{J}}$ respectively. For the diffusion part of the loss, we use the denoising form of the objective proven in Appendix E of \citet{benton2022denoising} which is equivalent to $\mathcal{I}_{\text{ISM}}^{\text{diff}}$ up to a constant independent of $\theta$
 \begin{equation}
   \textstyle 
     \mathcal{I}_{\text{ISM}}^{\text{diff}}(\beta) = \int_{0}^T \mathbb{E}_{p_{0, t}(\mX_0, \mX_t)} [ \frac{\Ldiff_t ( p_{t|0}( \cdot | \mX_0) \alpha_t(\cdot))(\mX_t)}{p_{t|0}(\mX_t | \mX_0) \alpha_t(\mX_t) } - \Ldiff_t \log ( p_{t|0}(\cdot | \mX_0) \alpha_t(\cdot) ) (\mX_t) ] \rmd t + \text{const} .
@@ -750,80 +750,80 @@ Therefore, the diffusion part of $\mathcal{I}_{\text{ISM}}$ can be written as
 \end{equation}
 We now focus on the jump part of the loss $\mathcal{I}_{\text{ISM}}^{\text{J}}$. We first substitute in $\hat{\mathcal{L}}^{\text{J}}_t$ and $\aLJ_t$
 \begin{align}
-    \textstyle \mathcal{I}_{\text{ISM}}^{\text{J}} = \int_0^T \mathbb{E}_{p_t(\mX_t)} [&\textstyle  \sum_m \int_{\y \in \mathbb{R}^{md}} \forwardrate_t(\mY) \frac{\beta_t(\mY)}{\beta_t(\mX_t)} ( \ftk_t(\mX_t | \mY) - \updelta_{\mY} (\mX_t) ) \rmd\y + \\
-    &\textstyle \forwardrate_t(\mX_t) \inty \ftk_t(\mY | \mX_t) \log \beta_t(\mY) \rmd\y - \forwardrate_t(\mX_t) \log \beta_t(\mX_t)] \rmd t. \label{eq:def_ism_j}
+    \textstyle \mathcal{I}_{\text{ISM}}^{\text{J}} = \int_0^T \mathbb{E}_{p_t(\mX_t)} [&\textstyle  \sum_m \int_{\y \in \mathbb{R}^{md}} \forwardrate_t(\mV) \frac{\beta_t(\mV)}{\beta_t(\mX_t)} ( \ftk_t(\mX_t | \mV) - \updelta_{\mV} (\mX_t) ) \rmd\y + \\
+    &\textstyle \forwardrate_t(\mX_t) \inty \ftk_t(\mV | \mX_t) \log \beta_t(\mV) \rmd\y - \forwardrate_t(\mX_t) \log \beta_t(\mX_t)] \rmd t. \label{eq:def_ism_j}
 \end{align}
 Noting that $\beta_t(\mX_t) = 1 / \alpha_t(\mX_t)$, we get 
 \begin{equation}
-    \textstyle \frac{\beta_t ( \mX_t)}{\beta_t(\mY)} = \frac{\backwardrate_{T-t}^\theta (\mY) \btk_{T-t}^\theta(\mX_t | \mY)}{\forwardrate_t(\mX_t) \ftk_t(\mY | \mX_t)} \quad \text{for } n_t \neq m
+    \textstyle \frac{\beta_t ( \mX_t)}{\beta_t(\mV)} = \frac{\backwardrate_{T-t}^\theta (\mV) \btk_{T-t}^\theta(\mX_t | \mV)}{\forwardrate_t(\mX_t) \ftk_t(\mV | \mX_t)} \quad \text{for } n_t \neq m
     \label{eq:betaratio1}
 \end{equation}
-or swapping labels for $\mX_t$ and $\mY$,
+or swapping labels for $\mX_t$ and $\mV$,
 \begin{equation}
-    \textstyle \frac{\beta_t ( \mY)}{\beta_t(\mX_t)} = \frac{\backwardrate_{T-t}^\theta (\mX_t) \btk_{T-t}^\theta(\mY | \mX_t)}{\forwardrate_t(\mY) \ftk_t(\mX_t | \mY)} \quad \text{for } n_t \neq m
+    \textstyle \frac{\beta_t ( \mV)}{\beta_t(\mX_t)} = \frac{\backwardrate_{T-t}^\theta (\mX_t) \btk_{T-t}^\theta(\mV | \mX_t)}{\forwardrate_t(\mV) \ftk_t(\mX_t | \mV)} \quad \text{for } n_t \neq m
     \label{eq:betaratio2}
 \end{equation}
 Substituting \eqref{eq:betaratio1} into the second line and
 $\eqref{eq:betaratio2}$ into the first line of \eqref{eq:def_ism_j} and using
-the fact that $\ftk_t(\mX_t | \mY) = 0$ for $n_t = m$, we obtain
+the fact that $\ftk_t(\mX_t | \mV) = 0$ for $n_t = m$, we obtain
 \begin{align}
-    \mathcal{I}_{\text{ISM}}^{\text{J}} = \textstyle \int_0^T \mathbb{E}_{p_t(\mX_t)} [&\textstyle  \intyNont \forwardrate_t(\mY)  \frac{\backwardrate_{T-t}^\theta (\mX_t) \btk_{T-t}^\theta(\mY | \mX_t)}{\forwardrate_t(\mY) \ftk_t(\mX_t | \mY)} \ftk_t(\mX_t | \mY) \rmd \y \\
-    &\textstyle - \inty \forwardrate_t(\mY) \frac{\beta_t(\mY)}{\beta_t(\mX_t)} \updelta_{\mY} (\mX_t)  \rmd\y \\
-    &\textstyle +\forwardrate_t(\mX_t) \intyNont \ftk_t(\mY | \mX_t) \{ \log \beta_t(\mX_t) - \log \backwardrate_{T-t}^\theta(\mY) \\ & \textstyle - \log \btk_{T-t}^\theta(\mX_t | \mY) 
-    \textstyle   + \log \forwardrate_t(\mX_t) + \log \ftk_t(\mY | \mX_t)  \} \rmd \y \\
+    \mathcal{I}_{\text{ISM}}^{\text{J}} = \textstyle \int_0^T \mathbb{E}_{p_t(\mX_t)} [&\textstyle  \intyNont \forwardrate_t(\mV)  \frac{\backwardrate_{T-t}^\theta (\mX_t) \btk_{T-t}^\theta(\mV | \mX_t)}{\forwardrate_t(\mV) \ftk_t(\mX_t | \mV)} \ftk_t(\mX_t | \mV) \rmd \y \\
+    &\textstyle - \inty \forwardrate_t(\mV) \frac{\beta_t(\mV)}{\beta_t(\mX_t)} \updelta_{\mV} (\mX_t)  \rmd\y \\
+    &\textstyle +\forwardrate_t(\mX_t) \intyNont \ftk_t(\mV | \mX_t) \{ \log \beta_t(\mX_t) - \log \backwardrate_{T-t}^\theta(\mV) \\ & \textstyle - \log \btk_{T-t}^\theta(\mX_t | \mV) 
+    \textstyle   + \log \forwardrate_t(\mX_t) + \log \ftk_t(\mV | \mX_t)  \} \rmd \y \\
     &\textstyle - \forwardrate_t(\mX_t) \log \beta_t(\mX_t)] \rmd t . 
 \end{align}
 Hence, we have 
 \begin{align}
   \textstyle 
-    \mathcal{I}_{\text{ISM}}^{\text{J}} &\textstyle = \int_{0}^T \mathbb{E}_{p_t(\mX_t)} [\textstyle  \backwardrate_{T-t}^\theta(\mX_t) \intyNont \btk_{T-t}^\theta(\mY | \mX_t) \rmd\y - \forwardrate_t(\mX_t) \frac{\beta_t(\mX_t)}{\beta_t(\mX_t)}  + \\
-    & \qquad\textstyle \forwardrate_t(\mX_t) \intyNont \ftk_t(\mY | \mX_t) \{ -\log \backwardrate_{T-t}^\theta(\mY) - \log \btk_{T-t}^\theta(\mX_t | \mY) \} \rmd \y ] \rmd t + \text{const} .
+    \mathcal{I}_{\text{ISM}}^{\text{J}} &\textstyle = \int_{0}^T \mathbb{E}_{p_t(\mX_t)} [\textstyle  \backwardrate_{T-t}^\theta(\mX_t) \intyNont \btk_{T-t}^\theta(\mV | \mX_t) \rmd\y - \forwardrate_t(\mX_t) \frac{\beta_t(\mX_t)}{\beta_t(\mX_t)}  + \\
+    & \qquad\textstyle \forwardrate_t(\mX_t) \intyNont \ftk_t(\mV | \mX_t) \{ -\log \backwardrate_{T-t}^\theta(\mV) - \log \btk_{T-t}^\theta(\mX_t | \mV) \} \rmd \y ] \rmd t + \text{const} .
 \end{align}
 This can be rewritten as 
 \begin{align}
   \textstyle 
-    \mathcal{I}_{\text{ISM}}^{\text{J}} = \int_{0}^T \mathbb{E}_{p_t(\mX_t)} [ \backwardrate_{T-t}^\theta(\mX_t) + \forwardrate_t(\mX_t) \mathbb{E}_{\ftk_t(\mY | \mX_t)} [ - \log \backwardrate_{T-t}^\theta(\mY) - \log \btk_{T-t}^\theta(\mX_t | \mY) ] ] \rmd t + \text{const} . 
+    \mathcal{I}_{\text{ISM}}^{\text{J}} = \int_{0}^T \mathbb{E}_{p_t(\mX_t)} [ \backwardrate_{T-t}^\theta(\mX_t) + \forwardrate_t(\mX_t) \mathbb{E}_{\ftk_t(\mV | \mX_t)} [ - \log \backwardrate_{T-t}^\theta(\mV) - \log \btk_{T-t}^\theta(\mX_t | \mV) ] ] \rmd t + \text{const} . 
 \end{align}
 Therefore, we have 
 \begin{align}
-   \mathcal{I}_{\text{ISM}}^{\text{J}} =  T\mathbb{E}_{\mathcal{U}(t; 0, T) p_t(\mX_t) \ftk_t(\mY | \mX_t) } [ \backwardrate_{T-t}^\theta(\mX_t) - \forwardrate_t(\mX_t) \log \backwardrate_{T-t}^\theta(\mY) - \forwardrate_t(\mX_t) \log \btk_{T-t}^\theta(\mX_t | \mY) ] + \text{const} . 
+   \mathcal{I}_{\text{ISM}}^{\text{J}} =  T\mathbb{E}_{\mathcal{U}(t; 0, T) p_t(\mX_t) \ftk_t(\mV | \mX_t) } [ \backwardrate_{T-t}^\theta(\mX_t) - \forwardrate_t(\mX_t) \log \backwardrate_{T-t}^\theta(\mV) - \forwardrate_t(\mX_t) \log \btk_{T-t}^\theta(\mX_t | \mV) ] + \text{const} . 
 \end{align}
-Finally, using  the definition of the forward and backward kernels, i.e.
-$\ftk_t(\mY | \mX_t) = \sum_{i=1}^n \delidxdist(i | n) \updelta_{\text{del}(\mX,
-  i)}(\mY)$ and
-$\btk_{T-t}^\theta(\mX_t | \mY) = \int_{\xadd} \sum_{i=1}^{n}
-\autonet^\theta_t(\xadd, i | \mY) \updelta_{\text{ins}(\mY, \xadd, i)}(\mX_t) \rmd
+Finally, using  the definition of the forward and reverse kernels, i.e.
+$\ftk_t(\mV | \mX_t) = \sum_{i=1}^n \delidxdist(i | n) \updelta_{\text{del}(\mX,
+  i)}(\mV)$ and
+$\btk_{T-t}^\theta(\mX_t | \mV) = \int_{\xadd} \sum_{i=1}^{n}
+\autonet^\theta_t(\xadd, i | \mV) \updelta_{\text{ins}(\mV, \xadd, i)}(\mX_t) \rmd
 \xadd$, we get
 \begin{align}
-   \mathcal{I}_{\text{ISM}}^{\text{J}} =  T\mathbb{E}_{\mathcal{U}(t; 0, T) p_t(\mX_t) } [&\textstyle  \inty \sum_{i=1}^{n_t} \delidxdist(i | n_t) \updelta_{\text{del}(\mX_t, i)}(\mY) ( \backwardrate_{T-t}^\theta(\mX_t) - \forwardrate_t(\mX_t) \log \backwardrate_{T-t}^\theta(\mY) \\ 
-    &\textstyle - \forwardrate_t(\mX_t) \log \btk_{T-t}^\theta(\mX_t | \mY) ) \rmd \y ] + \text{const} 
+   \mathcal{I}_{\text{ISM}}^{\text{J}} =  T\mathbb{E}_{\mathcal{U}(t; 0, T) p_t(\mX_t) } [&\textstyle  \inty \sum_{i=1}^{n_t} \delidxdist(i | n_t) \updelta_{\text{del}(\mX_t, i)}(\mV) ( \backwardrate_{T-t}^\theta(\mX_t) - \forwardrate_t(\mX_t) \log \backwardrate_{T-t}^\theta(\mV) \\ 
+    &\textstyle - \forwardrate_t(\mX_t) \log \btk_{T-t}^\theta(\mX_t | \mV) ) \rmd \y ] + \text{const} 
 \end{align}
 We get 
 \begin{align}
-  \mathcal{I}_{\text{ISM}}^{\text{J}} &=  T\mathbb{E}_{\mathcal{U}(t; 0, T) p_t(\mX_t) \delidxdist(i | n_t) \updelta_{\text{del}(\mX_t, i)}(\mY) } \\
-  & \qquad [\textstyle  \backwardrate_{T-t}^\theta(\mX_t) - \forwardrate_t(\mX_t) \log \backwardrate_{T-t}^\theta(\mY) - \forwardrate_t(\mX_t) \log \btk_{T-t}^\theta(\mX_t | \mY) ] + \text{const} . 
+  \mathcal{I}_{\text{ISM}}^{\text{J}} &=  T\mathbb{E}_{\mathcal{U}(t; 0, T) p_t(\mX_t) \delidxdist(i | n_t) \updelta_{\text{del}(\mX_t, i)}(\mV) } \\
+  & \qquad [\textstyle  \backwardrate_{T-t}^\theta(\mX_t) - \forwardrate_t(\mX_t) \log \backwardrate_{T-t}^\theta(\mV) - \forwardrate_t(\mX_t) \log \btk_{T-t}^\theta(\mX_t | \mV) ] + \text{const} . 
 \end{align}
 Therefore, we have 
 \begin{align}
-  \mathcal{I}_{\text{ISM}}^{\text{J}} &=  T\mathbb{E}_{\mathcal{U}(t; 0, T) p_t(\mX_t) \delidxdist(i | n_t) \updelta_{\text{del}(\mX_t, i)}(\mY) } \\
-                                      &\qquad [\textstyle  \backwardrate_{T-t}^\theta(\mX_t) - \forwardrate_t(\mX_t) \log \backwardrate_{T-t}^\theta(\mY) - \forwardrate_t(\mX_t) \log A_{T-t}^\theta(\xadd, i | \mY) ] + \text{const} . 
+  \mathcal{I}_{\text{ISM}}^{\text{J}} &=  T\mathbb{E}_{\mathcal{U}(t; 0, T) p_t(\mX_t) \delidxdist(i | n_t) \updelta_{\text{del}(\mX_t, i)}(\mV) } \\
+                                      &\qquad [\textstyle  \backwardrate_{T-t}^\theta(\mX_t) - \forwardrate_t(\mX_t) \log \backwardrate_{T-t}^\theta(\mV) - \forwardrate_t(\mX_t) \log A_{T-t}^\theta(\xadd, i | \mV) ] + \text{const} . 
 \end{align}
 Putting are expressions for $\mathcal{I}_{\text{ISM}}^{\text{diff}}$ and $\mathcal{I}_{\text{ISM}}^{\text{J}}$ together we obtain
 \begin{align}
     \mathcal{I}_{\text{ISM}} = &\textstyle \frac{T}{2} \mathbb{E} [g_t^2 \norm{\nabla \log p_{t|0}(\rvx_t | n_t, \mX_0, M_t) - s_t^\theta(\mX_t)}^2 ] + \\
-    &\textstyle T\mathbb{E} [ \backwardrate_{T-t}^\theta(\mX_t) - \forwardrate_t(\mX_t) \log \backwardrate_{T-t}^\theta(\mY) - \forwardrate_t(\mX_t) \log A_{T-t}^\theta(\xadd, i | \mY) ] + \text{const} . 
+    &\textstyle T\mathbb{E} [ \backwardrate_{T-t}^\theta(\mX_t) - \forwardrate_t(\mX_t) \log \backwardrate_{T-t}^\theta(\mV) - \forwardrate_t(\mX_t) \log A_{T-t}^\theta(\xadd, i | \mV) ] + \text{const} . 
 \end{align}
 We get that $-\mathcal{I}_{\text{ISM}}$ gives us our evidence lower bound on
 $\mathbb{E}_{\pdata(\mX_0)} [ \log p_0^\theta(\mX_0) ]$ up to a constant that does
 not depend on $\theta$. In the main text we have used a time notation such that
-the backward process runs backwards from $t=T$ to $t=0$. To align with the
+the reverse process runs backwards from $t=T$ to $t=0$. To align with the
 notation of time used in the main text we change $T-t$ to $t$ on subscripts for
 $\backwardrate_{T-t}^\theta$ and $A_{T-t}^\theta$. We also will use the fact
 that $\forwardrate_t(\mX_t)$ depends only on the number of components in $\mX_t$,
 $\forwardrate_t(\mX_t) = \forwardrate_t(n_t)$.
 \begin{align}
     \mathcal{L}(\theta) = &\textstyle  -\frac{T}{2} \mathbb{E} [g_t^2 \norm{ s_t^\theta(\mX_t) - \nabla_{\rvx_t} \log p_{t|0}(\rvx_t | n_t, \mX_0, M_t)}^2 ] + \\
-    &\textstyle T\mathbb{E} [ - \backwardrate_{t}^\theta(\mX_t) + \forwardrate_t(n_t) \log \backwardrate_{t}^\theta(\mY) + \forwardrate_t(n_t) \log A_{t}^\theta(\xadd, i | \mY) ] + \text{const} . 
+    &\textstyle T\mathbb{E} [ - \backwardrate_{t}^\theta(\mX_t) + \forwardrate_t(n_t) \log \backwardrate_{t}^\theta(\mV) + \forwardrate_t(n_t) \log A_{t}^\theta(\xadd, i | \mV) ] + \text{const} . 
 \end{align}
 
 
@@ -831,11 +831,11 @@ $\forwardrate_t(\mX_t) = \forwardrate_t(n_t)$.
 
 \paragraph{Tightness of the lower bound}
 \label{sec:tddm-tightness-}
-Now that we have derived the ELBO as in Proposition \ref{prop:elbo}, we show that the maximizers of the ELBO are tight, i.e.~that they close the variational
-gap. We do this by proving the general ELBO presented in \cite{benton2022denoising} has this property and therefore ours, which is a special case of this general ELBO, also has that the optimum parameters close the variational gap.
+Now that we have derived the ELBO as in Proposition \ref{prop:elbo}, we show that the maximisers of the ELBO are tight, i.e.~that they close the variational
+gap. We do this by proving the general ELBO presented in \citet{benton2022denoising} has this property and therefore ours, which is a special case of this general ELBO, also has that the optimum parameters close the variational gap.
 
 To state our proposition, we recall the setting of
-\cite{benton2022denoising}. The forward noising process is denoted
+\citet{benton2022denoising}. The forward noising process is denoted
 $(\bfY_t)_{t \geq 0}$ and associated with an infinitesimal generator
 $\hat{\mathcal{L}}$ its extension $(t, \bfY_t)_{t \geq 0}$ is associated with
 the infinitesimal generator $\mathcal{L}$, i.e.~
@@ -863,7 +863,7 @@ In particular, using \cite[Proposition 1]{benton2022denoising}, we get that
 $\mathrm{Gap} \geq 0$ and $\mathrm{Gap} = 0$ if and only if $\beta \propto
 v$. In addition, the ELBO is maximized if and only if $\beta \propto v$, see
 \cite[Equation 10]{benton2022denoising} and the remark that follows. Therefore,
-we have that: if we maximize the ELBO then the ELBO is tight. Combining this with the fact that the ELBO is maximized at the time reversal \cite{benton2022denoising}, then we have that when our jump diffusion parameters match the time reversal, our variational gap is $0$.
+we have that: if we maximize the ELBO then the ELBO is tight. Combining this with the fact that the ELBO is maximized at the time reversal \citet{benton2022denoising}, then we have that when our jump diffusion parameters match the time reversal, our variational gap is $0$.
 
 
 
@@ -880,15 +880,15 @@ we have that: if we maximize the ELBO then the ELBO is tight. Combining this wit
 
 
 \paragraph{Other approaches.} Another way to derive the ELBO is to follow
-the steps of \cite{huang2021variational} directly, since
-\cite{benton2022denoising} is a general framework extending this approach. The
+the steps of \citet{huang2021variational} directly, since
+\citet{benton2022denoising} is a general framework extending this approach. The
 key formulae to derive the result and the ELBO is 1) a Feynman-Kac formula 2) a
 Girsanov formula.  In the case of jump diffusions (with jump in $\rset^d$) a
 Girsanov formula has been established by
-\cite{cheridito2005equivalent}. Extending this result to one-point
+\citet{cheridito2005equivalent}. Extending this result to one-point
 compactification space would allow us to prove directly Proposition
 \ref{prop:elbo} without having to rely on the general framework of
-\cite{benton2022denoising}.
+\citet{benton2022denoising}.
 
 \subsection{Proof of Proposition \ref{prop:backwardrateparam}}
 \label{sec:tddm-proofPropBackwardRateParam}
@@ -896,7 +896,7 @@ We start by recalling the form for the time reversal given in Proposition \ref{p
 \begin{equation}
 \textstyle    \backwardrate_{t}^*(\mX) = \forwardrate_{t}(n+1) \sum_{i=1}^{n+1} \delidxdist(i | n+1) \int_{\yadd} p_{t}( \textup{ins}(\mX, \yadd, i)) \rmd \yadd  / p_{t}(\mX) .
 \end{equation}
-We then introduce a marginalization over $\mX_0$
+We then introduce a marginalisation over $\mX_0$
 \begin{align}
     \backwardrate_{t}^*(\mX) &\textstyle = \forwardrate_{t}(n+1)  \sum_{i=1}^{n+1} \delidxdist(i | n+1) \int_{\yadd} \sum_{n_0} \int_{\rvx_0} p_{0,t}(\mX_0, \textup{ins}(\mX, \yadd, i)) \rmd \rvx_0 \rmd \yadd  /p_{t}(\mX)\\
     &\textstyle = \forwardrate_{t}(n+1) \sum_{i=1}^{n+1} \delidxdist(i | n+1) \int_{\yadd} \sum_{n_0} \int_{\rvx_0} \frac{p_0(\mX_0)}{p_t(\mX)} p_{t|0}(\textup{ins}(\mX, \yadd, i) | \mX_0) \rmd \rvx_0 \rmd \yadd\\
@@ -913,7 +913,7 @@ $p_{t|0}(n+1 | \mX_0) = p_{t|0}(n+1 | n_0)$. Using this result, we get
 \label{eq:backwardrateparamProofLine1}
    &\textstyle   \int_{\rvx_0}  \frac{\sum_{i=1}^{n+1} K^{\text{del}}(i | n+1) \int_{\yadd} p_{t|0}(\z(\mX, \yadd, i) | \mX_0, n+1) \rmd \yadd}{p_{t|0}(\rvx | \mX_0, n)} p_{0|t}(\rvx_0 | \mX, n_0)\rmd \rvx_0 \} . 
 \end{align}
-We now focus on the probability ratio within the integral over $\rvx_0$. We will show that this ratio is $1$. We start with the numerator, introducing a marginalization over possible mask variables between $\mX_0$ and $(n+1, \z)$, denoted $M^{(n+1)}$ with $M^{(n+1)}$ having $n+1$ ones and $n_0 - (n+1)$ zeros.
+We now focus on the probability ratio within the integral over $\rvx_0$. We will show that this ratio is $1$. We start with the numerator, introducing a marginalisation over possible mask variables between $\mX_0$ and $(n+1, \z)$, denoted $M^{(n+1)}$ with $M^{(n+1)}$ having $n+1$ ones and $n_0 - (n+1)$ zeros.
 \begin{align}
     &\textstyle \sum_{i=1}^{n+1} K^{\text{del}}(i | n+1) \int_{\yadd} p_{t|0}(\z(\mX, \yadd, i) | \mX_0, n+1) \rmd \yadd \\
     &\textstyle  = \sum_{i=1}^{n+1} K^{\text{del}}(i | n+1) \sum_{M^{(n+1)}} \int_{\yadd} p_{t|0}(M^{(n+1)}, \z(\mX, \yadd, i) | \mX_0, n+1) \rmd \yadd \\
@@ -935,7 +935,7 @@ Hence, we have
   & \qquad \textstyle \prod_{j=1}^{n}\mathcal{N}( \rvx^{(j)} ; \sqrt{\alpha_t} M^{(n+1) \backslash i}(\mX_0)^j, (1-\alpha_t) I_d) .
     \label{eq:backwardrateParamProofLine1p5}
 \end{align}
-We now re-write the denominator from \eqref{eq:backwardrateparamProofLine1} introducing a marginalization over mask variables, $M^{(n)}$
+We now re-write the denominator from \eqref{eq:backwardrateparamProofLine1} introducing a marginalisation over mask variables, $M^{(n)}$
 \begin{equation}
     \textstyle p_{t|0}(\rvx | \mX_0, n) = \sum_{M^{(n)}} p_{t|0}(M^{(n)} | \mX_0, n) p_{t|0}(\rvx | M^{(n)}, \mX_0, n)  . 
     \label{eq:backwardrateParamProofLine2}
@@ -984,19 +984,19 @@ In cases where $\forwardrate_t(n)$ depends on $n$ not just for $n=1$, $p_{t|0}(n
 
 
 
-\subsection{The Objective is Maximized at the Time Reversal}
+\subsection{The objective is maximised at the time reversal}
 \label{sec:tddm-ObjTimeRevProof}
 
 \newcommand{\intxz}{\sum_{n_0=1}^N \int_{\rvx_0 \in \mathbb{R}^{n_0 d}}}
 
-In this section, we analyze the objective $\mathcal{L}(\theta)$ as a standalone object and determine the optimum values for $s_t^\theta$, $\backwardrate_t^\theta$ and $\autonet_t^\theta$ directly. This is in order to gain intuition directly into the learning signal of $\mathcal{L}(\theta)$ without needing to refer to stochastic process theory.
+In this section, we analyse the objective $\mathcal{L}(\theta)$ as a standalone object and determine the optimum values for $s_t^\theta$, $\backwardrate_t^\theta$ and $\autonet_t^\theta$ directly. This is in order to gain intuition directly into the learning signal of $\mathcal{L}(\theta)$ without needing to refer to stochastic process theory.
 
 The definition of $\mathcal{L}(\theta)$ as in the main text is
 \begin{align}
     \mathcal{L}(\theta) = \textstyle -\frac{T}{2} \mathbb{E}[&\textstyle  \diffcoeff_t^2 \norm{s_t^\theta(\mX_t) - \nabla_{\rvx_t} \log p_{t|0}(\rvx_t | \mX_0, n_t, M_t)   }^2 ] + \\
-    T \mathbb{E} [&\textstyle  - \backwardrate_{t}^\theta(\mX_t) + \forwardrate_t (n_t) \log \backwardrate_{t}^\theta(\mY) + \forwardrate_t(n_t) \log \autonet_{t}^\theta(\xadd_t, i | \mY) ] + C.
+    T \mathbb{E} [&\textstyle  - \backwardrate_{t}^\theta(\mX_t) + \forwardrate_t (n_t) \log \backwardrate_{t}^\theta(\mV) + \forwardrate_t(n_t) \log \autonet_{t}^\theta(\xadd_t, i | \mV) ] + C.
 \end{align}
-with the expectations taken over $\mathcal{U}(t; 0, T) p_{0,t}(\mX_0, \mX_t, M_t) \delidxdist(i | n_t) \updelta_{\textup{del}(\mX_t, i)} (\mY)$.
+with the expectations taken over $\mathcal{U}(t; 0, T) p_{0,t}(\mX_0, \mX_t, M_t) \delidxdist(i | n_t) \updelta_{\textup{del}(\mX_t, i)} (\mV)$.
 
 \paragraph{Continuous optimum.} We start by analysing the objective for
 $s_t^\theta$. This part of $\mathcal{L}(\theta)$ can be written as
@@ -1004,7 +1004,7 @@ $s_t^\theta$. This part of $\mathcal{L}(\theta)$ can be written as
   \textstyle 
     -\frac{1}{2} \int_{0}^T g_t^2 \mathbb{E}_{p_{0,t}(\mX_0, \mX_t, M_t)} [ \norm{s_t^\theta(\mX_t) - \nabla_{\rvx_t} \log p_{t|0}(\rvx_t | \mX_0, n_t, M_t) }^2 ] \rmd t
 \end{equation}
-We now use the fact that the function that minimizes an $L_2$ regression problem $\underset{f}{\text{min}} \,\, \mathbb{E}_{p(x, y)} [ \norm{f(x) - y}^2 ]$ is the conditional expectation of the target $f^*(x) = \mathbb{E}_{p(y|x)} [ y]$. Therefore the optimum value for $s_t^\theta(\mX_t)$ is
+We now use the fact that the function that minimises an $L_2$ regression problem $\underset{f}{\text{min}} \,\, \mathbb{E}_{p(x, y)} [ \norm{f(x) - y}^2 ]$ is the conditional expectation of the target $f^*(x) = \mathbb{E}_{p(y|x)} [ y]$. Therefore the optimum value for $s_t^\theta(\mX_t)$ is
 \begin{align}
     s_t^*(\mX_t) &\textstyle = \mathbb{E}_{p(M_t, \mX_0 | \mX_t)} [ \nabla_{\rvx_t} \log p_{t|0}(\rvx_t | \mX_0, n_t, M_t) ]\\
     &\textstyle = \sum_{M_t} \intxz p(M_t, n_0, \rvx_0 | \mX_t) \nabla_{\rvx_t} \log p_{t|0}(\rvx_t | \rvx_0, n_0, n_t, M_t) \rmd \rvx_0\\
@@ -1018,10 +1018,10 @@ Therefore, the optimum value for $s_t^\theta(\mX_t)$ is $\nabla_{\rvx_t} \log p(
 
 \paragraph{Jump rate optimum.} The learning signal for $\backwardrate_{t}^\theta$ comes from these two terms in $\mathcal{L}(\theta)$
 \begin{equation}
-    T \mathbb{E}[ - \backwardrate_t^\theta(\mX_t) + \forwardrate_t(n_t) \log \backwardrate_t^\theta(\mY) ]
+    T \mathbb{E}[ - \backwardrate_t^\theta(\mX_t) + \forwardrate_t(n_t) \log \backwardrate_t^\theta(\mV) ]
     \label{eq:backwardrateelboexpression}
 \end{equation}
-This expectation is maximized when for each test input $\mZ$ and test time $t$, we have the following expression maximized
+This expectation is maximised when for each test input $\mZ$ and test time $t$, we have the following expression maximised
 \begin{align}
   \textstyle 
     &-p_t(\mZ) \backwardrate_t^\theta(\mZ) \\
@@ -1041,77 +1041,77 @@ We therefore have the optimum $\backwardrate_t^\theta(\mZ)$ as
 which is the form for the time-reversal given in Proposition \eqref{prop:time_reversal}.\\
 
 \paragraph{Jump kernel optimum.} Finally, we analyse the part of
-$\mathcal{L}(\theta)$ for learning $\autonet_t^\theta(\xadd_t, i | \mY)$,
+$\mathcal{L}(\theta)$ for learning $\autonet_t^\theta(\xadd_t, i | \mV)$,
 \begin{align}
-    &\textstyle T \mathbb{E} [ \forwardrate_t(n_t) \log \autonet_t^\theta(\xadd_t, i | \mY) ]\\
-    &\textstyle = \int_{0}^T \mathbb{E}_{p_t(\mX_t) \delidxdist(i | n_t) \updelta_{\text{del}(\mX_t, i)}(\mY)} [ \forwardrate_t(n_t) \log \autonet_t^\theta(\xadd_t, i | \mY) ] \rmd t\\
-    &\textstyle = \int_{0}^T \mathbb{E}_{p_t(n_t)} [ \forwardrate_t(n_t) \mathbb{E}_{p_t(\rvx_t | n_t) \delidxdist(i | n_t) \updelta_{\text{del}(\mX_t, i)}(\mY)} [ \log \autonet_t^\theta(\xadd_t, i | \mY) ] ] \rmd t.
+    &\textstyle T \mathbb{E} [ \forwardrate_t(n_t) \log \autonet_t^\theta(\xadd_t, i | \mV) ]\\
+    &\textstyle = \int_{0}^T \mathbb{E}_{p_t(\mX_t) \delidxdist(i | n_t) \updelta_{\text{del}(\mX_t, i)}(\mV)} [ \forwardrate_t(n_t) \log \autonet_t^\theta(\xadd_t, i | \mV) ] \rmd t\\
+    &\textstyle = \int_{0}^T \mathbb{E}_{p_t(n_t)} [ \forwardrate_t(n_t) \mathbb{E}_{p_t(\rvx_t | n_t) \delidxdist(i | n_t) \updelta_{\text{del}(\mX_t, i)}(\mV)} [ \log \autonet_t^\theta(\xadd_t, i | \mV) ] ] \rmd t.
 \end{align}
 We now re-write the joint probability distribution that the inner expectation is taken with respect to,
 \begin{equation}
-    p_t(\rvx_t | n_t) \delidxdist(i | n_t) \updelta_{\text{del}(\mX_t, i)}(\mY) = \tilde{p}(\mY | n_t) p(\xadd_t, i | \mY) \updelta_{\y}(\rvx_t^{\text{base}}) . 
+    p_t(\rvx_t | n_t) \delidxdist(i | n_t) \updelta_{\text{del}(\mX_t, i)}(\mV) = \tilde{p}(\mV | n_t) p(\xadd_t, i | \mV) \updelta_{\y}(\rvx_t^{\text{base}}) . 
 \end{equation}
 with 
 \begin{equation}
   \textstyle 
-    \tilde{p}(\mY | n_t) = \sum_{i=1}^{n_t} \int_{\rvx_t} p_t(\rvx_t | n_t) \delidxdist(i | n_t) \updelta_{\text{del}(\rvx_t, i)}(\mY) \rmd \rvx_t,
+    \tilde{p}(\mV | n_t) = \sum_{i=1}^{n_t} \int_{\rvx_t} p_t(\rvx_t | n_t) \delidxdist(i | n_t) \updelta_{\text{del}(\rvx_t, i)}(\mV) \rmd \rvx_t,
   \end{equation}
   and
 \begin{equation}
-    p(\xadd_t, i | \mY) \propto p_t(\rvx_t | n_t) \delidxdist(i | n_t) , 
+    p(\xadd_t, i | \mV) \propto p_t(\rvx_t | n_t) \delidxdist(i | n_t) , 
 \end{equation}
 and $\rvx_t^{\text{base}} \in \mathbb{R}^{(n_t-1)d}$ referring to the $n_t - 1$ components of $\rvx_t$, that are not $\rvx_t^{\text{add}}$ i.e. $\mX_t = \text{ins}((\rvx_t^{\text{base}}, n_t - 1), \xadd_t, i)$.
 We then have
 \begin{align}
-    &\textstyle T \mathbb{E} [ \forwardrate_t(n_t) \log \autonet_t^\theta(\xadd_t, i | \mY) ]\\
-    &\textstyle = \int_{0}^T \mathbb{E}_{p_t(n_t)} [ \forwardrate_t(n_t) \mathbb{E}_{\tilde{p}(\mY | n_t) p(\xadd_t, i | \mY) \updelta_{\y}(\rvx_t^{\text{base}})} [ \log \autonet_t^\theta(\xadd_t, i | \mY) ] ] \rmd t\\
-    &\textstyle = \int_{0}^T \mathbb{E}_{p_t(n_t)} [ \forwardrate_t(n_t) \mathbb{E}_{\tilde{p}(\mY | n_t) p(\xadd_t, i | \mY) \updelta_{\y}(\rvx_t^{\text{base}})} [ \log \autonet_t^\theta(\xadd_t, i | \mY) ] ] \rmd t \\
-    &\textstyle  \hspace{1cm} - \int_{0}^T \mathbb{E}_{p_t(n_t)} [ \forwardrate_t(n_t) \mathbb{E}_{\tilde{p}(\mY | n_t) p(\xadd_t, i | \mY) \updelta_{\y}(\rvx_t^{\text{base}})} [ \log p(\xadd_t, i | \mY) ] ] \rmd t + \text{const}\\
-    &\textstyle = \int_{0}^T \mathbb{E}_{p_t(n_t)} [ \forwardrate_t(n_t) \mathbb{E}_{\tilde{p}(\mY | n_t) \updelta_{\y}(\rvx_t^{\text{base}}) } [ - \text{KL}(p(\xadd_t, i | \mY) \, || \, A_t^\theta(\xadd_t, i | \mY) ] ] \rmd t + \text{const} .
+    &\textstyle T \mathbb{E} [ \forwardrate_t(n_t) \log \autonet_t^\theta(\xadd_t, i | \mV) ]\\
+    &\textstyle = \int_{0}^T \mathbb{E}_{p_t(n_t)} [ \forwardrate_t(n_t) \mathbb{E}_{\tilde{p}(\mV | n_t) p(\xadd_t, i | \mV) \updelta_{\y}(\rvx_t^{\text{base}})} [ \log \autonet_t^\theta(\xadd_t, i | \mV) ] ] \rmd t\\
+    &\textstyle = \int_{0}^T \mathbb{E}_{p_t(n_t)} [ \forwardrate_t(n_t) \mathbb{E}_{\tilde{p}(\mV | n_t) p(\xadd_t, i | \mV) \updelta_{\y}(\rvx_t^{\text{base}})} [ \log \autonet_t^\theta(\xadd_t, i | \mV) ] ] \rmd t \\
+    &\textstyle  \hspace{1cm} - \int_{0}^T \mathbb{E}_{p_t(n_t)} [ \forwardrate_t(n_t) \mathbb{E}_{\tilde{p}(\mV | n_t) p(\xadd_t, i | \mV) \updelta_{\y}(\rvx_t^{\text{base}})} [ \log p(\xadd_t, i | \mV) ] ] \rmd t + \text{const}\\
+    &\textstyle = \int_{0}^T \mathbb{E}_{p_t(n_t)} [ \forwardrate_t(n_t) \mathbb{E}_{\tilde{p}(\mV | n_t) \updelta_{\y}(\rvx_t^{\text{base}}) } [ - \text{KL}(p(\xadd_t, i | \mV) \, || \, A_t^\theta(\xadd_t, i | \mV) ] ] \rmd t + \text{const} .
 \end{align}
-Therefore, the optimum $\autonet_t^\theta(\xadd_t, i | \mY)$ which maximizes this part of $\mathcal{L}(\theta)$ is
+Therefore, the optimum $\autonet_t^\theta(\xadd_t, i | \mV)$ which maximises this part of $\mathcal{L}(\theta)$ is
 \begin{equation}
-    \autonet_t^*(\xadd_t, i | \mY) = p(\xadd_t, i | \mY) \propto p_t(\mX_t) \delidxdist(i | n_t) . 
+    \autonet_t^*(\xadd_t, i | \mV) = p(\xadd_t, i | \mV) \propto p_t(\mX_t) \delidxdist(i | n_t) . 
 \end{equation}
 which is the same form as given in Proposition \ref{prop:time_reversal}.
 
 
 
-\section{Training Objective}
+\section{Training objective}
 \label{sec:tddm-ApdxTrainingObjective}
 We estimate our objective $\mathcal{L}(\theta)$ by taking minibatches from the expectation 
 \begin{equation}
-    \mathcal{U}(t; 0, T) p_{0,t}(\mX_0, \mX_t, M_t) \delidxdist(i | n_t) \updelta_{\text{del}(\mX_t, i)}(\mY).
+    \mathcal{U}(t; 0, T) p_{0,t}(\mX_0, \mX_t, M_t) \delidxdist(i | n_t) \updelta_{\text{del}(\mX_t, i)}(\mV).
 \end{equation}
-We first sample $t \sim \mathcal{U}(0, T)$ and then take samples from our dataset $\mX_0 \sim \pdata(\cdot)$. In order to sample $p_{t|0}(\mX_t, M_t | \mX_0)$ we need to add noise, delete dimensions, and sample a mask variable. Since the Gaussian noising process is isotropic, we can add a suitable amount of noise to all dimensions of $\mX_0$ and then delete dimensions of that noised full dimensional value. More specifically, we first sample $\tilde{\mX}_t = (n_0, \tilde{\rvx}_t)$ with $\tilde{\rvx}_t \sim \mathcal{N}(\tilde{\rvx}_t; \sqrt{\alpha_t} \rvx_0, (1 - \alpha_t) I_{n_0 d})$ for $\alpha_t = \text{exp}\left( - \int_0^t \beta(s) \rmd s \right)$ using the analytic forward equations for the VP-SDE derived in \cite{song2020score}. Then we sample the number of dimensions to delete. This is simple to do when our rate function is independent of $n$ except for the case when $n=1$ at which it is zero. We simply sample a Poisson random variable with mean parameter $\int_0^t \forwardrate_s \rmd s$ and then clamp its value such that the maximum number of possible components that are deleted is $n_0 - 1$. This gives the appropriate distribution over $n$, $p_{t|0}(n | n_0)$ as given in \cref{sec:tddm-proofPropBackwardRateParam}. To sample which dimensions are deleted, we can sample $\delidxdist(i_1 | n_0) \delidxdist(i_2 | n_0-1) \dots \delidxdist(i_{n_0 - n_t} | n_t+1)$ from which we can create the mask $M_t$ and apply it to $\tilde{\mX}_t$ to obtain $\mX_t$, $\mX_t = M_t(\tilde{\mX}_t)$. When $\delidxdist(i | n) = 1/n$ this is especially simple to do by simply randomly permuting the components of $\tilde{\mX}_t$, and then removing the final $n_0 - n_t$ components.\\
+We first sample $t \sim \mathcal{U}(0, T)$ and then take samples from our dataset $\mX_0 \sim \pdata(\cdot)$. In order to sample $p_{t|0}(\mX_t, M_t | \mX_0)$ we need to add noise, delete dimensions, and sample a mask variable. Since the Gaussian noising process is isotropic, we can add a suitable amount of noise to all dimensions of $\mX_0$ and then delete dimensions of that noised full dimensional value. More specifically, we first sample $\tilde{\mX}_t = (n_0, \tilde{\rvx}_t)$ with $\tilde{\rvx}_t \sim \mathcal{N}(\tilde{\rvx}_t; \sqrt{\alpha_t} \rvx_0, (1 - \alpha_t) I_{n_0 d})$ for $\alpha_t = \text{exp}\left( - \int_0^t \beta(s) \rmd s \right)$ using the analytic forward equations for the VP-SDE derived by \citet{song2020score}. Then we sample the number of dimensions to delete. This is simple to do when our rate function is independent of $n$ except for the case when $n=1$ at which it is zero. We simply sample a Poisson random variable with mean parameter $\int_0^t \forwardrate_s \rmd s$ and then clamp its value such that the maximum number of possible components that are deleted is $n_0 - 1$. This gives the appropriate distribution over $n$, $p_{t|0}(n | n_0)$ as given in \cref{sec:tddm-proofPropBackwardRateParam}. To sample which dimensions are deleted, we can sample $\delidxdist(i_1 | n_0) \delidxdist(i_2 | n_0-1) \dots \delidxdist(i_{n_0 - n_t} | n_t+1)$ from which we can create the mask $M_t$ and apply it to $\tilde{\mX}_t$ to obtain $\mX_t$, $\mX_t = M_t(\tilde{\mX}_t)$. When $\delidxdist(i | n) = 1/n$ this is especially simple to do by simply randomly permuting the components of $\tilde{\mX}_t$, and then removing the final $n_0 - n_t$ components.\\
 
-As is typically done in standard diffusion models, we parameterize $s_t^\theta$ in terms of a noise prediction network that predicts $\epsilon$ where $\rvx_t = \sqrt{\alpha_t}M_t(\rvx_0) + \sqrt{1- \alpha_t} \epsilon$, $\epsilon \sim \mathcal{N}(0, I_{n_t d})$. We then re-weight the score loss in time such that we have a uniform weighting in time rather than the `likelihood weighting' with $g_t^2$ \cite{song2020score, song2021maximum}. Our objective to learn $s_t^\theta$ then becomes
+As is typically done in standard diffusion models, we parameterise $s_t^\theta$ in terms of a noise prediction network that predicts $\epsilon$ where $\rvx_t = \sqrt{\alpha_t}M_t(\rvx_0) + \sqrt{1- \alpha_t} \epsilon$, $\epsilon \sim \mathcal{N}(0, I_{n_t d})$. We then re-weight the score loss in time such that we have a uniform weighting in time rather than the `likelihood weighting' with $g_t^2$ \citet{song2020score, song2021maximum}. Our objective to learn $s_t^\theta$ then becomes
 \begin{equation}
     - \mathbb{E}_{\mathcal{U}(t; 0, T) \pdata(\mX_0) p(M_t, n_t | \mX_0) \mathcal{N}(\epsilon; 0, I_{n_t d})} \left[ \norm{\epsilon_t^\theta(\mX_t) - \epsilon}^2 \right]
 \end{equation}
 with $\rvx_t = \sqrt{\alpha_t} M_t(\rvx_0) + \sqrt{1 - \alpha_t} \epsilon$, $s_t^\theta(\mX_t) = \frac{-1}{\sqrt{1-\alpha_t}} \epsilon_t^\theta(\mX_t)$.
 
-Further, by using the parameterization given in Proposition \ref{prop:backwardrateparam}, we can directly supervise the value of $p_{0|t}^\theta(n_0 | \mX_t)$ by adding an extra term to our objective. We can treat the learning of $p_{0|t}^\theta(n_0 | \mX_t)$ as a standard prediction task where we aim to predict $n_0$ given access to $\mX_t$. A standard objective for learning $p_{0|t}^\theta(n_0 | \mX_t)$ is then the cross entropy
+Further, by using the parameterisation given in Proposition \ref{prop:backwardrateparam}, we can directly supervise the value of $p_{0|t}^\theta(n_0 | \mX_t)$ by adding an extra term to our objective. We can treat the learning of $p_{0|t}^\theta(n_0 | \mX_t)$ as a standard prediction task where we aim to predict $n_0$ given access to $\mX_t$. A standard objective for learning $p_{0|t}^\theta(n_0 | \mX_t)$ is then the cross entropy
 \begin{equation}
     \underset{\theta}{\text{max}} \quad \mathbb{E}_{p_{0,t}(\mX_0, \mX_t)} \left[ \log p_{0|t}^{\theta}(n_0 | \mX_t) \right] 
 \end{equation}
 Our augmented objective then becomes
 \begin{align}
-    \tilde{\mathcal{L}}(\theta) = &T\mathbb{E} [ -\frac{1}{2}\norm{\epsilon_t^\theta(\mX_t) - \epsilon}^2 - \backwardrate_t^\theta(\mX_t) + \forwardrate_t(n_t) \log \backwardrate_t^\theta(\mY) \\ 
-    &+ \forwardrate_t(n_t) \log \autonet_t^\theta(\xadd_t, i | \mY) + \gamma \log p_{0|t}^\theta (n_0 | \mX_t) ] \nonumber
+    \tilde{\mathcal{L}}(\theta) = &T\mathbb{E} [ -\frac{1}{2}\norm{\epsilon_t^\theta(\mX_t) - \epsilon}^2 - \backwardrate_t^\theta(\mX_t) + \forwardrate_t(n_t) \log \backwardrate_t^\theta(\mV) \\ 
+    &+ \forwardrate_t(n_t) \log \autonet_t^\theta(\xadd_t, i | \mV) + \gamma \log p_{0|t}^\theta (n_0 | \mX_t) ] \nonumber
     \label{eq:augmentedObjective}
 \end{align}
 where the expectation is taken with respect to 
 \begin{equation}
-\mathcal{U}(t; 0, T) \pdata(\mX_0) p(M_t, n_t | \mX_0) \mathcal{N}(\epsilon; 0, I_{n_t d}) \delidxdist(i | n_t) \updelta_{\text{del}(\mX_t, i)}(\mY)
+\mathcal{U}(t; 0, T) \pdata(\mX_0) p(M_t, n_t | \mX_0) \mathcal{N}(\epsilon; 0, I_{n_t d}) \delidxdist(i | n_t) \updelta_{\text{del}(\mX_t, i)}(\mV)
 \end{equation}
 where $\rvx_t = \sqrt{\alpha_t} M_t(\rvx_0) + \sqrt{1 - \alpha_t} \epsilon$ and $\gamma$ is a loss weighting term for the cross entropy loss.
 
 
-\section{Trans-Dimensional Diffusion Guidance}
+\section{Trans-dimensional diffusion guidance}
 \label{sec:tddm-ApdxDiffGuide}
 
-To guide an unconditionally trained model such that it generates datapoints consistent with conditioning information, we use the reconstruction guided sampling approach introduced in \cite{ho2022video}. Our conditioning information will be the values for some of the components of $\mX_0$, and thus the guidance should guide the generative process such that the rest of the components of the generated datapoint are consistent with those observed components. Following the notation of \cite{ho2022video}, we denote the observed components as $\rvx^a \in \mathbb{R}^{n_a d}$ and the components to be generated as $\rvx^b \in \mathbb{R}^{n_b d}$. Our trained score function $s_t^\theta(\mX_t)$ approximates $\nabla_{\rvx_t} \log p_t(\mX_t)$ whereas we would like the score to approximate $\nabla_{\rvx_t} \log p_t(\mX_t | \rvx_0^a)$. In order to do this, we will need to augment our unconditional score $s_t^\theta(\mX_t)$ such that it incorporates the conditioning information.\\
+To guide an unconditionally trained model such that it generates datapoints consistent with conditioning information, we use the reconstruction guided sampling approach introduced by \citet{ho2022video}. Our conditioning information will be the values for some of the components of $\mX_0$, and thus the guidance should guide the generative process such that the rest of the components of the generated datapoint are consistent with those observed components. Following the notation of \citet{ho2022video}, we denote the observed components as $\rvx^a \in \mathbb{R}^{n_a d}$ and the components to be generated as $\rvx^b \in \mathbb{R}^{n_b d}$. Our trained score function $s_t^\theta(\mX_t)$ approximates $\nabla_{\rvx_t} \log p_t(\mX_t)$ whereas we would like the score to approximate $\nabla_{\rvx_t} \log p_t(\mX_t | \rvx_0^a)$. In order to do this, we will need to augment our unconditional score $s_t^\theta(\mX_t)$ such that it incorporates the conditioning information.\\
 
 We first focus on the dimensions of the score vector corresponding to $\rvx^a$. These can be calculated analytically from the forward process
 \begin{equation}
@@ -1124,7 +1124,7 @@ Now we analyse the dimensions of the score vector corresponding to $\rvx^b$. We 
     \nabla_{\rvx_t^b} \log p(\mX_t | \rvx_0^a) = \nabla_{\rvx_t^b} \log p(\rvx_0^a | \mX_t) + \nabla_{\rvx_t^b} \log p_t(\mX_t)
     \label{eq:condScoreSplit}
 \end{equation}
-$p(\rvx_0^a | \mX_t)$ is intractable to calculate directly and so, following \cite{ho2022video}, we approximate it with $\mathcal{N}(\rvx_0^a ; \hat{\rvx}_0^{\theta a}(\mX_t), \frac{1 - \alpha_t}{\alpha_t} I_{n_a d})$ where $\hat{\rvx}_0^{\theta a}(\mX_t)$ is a point estimate of $\rvx_0^a$ given from $s_t^\theta(\mX_t)$ calculated as 
+$p(\rvx_0^a | \mX_t)$ is intractable to calculate directly and so, following \citet{ho2022video}, we approximate it with $\mathcal{N}(\rvx_0^a ; \hat{\rvx}_0^{\theta a}(\mX_t), \frac{1 - \alpha_t}{\alpha_t} I_{n_a d})$ where $\hat{\rvx}_0^{\theta a}(\mX_t)$ is a point estimate of $\rvx_0^a$ given from $s_t^\theta(\mX_t)$ calculated as 
 \begin{equation}
     \hat{\rvx}_0^{\theta a}(\mX_t) = \frac{\rvx_t^a + (1 - \alpha_t) s_t^\theta(\mX_t)^a}{\sqrt{\alpha_t}}
 \end{equation}
@@ -1142,33 +1142,33 @@ We approximate $\backwardrate_t^*(\mX_t | \rvx_0^a)$ and $\autonet_t^*(\yadd, i 
 
 
 
-\section{Experiment Details}
+\section{Experimental details}
 \label{sec:tddm-ExperimentDetails}
-Our code is available at \url{https://github.com/andrew-cr/jump-diffusion}
+The code corresponding to \cref{ch:tddm} is available at \url{https://github.com/andrew-cr/jump-diffusion}.
 
 \subsection{Molecules}
 
-\subsubsection{Network Architecture}
+\subsubsection{Network architecture}
 \paragraph{Backbone}
-For our backbone network architecture, we used the EGNN used in \cite{hoogeboom2022equivariant}. This is a specially designed graph neural network applied to the point cloud treating it as a fully connected graph. A special equivariant update is used, operating only on distances between atoms. We refer to \cite{hoogeboom2022equivariant} for the specific details on the architecture. We used the same size network as used in \cite{hoogeboom2022equivariant}'s QM9 experiments, specifically there are $9$ layers, with a hidden node feature size of $256$. The output of the EGNN is fed into a final output projection layer to give the score network output $s_t^\theta(\mX_t)$.
+For our backbone network architecture, we used the EGNN used in \citet{hoogeboom2022equivariant}. This is a specially designed graph neural network applied to the point cloud treating it as a fully connected graph. A special equivariant update is used, operating only on distances between atoms. We refer to \citet{hoogeboom2022equivariant} for the specific details on the architecture. We used the same network size as \citet{hoogeboom2022equivariant}'s QM9 experiments; in particular it has $9$ layers with a hidden node feature size of $256$. The output of the EGNN is fed into a final output projection layer to give the score network output $s_t^\theta(\mX_t)$.
 
 \paragraph{Component number prediction}
 To obtain $p_{0|t}^\theta(n_0 | \mX_t)$,  we take the embedding produced by the EGNN before the final output embedding layer and pass it through 8 transformer layers each consisting of a self-attention block and an MLP block applied channel wise. Our transformer model dimension is $128$ and so we project the EGNN embedding output down to $128$ before entering into the transformer layers. We then take the output of the transformer and take the average embedding over all nodes. This embedding is then passed through a final projection layer to give softmax logits over the $p_{0|t}^\theta(n_0 | \mX_t)$ distribution.
 
-\paragraph{Autoregressive Distribution}
-Our $\autonet_t^\theta(\yadd, i | \mX_t)$ network has to predict the position and features for a new atom when it is added to the molecule. Since the point cloud is permutation invariant, we do not need to predict $i$ and so we just need to parameterize $\autonet_t^\theta(\yadd | \mX_t)$. We found the network to perform the best if the network first predicts the nearest atom to the new atom and then a vector from that atom to the location of the new atom. To achieve this, we first predict softmax logits for a distribution over the nearest atom by applying a projection to the embedding output from the previously described transformer block. During training, the output of this distribution can be directly supervised by a cross entropy loss. Given the nearest atom, we then need to predict the position and features of the new atom to add. We do this by passing in the embedding generated by the EGNN and original point cloud features into a new transformer block of the same size as that used for $p_{0|t}^\theta(n_0 | \mX_t)$. We also input the distances from the nearest atom to all other atoms in the molecule currently as an additional feature. To obtain the position of the new atom, we will take a weighted sum of all the vectors between the nearest atom and other atoms in the molecule. This is to make it easy for the network to create new atoms `in plane' with existing atoms which is useful for e.g. completing rings that have to remain in the same plane. To calculate the weights for the vectors, we apply an output projection to the output of the transformer block. The new atom features (atom type and charge) are generated by a separate output projection from the transformer block. For the position and features, $\autonet_t^\theta(\yadd | \mX_t)$ outputs both a mean and a standard deviation for a Gaussian distribution. For the position distribution, we set the standard deviation to be isotropic to remain equivariant to rotations. In total our model has around 7.3 million parameters.
+\paragraph{Autoregressive distribution}
+Our $\autonet_t^\theta(\yadd, i | \mX_t)$ network has to predict the position and features for a new atom when it is added to the molecule. Since the point cloud is permutation invariant, we do not need to predict $i$ and so we just need to parameterise $\autonet_t^\theta(\yadd | \mX_t)$. We found the network to perform the best if the network first predicts the nearest atom to the new atom and then a vector from that atom to the location of the new atom. To achieve this, we first predict softmax logits for a distribution over the nearest atom by applying a projection to the embedding output from the previously described transformer block. During training, the output of this distribution can be directly supervised by a cross entropy loss. Given the nearest atom, we then need to predict the position and features of the new atom to add. We do this by passing in the embedding generated by the EGNN and original point cloud features into a new transformer block of the same size as that used for $p_{0|t}^\theta(n_0 | \mX_t)$. We also input the distances from the nearest atom to all other atoms in the molecule currently as an additional feature. To obtain the position of the new atom, we will take a weighted sum of all the vectors between the nearest atom and other atoms in the molecule. This is to make it easy for the network to create new atoms `in plane' with existing atoms which is useful for e.g. completing rings that have to remain in the same plane. To calculate the weights for the vectors, we apply an output projection to the output of the transformer block. The new atom features (atom type and charge) are generated by a separate output projection from the transformer block. For the position and features, $\autonet_t^\theta(\yadd | \mX_t)$ outputs both a mean and a standard deviation for a Gaussian distribution. For the position distribution, we set the standard deviation to be isotropic to remain equivariant to rotations. In total our model has around 7.3 million parameters.
 
 \subsubsection{Training}
-We train our model for 1.3 million iterations at a batch size of $64$. We use the Adam optimizer with learning rate $0.00003$. We also keep a running exponential moving average of the network weights that is used during sampling as is standard for training diffusion models \cite{ho2020denoising, song2020score, karras2022elucidating} with a decay parameter of $0.9999$. We train on the 100K molecules contained in the QM9 training split. We model hydrogens explicitly. Training a model requires approximately $7$ days on a single GPU which was done on an Academic cluster.
+We train our model for 1.3 million iterations at a batch size of $64$. We use the Adam optimiser with learning rate $0.00003$. We also keep a running exponential moving average of the network weights that is used during sampling as is standard for training diffusion models~\citep{ho2020denoising, song2020score, karras2022elucidating} with a decay parameter of $0.9999$. We train on the 100K molecules contained in the QM9 training split. We model hydrogens explicitly. Training a model requires approximately $7$ days on a single GPU.
 
-In \cite{hoogeboom2022equivariant} the atom type is encoded as a one-hot vector and diffused as a continuous variable along with the positions and charge values for all atoms. They found that multiplying the one-hot vectors by $0.25$ to boost performance by allowing the atom-type to be decided later on in the diffusion process. We instead multiply the one-hot vectors by $4$ so that atom-type is decided early on in the diffusion process which improves our guided performance when conditioning on certain atom-types being present. We found our model is robust to this change and achieves similar sample quality to \cite{hoogeboom2022equivariant} as shown in Table \ref{tab:uncond_mol}.
+\citet{hoogeboom2022equivariant} encode the atom type as a one-hot vector and diffused as a continuous variable along with the positions and charge values for all atoms. They found that multiplying the one-hot vectors by $0.25$ to boost performance by allowing the atom-type to be decided later on in the diffusion process. We instead multiply the one-hot vectors by $4$ so that atom-type is decided early on in the diffusion process which improves our guided performance when conditioning on certain atom-types being present. We found our model is robust to this change and achieves similar sample quality to \citet{hoogeboom2022equivariant} as shown in \cref{tab:uncond_mol}.
 
-When deleting dimensions, we first shuffle the ordering of the nodes and then delete the final $n_0 - n_t$ nodes. The cross entropy loss weighting in \eqref{eq:augmentedObjective} is set to $1$.
+When deleting dimensions, we first shuffle the ordering of the nodes and then delete the final $n_0 - n_t$ nodes. The cross entropy loss weighting in \cref{eq:augmentedObjective} is set to $1$.
 
-Following \citep{hoogeboom2022equivariant} we train our model to operate within the center of mass (CoM) zero subspace of possible molecule positions. The means, throughout the forward and backward process, the average position of an atom is $0$. In our transdimensional framework, this is achieved by first deleting any atoms required under the forward component deletion process. We then move the molecule such that its CoM is $0$. We then add CoM free noise such that the noisy molecule also has CoM$=0$. Our score model $s_t^\theta$ is parameterized through a noise prediction model $\epsilon_t^\theta$ which is trained to predict the CoM free noise that was added. Therefore, our score network learns suitable directions to maintain the process on the CoM$=0$ subspace. For the position prediction from $\autonet_t^\theta(\yadd | \mX_t)$ we train it to predict the new atom position from the current molecules reference frame. When the new atom is added, we then update all atom positions such that CoM$=0$ is maintained.
+Following \citet{hoogeboom2022equivariant} we train our model to operate within the centre of mass (CoM) zero subspace of possible molecule positions. The means, throughout the forward and reverse process, the average position of an atom is $0$. In our trans-dimensional framework, this is achieved by first deleting any atoms required under the forward component deletion process. We then move the molecule such that its CoM is $0$. We then add CoM free noise such that the noisy molecule also has CoM$=0$. Our score model $s_t^\theta$ is parameterised through a noise prediction model $\epsilon_t^\theta$ which is trained to predict the CoM free noise that was added. Therefore, our score network learns suitable directions to maintain the process on the CoM$=0$ subspace. For the position prediction from $\autonet_t^\theta(\yadd | \mX_t)$ we train it to predict the new atom position from the current molecules reference frame. When the new atom is added, we then update all atom positions such that CoM$=0$ is maintained.
 
 \subsubsection{Sampling}
-During sampling we found that adding corrector steps \cite{song2020score} improved sample quality. Intuitively, corrector steps form a process that has $p_t(\mX)$ as its stationary distribution rather than the process progressing toward $p_0(\mX)$. We use the same method to determine the corrector step size $\zeta$ as in \cite{song2020score}. For the conditional generation tasks, we also found it useful to include corrector steps for the component generation process. As shown in \cite{campbell2022continuous}, corrector steps in discrete spaces can be achieved by simulating with a rate that is the addition of the forward and backward rates. We achieve this in the context of trans-dimensional modeling by first simulating a possible insertion using $\backwardrate_t^\theta$ and then simulating a possible deletion using $\forwardrate_t$. We describe our overall sampling algorithm in Algorithm \ref{alg:backwardsamplingWithCorrector}.
+During sampling we found that adding corrector steps~\citep{song2020score} improved sample quality. Intuitively, corrector steps form a process that has $p_t(\mX)$ as its stationary distribution rather than the process progressing toward $p_0(\mX)$. We use the same method to determine the corrector step size $\zeta$ as \citet{song2020score}. For the conditional generation tasks, we also found it useful to include corrector steps for the component generation process. As shown by \citet{campbell2022continuous}, corrector steps in discrete spaces can be achieved by simulating with a rate that is the addition of the forward and reverse rates. We achieve this in the context of trans-dimensional modelling by first simulating a possible insertion using $\backwardrate_t^\theta$ and then simulating a possible deletion using $\forwardrate_t$. We describe our overall sampling algorithm in \cref{alg:backwardsamplingWithCorrector}.
 
 \begin{algorithm}
 \begin{algorithmic}[1]
@@ -1207,15 +1207,15 @@ During sampling we found that adding corrector steps \cite{song2020score} improv
 
 \subsubsection{Evaluation}
 \paragraph{Unconditional}
-For our unconditional sampling evaluation, we start adding corrector steps when $t<0.1T$ in the backward process and use $5$ corrector steps without the corrector steps on the number of components. We set $\updelta = 0.05$ for $ t > 0.5T$ and $\updelta = 0.001$ for $t<0.5T$ such that the total number of network evaluations is $1000$. We show the distribution of sizes of molecules generated by our model in Figure \ref{fig:tddm-uncond_dims} and show more unconditional samples in Figure \ref{fig:tddm-apdxUncondMolSamples}. We find our model consistently generates realistic molecules and achieves a size distribution similar to the training dataset even though this is not explicitly trained and arises from sampling our backward rate $\backwardrate_t^\theta$. Since we are numerically integrating a continuous time process and approximating the true time reversal rate $\backwardrate_t^*$, some approximation error is expected. For this experiment, sampling all of our models and ablations takes approximately $2$ GPU days on Nvidia $1080$Ti GPUs.
+For our unconditional sampling evaluation, we start adding corrector steps when $t<0.1T$ in the backward process and use $5$ corrector steps without the corrector steps on the number of components. We set $\updelta = 0.05$ for $ t > 0.5T$ and $\updelta = 0.001$ for $t<0.5T$ such that the total number of network evaluations is $1000$. We show the distribution of sizes of molecules generated by our model in \cref{fig:tddm-uncond_dims} and show more unconditional samples in \cref{fig:tddm-apdxUncondMolSamples}. We find our model consistently generates realistic molecules and achieves a size distribution similar to the training dataset even though this is not explicitly trained and arises from sampling our reverse rate $\backwardrate_t^\theta$. Since we are numerically integrating a continuous time process and approximating the true time reversal rate $\backwardrate_t^*$, some approximation error is expected. For this experiment, sampling all of our models and ablations takes approximately $2$ GPU days on Nvidia $1080$Ti GPUs.
 
 \paragraph{Conditional}
-For evaluating applying conditional diffusion guidance to our model, we choose $10$ conditioning tasks that each result in a different distribution of target dimensions. The task is to produce molecules that include at least a certain number of target atom types. We then guide the first set of atoms generated by the model to have these desired atom types. The tasks chosen are given in Table \ref{tab:molecule_conditions}. Molecules in the training dataset that meet the conditions in each task have a different distribution of sizes. The tasks were chosen so that we have an approximately linearly increasing mean number of atoms for molecules that meet the condition. We also require that there are at least 100 examples of molecules that meet the condition within the training dataset.\\
+For evaluating applying conditional diffusion guidance to our model, we choose $10$ conditioning tasks that each result in a different distribution of target dimensions. The task is to produce molecules that include at least a certain number of target atom types. We then guide the first set of atoms generated by the model to have these desired atom types. The tasks chosen are given in \cref{tab:molecule_conditions}. Molecules in the training dataset that meet the conditions in each task have a different distribution of sizes. The tasks were chosen so that we have an approximately linearly increasing mean number of atoms for molecules that meet the condition. We also require that there are at least 100 examples of molecules that meet the condition within the training dataset.\\
 
-For sampling when using conditional diffusion guidance, we use $3$ corrector steps throughout the backward process with $\updelta t = 0.001$. For these conditional tasks, we include the corrector steps on the number of components. We show the distribution of dimensions for each task from the training dataset and from our generated samples in Figure \ref{fig:tddm-apdx_CondDims}. Our metrics are calculated by first drawing 1000 samples for each conditioning task and then finding the Hellinger distance between the size distribution generated by our method (orange diagonal hashing in Figure \ref{fig:tddm-apdx_CondDims}) and the size distribution for molecules in the training dataset that match the conditions of the task (green no hashing in Figure \ref{fig:tddm-apdx_CondDims}). We find that indeed our model when guided by diffusion guidance can automatically produce a size distribution close to the ground truth size distribution found in the dataset for that conditioning value. We show samples generated by our conditionally guided model in Figure \ref{fig:tddm-CondSampleExamples}. We can see that our model can generate realistic molecules that include the required atom types and are of a suitable size. For this experiment, sampling all of our models and ablations takes approximately $13$ GPU days on Nvidia $1080$Ti GPUs.
+For sampling when using conditional diffusion guidance, we use $3$ corrector steps throughout the reverse process with $\updelta t = 0.001$. For these conditional tasks, we include the corrector steps on the number of components. We show the distribution of dimensions for each task from the training dataset and from our generated samples in \cref{fig:tddm-apdx_CondDims}. Our metrics are calculated by first drawing 1000 samples for each conditioning task and then finding the Hellinger distance between the size distribution generated by our method (orange diagonal hashing in \cref{fig:tddm-apdx_CondDims}) and the size distribution for molecules in the training dataset that match the conditions of the task (green no hashing in \cref{fig:tddm-apdx_CondDims}). We find that indeed our model when guided by diffusion guidance can automatically produce a size distribution close to the ground truth size distribution found in the dataset for that conditioning value. We show samples generated by our conditionally guided model in \cref{fig:tddm-CondSampleExamples}. We can see that our model can generate realistic molecules that include the required atom types and are of a suitable size. For this experiment, sampling all of our models and ablations takes approximately $13$ GPU days on Nvidia $1080$Ti GPUs.
 
 \paragraph{Interpolations}
-For our interpolations experiments, we follow the set up of \cite{hoogeboom2022equivariant} who train a new model conditioned on the polarizability of molecules in the dataset. We train a conditional version of our model which can be achieved by simply adding in the polarizability as an additional feature input to our backbone network and re-using all the same hyperparameters. We show more examples of interpolations in Figure \ref{fig:tddm-apdxMoreInterps}.
+For our interpolations experiments, we follow the set up of \citet{hoogeboom2022equivariant} who train a new model conditioned on the polarizability of molecules in the dataset. We train a conditional version of our model which can be achieved by simply adding in the polarizability as an additional feature input to our backbone network and re-using all the same hyperparameters. We show more examples of interpolations in \cref{fig:tddm-apdxMoreInterps}.
 
 
 \begin{figure}
@@ -1276,7 +1276,7 @@ For our interpolations experiments, we follow the set up of \cite{hoogeboom2022e
 \end{figure}
 
 \subsubsection{Ablations}
-For our main model, we set $\forwardrate_{t < 0.1T} = 0$ to ensure that all dimensions are added with enough generation time remaining for the diffusion process to finalize all state values. To verify this setting, we compare its performance with $\forwardrate_{t<0.03T} = 0$ and $\forwardrate_{t<0.3T} = 0$. We show our results in Table \ref{tab:lowTablation}. We find that the $\forwardrate_{t<0.03T}=0$ setting to generate reasonable sample quality but incur some extra dimension error due to the generative process sometimes observing a lack of dimensions near $t=0$ and adding too many dimensions. We observed the same effect in the paper for when setting $\forwardrate_t$ to be constant for all $t$ in Table \ref{tab:cond_mol}. Further, the setting $\forwardrate_{t<0.3T}=0$ also results in increased dimension error due to there being less opportunity for the guidance model to supervise the number of dimensions. We find that $\forwardrate_{t<0.1T}=0$ to be a reasonable trade-off between these effects.
+For our main model, we set $\forwardrate_{t < 0.1T} = 0$ to ensure that all dimensions are added with enough generation time remaining for the diffusion process to finalise all state values. To verify this setting, we compare its performance with $\forwardrate_{t<0.03T} = 0$ and $\forwardrate_{t<0.3T} = 0$. We show our results in \cref{tab:lowTablation}. We find that the $\forwardrate_{t<0.03T}=0$ setting to generate reasonable sample quality but incur some extra dimension error due to the generative process sometimes observing a lack of dimensions near $t=0$ and adding too many dimensions. We observed the same effect in the paper for when setting $\forwardrate_t$ to be constant for all $t$ in \cref{tab:cond_mol}. Further, the setting $\forwardrate_{t<0.3T}=0$ also results in increased dimension error due to there being less opportunity for the guidance model to supervise the number of dimensions. We find that $\forwardrate_{t<0.1T}=0$ to be a reasonable trade-off between these effects.
 \begin{table}[h]
 \centering
 \caption{Ablation of when to set the forward rate to $0$ on the conditional molecule generation task. We report dimension error as the average Hellinger distance between the generated and ground truth conditional dimension distributions as well as average sample quality metrics. Metrics are reported after 620k training iterations.}
@@ -1291,8 +1291,8 @@ $ \overrightarrow{\lambda}_{t < 0.3T} = 0$ & $0.266 {\scriptstyle \pm 0.11}$ & $
 \label{tab:lowTablation}
 \end{table}
 
-\subsubsection{Uniqueness and Novelty Metrics}
-We here investigate sample diversity and novelty of our unconditional generative models. We measure uniqueness by computing the chemical graph corresponding to each generated sample and measure what proportion of the 10000 produced samples have a unique chemical graph amongst this set of 10000 as is done in \cite{hoogeboom2022equivariant}. We show our results in Table \ref{tab:uniqueness_and_novelty} and find our TDDM method to have slightly lower levels of uniqueness when compared to the fixed dimension diffusion model baseline. Measuring novelty on generative models trained on the QM9 dataset is challenging because the QM9 dataset contains an exhaustive enumeration of all molecules that satisfy certain predefined constraints \cite{vignac2021top}, \cite{hoogeboom2022equivariant}. Therefore, if a novel molecule is produced it means the generative model has failed to capture some of the physical properties of the dataset and indeed it is found in \cite{hoogeboom2022equivariant} that during training, as the model improved, novelty decreased. Novelty is therefore not typically included in evaluating molecular diffusion models. For completeness, we include the novelty scores in Table \ref{tab:uniqueness_and_novelty} as a comparison to the results presented in \cite{hoogeboom2022equivariant} Appendix C. We find that our samples are closer to the statistics of the training dataset whilst still producing ‘novel’ samples at a consistent rate.
+\subsubsection{Uniqueness and novelty metrics}
+We here investigate sample diversity and novelty of our unconditional generative models. We measure uniqueness by computing the chemical graph corresponding to each generated sample and measure what proportion of the 10000 produced samples have a unique chemical graph amongst this set of 10000 as is done by \citet{hoogeboom2022equivariant}. We show our results in \cref{tab:uniqueness_and_novelty} and find our TDDM method to have slightly lower levels of uniqueness when compared to the fixed dimension diffusion model baseline. Measuring novelty on generative models trained on the QM9 dataset is challenging because the QM9 dataset contains an exhaustive enumeration of all molecules that satisfy certain predefined constraints~\citep{vignac2021top,hoogeboom2022equivariant}. Therefore, if a novel molecule is produced it means the generative model has failed to capture some of the physical properties of the dataset and indeed it was found by \citet{hoogeboom2022equivariant} that during training, as the model improved, novelty decreased. Novelty is therefore not typically included in evaluating molecular diffusion models. For completeness, we include the novelty scores in \cref{tab:uniqueness_and_novelty} as a comparison to the results presented in Appendix C of \citet{hoogeboom2022equivariant}. We find that our samples are closer to the statistics of the training dataset whilst still producing ‘novel’ samples at a consistent rate.
 \begin{table}[h]
      \centering
    \caption{Uniqueness and novelty metrics on unconditional molecule generation. We produce 10000 samples for each method and measure validity using RDKit. Uniquenss is judged as whether the chemical graph is unique amongst the 10000 produced samples. Amongst the valid and unique molecules, we then find the percentage that have a chemical graph not present in the training dataset.}
@@ -1315,10 +1315,10 @@ We here investigate sample diversity and novelty of our unconditional generative
 \subsubsection{Dataset}
 We used the VP$^2$ benchmark, which consists of 35\,000 videos, each 35 frames long. The videos are evenly divided among seven tasks, namely: \texttt{push \{red, green, blue\} button, open \{slide, drawer\}, push \{upright block, flat block\} off table}. The 5000 videos for each task were collected using a scripted task-specific policy operating in the RoboDesk environment~\citep{kannan2021robodesk}. They sample an action vector at every step during data generation by adding i.i.d.\ Gaussian noise to each dimension of the action vector output by the scripted policy. For each task, they sample 2500 videos with noise standard deviation 0.1 and 2500 videos with standard deviation 0.2. We filter out the lower-quality trajectories sampled with noise standard deviation 0.2, and so use only the 17\,500 videos (2500) per task with noise standard deviation 0.1. We convert these videos to $32\times32$ resolution and then, so that the data we train on has varying lengths, we create each training example by sampling a length $l$ from a uniform distribution over $\{2,\ldots,35\}$ and then taking a random $l$-frame subset of the video.
 
-\subsubsection{Forward Process}
+\subsubsection{Forward process}
 The video domain differs from molecules in two important ways. The first is that videos cannot be reasonably treated as a permutation-invariant set. This is because the order of the frames matters. Secondly, generating a full new component for the molecules with a single pass autoregressive network is feasible, however, a component for the videos is a full frame which is challenging for a single pass autoregressive network to generate. We design our forward process to overcome these challenges.
 
-We define our forward process to delete frames in a random order. This means that during generation, frames can be generated in any order in the reverse process, enabling more conditioning tasks since we can always ensure that whichever frames we want to condition on are added first. Further, we use a non-isotropic noise schedule by adding noise just to the frame that is about to be deleted. Once it is deleted, we then start noising the next randomly chosen frame. This is so that, in the backward direction, when a new frame is added, it is simply Gaussian noise. Then the score network will fully denoise that new frame before the next new frame is added. We now specify exactly how our forward process is constructed.
+We define our forward process to delete frames in a random order. This means that during generation, frames can be generated in any order in the reverse process, enabling more conditioning tasks since we can always ensure that whichever frames we want to condition on are added first. Further, we use a non-isotropic noise schedule by adding noise just to the frame that is about to be deleted. Once it is deleted, we then start noising the next randomly chosen frame. This is so that, in the reverse direction, when a new frame is added, it is simply Gaussian noise. Then the score network will fully denoise that new frame before the next new frame is added. We now specify exactly how our forward process is constructed.
 
 We enable random-order deletion by applying an initial shuffling operation occurring at time $t=0$. Before this operation, we represent the video $\rvx$ as an ordered sequence of frames, $\rvx_0=[\rvx_1,\rvx_2,\ldots,\rvx_{n_0}]$. During shuffling, we sample a random permutation $\pi$ of the integers $1,\ldots,n_0$. Then the frames are kept in the same order, but annotated with an index variable so that we have $\rvx_{0^+}=[(\rvx_{0^+}^{(1)}, \pi(1)), (\rvx_{0^+}^{(2)}, \pi(2)), \ldots, (\rvx^{(n_0)}_{0^+}, \pi(n_0))]$.
 
@@ -1358,51 +1358,51 @@ Between jumps, we use a noising process to add noise to frames. The noising proc
         t - (N - \rvx_t^{(i)}[2])100 & \text{for } (N - \rvx_t^{(i)}[2])100 \leq t \leq (N - \rvx_t^{(i)}[2]+1) 100
     \end{cases}
 \end{equation}
-where we again use $\rvx_t^{(i)}[2]$ for the shuffle index of component $i$. This is the VE-SDE from \cite{song2020score} applied to each frame in turn. We note that we only add noise to the state values on not the shuffle index itself. The SDE parameters that result in the VE-SDE are $\forwarddrift_t = 0$ and $\forwarddiffcoeff_t = \sqrt{2t - 2(N - \rvx_t^{(i)}[2])100}$.
+where we again use $\rvx_t^{(i)}[2]$ for the shuffle index of component $i$. This is the VE-SDE from \citet{song2020score} applied to each frame in turn. We note that we only add noise to the state values on not the shuffle index itself. The SDE parameters that result in the VE-SDE are $\forwarddrift_t = 0$ and $\forwarddiffcoeff_t = \sqrt{2t - 2(N - \rvx_t^{(i)}[2])100}$.
 
 
 
-\subsubsection{Sampling the Backward Process}
+\subsubsection{Sampling the reverse process}
 
-When $t$ is not at a multiple of 100, the forward process is purely adding Gaussian noise, and so the reverse process is also purely operating on the continuous dimensions. We use the Heun sampler proposed by \cite{karras2022elucidating} to update the continuous dimensions in this case, and also a variation of their discretisation of $t$ - specifically to update from e.g. $t=600$ to $t=500$, we use their discretization of $t$ as if the maximum value was 100 and then offset all values by $500$. 
+When $t$ is not at a multiple of 100, the forward process is purely adding Gaussian noise, and so the reverse process is also purely operating on the continuous dimensions. We use the Heun sampler proposed by \citet{karras2022elucidating} to update the continuous dimensions in this case, and also a variation of their discretisation of $t$ - specifically to update from e.g. $t=600$ to $t=500$, we use their discretisation of $t$ as if the maximum value was 100 and then offset all values by $500$. 
 
-To invert the dimension deletion process, we can use Proposition \ref{prop:backwardrateparam} to derive our reverse dimension generation process. We re-write our parameterized $\backwardrate_t^\theta$ using Proposition \ref{prop:backwardrateparam} as 
+To invert the dimension deletion process, we can use \cref{prop:backwardrateparam} to derive our reverse dimension generation process. We re-write our parameterised $\backwardrate_t^\theta$ using \cref{prop:backwardrateparam} as 
 \begin{equation}
     \backwardrate_t^\theta(\mX_t) = \forwardrate_t(n_t + 1) \mathbb{E}_{p_{0|t}^\theta(n_0 | \mX_t)} \left[ \frac{p_{t|0}(n_t + 1 | n_0)}{p_{t|0}(n_t | n_0)}\right]
 \end{equation}
-At each time multiple of 100 in the backward process, we will have an opportunity to add a component. At this time point, we estimate the expectation with a single sample $n_0 \sim p_{0|t}^\theta(n_0 | \mX_t)$. If $n_0 > n_t$ then $\backwardrate_t^\theta(\mX_t) = \infty$. The new component will then be added at which point $\backwardrate_t^\theta(\mX_t)$ becomes $0$ for the remainder of this block of time due to $n_t$ becoming $n_t+1$. If $n_0 = n_t$ then $\backwardrate_t^\theta(\mX_t) = 0$ and no new component is added. $\backwardrate_t^\theta(\mX_t)$ will continue to be $0$ for the remainder of the backward process once an opportunity to add a component is not used.
+At each time multiple of 100 in the reverse process, we will have an opportunity to add a component. At this time point, we estimate the expectation with a single sample $n_0 \sim p_{0|t}^\theta(n_0 | \mX_t)$. If $n_0 > n_t$ then $\backwardrate_t^\theta(\mX_t) = \infty$. The new component will then be added at which point $\backwardrate_t^\theta(\mX_t)$ becomes $0$ for the remainder of this block of time due to $n_t$ becoming $n_t+1$. If $n_0 = n_t$ then $\backwardrate_t^\theta(\mX_t) = 0$ and no new component is added. $\backwardrate_t^\theta(\mX_t)$ will continue to be $0$ for the remainder of the reverse process once an opportunity to add a component is not used.
 
-When a new frame is added, we use $\autonet_t^\theta(\yadd, i | \mX_t)$ to decide where the frame is added and its initial value. Since when we delete a frame it is fully noised, $\autonet_t^\theta(\yadd, i | \mX_t)$ can simply predict Gaussian noise for the new frame $\yadd$. However, $\autonet_t^\theta(\yadd, i | \mX_t)$ will still learn to predict a suitable location $i$ to place the new frame such that backward process is the reversal of the forward.
+When a new frame is added, we use $\autonet_t^\theta(\yadd, i | \mX_t)$ to decide where the frame is added and its initial value. Since when we delete a frame it is fully noised, $\autonet_t^\theta(\yadd, i | \mX_t)$ can simply predict Gaussian noise for the new frame $\yadd$. However, $\autonet_t^\theta(\yadd, i | \mX_t)$ will still learn to predict a suitable location $i$ to place the new frame such that reverse process is the reversal of the forward.
 
-We give an example simulation from the backward generative process in Figure \ref{fig:tddm-examplevideoreverse}.
+We give an example simulation from the reverse generative process in \cref{fig:tddm-examplevideoreverse}.
 
 \begin{figure}
     \centering
     \includegraphics[width=6cm]{figs/tddm/short-obs-32.png}
-    \caption{An example simulation of the backward generative process conditioned on the first and last frame. Note how the process first adds a new frame and then fully denoises it before adding the next frame. Since the first and last frame are very similar, the process produces a short video.}
+    \caption{An example simulation of the reverse generative process conditioned on the first and last frame. Note how the process first adds a new frame and then fully denoises it before adding the next frame. Since the first and last frame are very similar, the process produces a short video.}
     \label{fig:tddm-examplevideoreverse}
 \end{figure}
 
 
 
 
-\subsubsection{Network Architecture}
-Our video diffusion network architecture is based on the U-net used by \cite{harvey2022flexible}, which takes as input the index of each frame within the video, and uses the differences between these indices to control the interactions between frames via an attention mechanism. Since, during generation, we do not know the final position of each frame within the $\rvx_0$, we instead pass in its position within the ordered sequence $\rvx_t$.
+\subsubsection{Network architecture}
+Our video diffusion network architecture is based on the U-net used by \citet{harvey2022flexible}, which takes as input the index of each frame within the video, and uses the differences between these indices to control the interactions between frames via an attention mechanism. Since, during generation, we do not know the final position of each frame within the $\rvx_0$, we instead pass in its position within the ordered sequence $\rvx_t$.
 
-One further difference is that, since we are perform non-isotropic diffusion, the standard deviation of the added noise will differ between frames. We adapt to this by performing preconditioning, and inputting the timestep embedding, separately for each frame $\rvx_t^{(i)}$ based on $\sigma_t(\rvx_t^{(i)})$ instead of basing them on the global diffusion timestep $t$. Our timestep embedding and pre- and post-conditioning of network inputs/outputs are as suggested by \cite{karras2022elucidating}, other than being done on a per-frame basis. The architecture from \cite{harvey2022flexible} with these changes applied then gives us our score network $s_t^\theta$.
+One further difference is that, since we are perform non-isotropic diffusion, the standard deviation of the added noise will differ between frames. We adapt to this by performing preconditioning, and inputting the timestep embedding, separately for each frame $\rvx_t^{(i)}$ based on $\sigma_t(\rvx_t^{(i)})$ instead of basing them on the global diffusion timestep $t$. Our timestep embedding and pre- and post-conditioning of network inputs/outputs are as suggested by \citet{karras2022elucidating}, other than being done on a per-frame basis. The architecture from \citet{harvey2022flexible} with these changes applied then gives us our score network $s_t^\theta$.
 
-While it would be possible to train a single network that estimates the score and all quantities needed for modelling jumps, we chose to train two separate networks in order to factorize our exploration of the design space. These were the score network $s_t^\theta$, and the rate and index prediction network modeling $p_{0|t}^\theta(n_0 | \mX_t)$ and $\autonet_t^\theta(i | \mX_t)$. The rate and index prediction network is similar to the first half of the score network, in that it uses all U-net blocks up to and including the middle one. We then flatten the $512\times4\times4$ hidden state for each frame after this block such that, for an $n_t$ frame input, we obtain a $n_t \times 8192$ hidden state. These are fed through a 1D convolution with kernel size $2$ and zero-padding of size $1$ on each end, reducing the hidden state to $(n_t+1) \times 128$, which is in turn fed through a ReLU activation function. This hidden state is then fed into three separate heads. One head maps it to the parameters of $\autonet_t^\theta(i | \mX_t)$ via a 1D convolution of kernel size 3. The output of size $(n_t+1)$ is fed through a softmax to provide the categorical distribution $\autonet_t^\theta(i | \mX_t)$. The second head averages the hidden state over the ``frame'' dimension, producing a $128$-dimensional vector. This is fed through a single linear layer and a softmax to parameterize $p_{0|t}^\theta(n_0 | \mX_t)$. Finally, the third head consists of a 1D convolution of kernel size 3 with 35 output channels. The $(n_t+1)\times35$ output is fed through a softmax to parameterize distributions over the number of frames that were deleted from $\mX_0$ which came before the first in $\rvx_t$, the number of frames from $\mX_0$ which were deleted between each pair of frames in $\rvx_t$, and the number deleted after the last frame in $\rvx_t$. We do not use this head at inference-time but found that including it improved the performance of the other heads by helping the network learn better representations. 
+While it would be possible to train a single network that estimates the score and all quantities needed for modelling jumps, we chose to train two separate networks in order to factorise our exploration of the design space. These were the score network $s_t^\theta$, and the rate and index prediction network modelling $p_{0|t}^\theta(n_0 | \mX_t)$ and $\autonet_t^\theta(i | \mX_t)$. The rate and index prediction network is similar to the first half of the score network, in that it uses all U-net blocks up to and including the middle one. We then flatten the $512\times4\times4$ hidden state for each frame after this block such that, for an $n_t$ frame input, we obtain a $n_t \times 8192$ hidden state. These are fed through a 1D convolution with kernel size $2$ and zero-padding of size $1$ on each end, reducing the hidden state to $(n_t+1) \times 128$, which is in turn fed through a ReLU activation function. This hidden state is then fed into three separate heads. One head maps it to the parameters of $\autonet_t^\theta(i | \mX_t)$ via a 1D convolution of kernel size 3. The output of size $(n_t+1)$ is fed through a softmax to provide the categorical distribution $\autonet_t^\theta(i | \mX_t)$. The second head averages the hidden state over the ``frame'' dimension, producing a $128$-dimensional vector. This is fed through a single linear layer and a softmax to parameterise $p_{0|t}^\theta(n_0 | \mX_t)$. Finally, the third head consists of a 1D convolution of kernel size 3 with 35 output channels. The $(n_t+1)\times35$ output is fed through a softmax to parameterise distributions over the number of frames that were deleted from $\mX_0$ which came before the first in $\rvx_t$, the number of frames from $\mX_0$ which were deleted between each pair of frames in $\rvx_t$, and the number deleted after the last frame in $\rvx_t$. We do not use this head at inference-time but found that including it improved the performance of the other heads by helping the network learn better representations. 
 
 For a final performance improvement, we note that under our forward process there is only ever one ``noised'' frame in $\rvx_t$, while there are sometimes many clean frames. Since the cost of running our architecture scales with the number of frames, running it on many clean frames may significantly increase the cost while providing little improvement to performance. We therefore only feed into the architecture the ``noised'' frame, the two closest ``clean'' frames before it, and the two closest ``clean'' frames after it. See our released source code for the full implementation of this architecture.
 
 \subsubsection{Training}
-To sample $t$ during training, we adapt the log-normal distribution suggested by \cite{karras2022elucidating} in the context of isotropic diffusion over a single image. To apply it to our non-isotropic video diffusion, we first sample which frames have been deleted, which exist with no noise, and which have had noise added, by sampling the timestep from a uniform distribution and simulating our proposed forward process. We then simply change the noise standard deviation for the noisy frame, replacing it with a sample from the log-normal distribution. The normal distribution underlying our log-normal has mean $-0.6$ and standard deviation $1.8$. 
+To sample $t$ during training, we adapt the log-normal distribution suggested by \citet{karras2022elucidating} in the context of isotropic diffusion over a single image. To apply it to our non-isotropic video diffusion, we first sample which frames have been deleted, which exist with no noise, and which have had noise added, by sampling the timestep from a uniform distribution and simulating our proposed forward process. We then simply change the noise standard deviation for the noisy frame, replacing it with a sample from the log-normal distribution. The normal distribution underlying our log-normal has mean $-0.6$ and standard deviation $1.8$. 
 %
 This can be interpreted as sampling the timestep from a mixture of log-normal distributions, $\frac{1}{N}\sum_{i=0}^{N-1} \mathcal{LN}(t-100i; -0.6, 1.8^2)$. Here, the mixture index $i$ can be interpreted as controlling the number of deleted frames.
 
-We use the same loss weighting as \cite{karras2022elucidating} but, similarly to our use of preconditioning, compute the weighting separately for each frame $\rvx_t^{(i)}$ as a function of $\sigma_t(\rvx_t^{(i)})$ to account for the non-isotropic noise.
+We use the same loss weighting as \citet{karras2022elucidating} but, similarly to our use of preconditioning, compute the weighting separately for each frame $\rvx_t^{(i)}$ as a function of $\sigma_t(\rvx_t^{(i)})$ to account for the non-isotropic noise.
 
-\subsubsection{Perceptual Quality Metrics}
+\subsubsection{Perceptual quality metrics}
 We now verify that our reverse process does not have any degradation in quality during the generation as more dimensions are added. We generate 10000 videos and throw away the 278 that were sampled to have only two frames. We then compute the FID score for individual frames in each of the remaining 9722 videos. We group together the scores for all the first frames to be generated in the reverse process and then for the second frame to be generated and so on. We show our results in \cref{tab:fid-by-insertion-order}. We find that when a frame is inserted has no apparent effect on perceptual quality and conclude that there is no overall degradation in quality as our sampling process progresses. We note that the absolute value of these FID scores may not be meaningful due to the RoboDesk dataset being far out of distribution for the Inception network used to calculate FID scores. We can visually confirm good sample quality from \cref{fig:tddm-video_example}.
 \begin{table}[h]
 \centering

@@ -1,0 +1,16 @@
+\chapter{Supporting materials for conditional diffusion background} \label{supp:conditional-diffusion}
+
+\Cref{tab:fid-and-time} compares sampling times for EDM, 2SDM, and a version of 2SDM that uses two fewer diffusion steps when sampling from the conditional image model. While 2SDM is slightly more expensive to sample from than EDM, taking two fewer sampling steps makes it cheaper with very little impact on sample quality.
+
+\begin{table}[h]
+    \centering
+    \caption{Comparison of FID and sampling time for EDM baseline, 2SDM, and a variation of 2SDM which uses two fewer sampling steps such that its sampling time is less than that of EDM. To account for batching, we measure the time to sample a batch of size 256 on a V100 GPU, and then divide it by 256. We see that (a) 2SDM outperforms EDM at little additional cost, and (b) we can reduce the number of sampling steps used by 2SDM such that it is both faster than and has better image quality than our baseline.}
+    \begin{tabular}{l|ccc}
+                         & EDM & 2SDM & 2SDM-``less steps'' \\
+                         \hline
+    Sampling time        & $789$ ms & $824$ ms  & $784$ ms         \\
+    FID on AFHQ (trained from scratch)         & $2.04$   & $1.56$ & $1.58$                   \\
+    FID on FFHQ (init. from pretrained EDM)         & $2.46$   & $2.32$ & $2.32$                   \\
+    \end{tabular}
+    \label{tab:fid-and-time}
+\end{table}

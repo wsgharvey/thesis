@@ -2,14 +2,14 @@
 \newtheorem{lemma}{Lemma}
 \newtheorem{assumption}{Assumption}
 
-\chapter{Flexible Diffusion on Varying Dimensionality Data}
+\chapter{Flexible diffusion on varying dimensionality data}
 \label{ch:tddm}
 
 So far in this thesis we have described how to train a diffusion model to be flexibly conditioned on any subset of its dimensions at test time, and how to adapt such a model to high-dimensional video data with bounded compute resources. In this section we explore how to enable flexible conditioning in another scenario: when the data $\rvx$ that we wish to infer has unknown dimensionality. This can be an issue with molecular data, where the number of atoms could vary, or with video data, where the number of frames can vary. When defining a generative model over these data-types, it is necessary to model the number of dimensions along with the raw values of each of its dimensions (the state). Previous approaches to modelling such data have relied on first sampling the number of dimensions from the empirical distribution obtained from the training data, and then sampling data using a fixed dimension diffusion model (FDDM) conditioned on this number of dimensions~\cite{hoogeboom2022equivariant}. This works well for unconditional generative modelling. For conditional modelling, where the number of dimensions may depend on the observations, this approach does not apply and we are forced to first train an auxiliary model that predicts the number of dimensions given the observations~\cite{igashov2022equivariant}.
 
 This approach to trans-dimensional generative modelling is fundamentally limited due to the complete separation of dimension generation and state value generation. A particular limitation is in the common use-case of conditional sampling from an unconditional diffusion model discussed in \cref{sec:other-methods-for-conditional-sampling}. Here, an unconditional diffusion model is trained that end-users can then easily and cheaply adapt to their task of interest through conditioning~\cite{song2020score, dhariwal2021diffusion, clip_guided_diffusion, zhang2023towards} without needing to perform any further training or fine-tuning of the model. In an FDDM, there is no way for the guidance to appropriately guide the dimension of the generated datapoint. This can lead to incorrect generations for datasets where the dimension greatly affects the nature of the datapoint created, which is common since e.g. small molecules have completely different properties to large molecules.
 
-To generate data of varying dimensionality, we propose a jump diffusion based generative model that jointly generates both the dimension and the state. Our model can be seen as a unification of diffusion models which generate all dimensions in parallel with autoregressive type models which generate dimensions sequentially. We derive the model through constructing a forward noising process that adds noise and removes dimensions and a backward generative process that adds dimensions while removing noise. We depict both processes in \cref{fig:tddm-fig1}. We derive the optimum backward generative process as the time-reversal of the forward noising process and derive a novel learning objective to learn this backward process from data. We demonstrate the advantages of our method on molecular and video datasets finding our method achieves superior guided generation performance and produces more representative data interpolations across dimensions.
+To generate data of varying dimensionality, we propose a jump diffusion based generative model that jointly generates both the dimension and the state. Our model can be seen as a unification of diffusion models which generate all dimensions in parallel with autoregressive type models which generate dimensions sequentially. We derive the model through constructing a forward noising process that adds noise and removes dimensions and a reverse generative process that adds dimensions while removing noise. We depict both processes in \cref{fig:tddm-fig1}. We derive the optimum reverse generative process as the time-reversal of the forward noising process and derive a novel learning objective to learn this reverse process from data. We demonstrate the advantages of our method on molecular and video datasets finding our method achieves superior guided generation performance and produces more representative data interpolations across dimensions.
 
 \begin{figure}
     \centering
@@ -41,16 +41,16 @@ To generate data of varying dimensionality, we propose a jump diffusion based ge
 % \end{equation}
 % For a flexible model class, $s^\theta$, we get $s^\theta_t(\rvx_t) \approx \nabla_{\rvx_t} \log p_t(\rvx_t)$ at the minimizing parameter.
 
-\section{Trans-Dimensional Generative Model}
+\section{Trans-dimensional generative model}
 Instead of working with fixed dimension datapoints, we will instead assume our datapoints consist of a variable number of components. A datapoint $\mX$ consists of $n$ components each of dimension $d$. For ease of notation, each datapoint will explicitly store both the number of components, $n$, and the state values, $\rvx$, giving $\mX = (n, \rvx)$. Since each datapoint can have a variable number of components from $n=1$ to $n=N$, our overall space that our datapoints live in is the union of all these possibilities, $\mX \in \gX = \bigcup_{n=1}^N \{n \} \times \mathbb{R}^{nd}$. For example, for a varying size point cloud dataset, components would refer to points in the cloud, each containing $(x,y,z)$ coordinates giving $d=3$ and the maximum possible number of points in the cloud is $N$.
 
 Broadly speaking, our approach will follow the same framework as previous diffusion models. We will first define a forward noising process that both corrupts state values with Gaussian noise and progressively deletes dimensions.
-We then learn an approximation to the time-reversal giving a backward generative process that simultaneously denoises whilst also progressively adding dimensions back until a synthetic datapoint of appropriate dimensionality has been constructed.
+We then learn an approximation to the time-reversal giving a reverse generative process that simultaneously denoises whilst also progressively adding dimensions back until a synthetic datapoint of appropriate dimensionality has been constructed.
 
-\subsection{Forward Process}
+\subsection{Forward process}
 \label{sec:tddm-jump-diff-proc}
 
-Our forward and backward processes will be defined through jump diffusions. A jump diffusion process has two components, the diffusion part and the jump part. Between jumps, the process evolves according to a standard SDE. When a jump occurs, the process transitions to a different dimensional space with the new value for the process being drawn from a transition kernel $K_t(\mV | \mX): \gX \times \gX \rightarrow  \mathbb{R}_{\geq 0}$. Letting $\mV = (m, \rvy)$, the transition kernel satisfies $\sum_m \int_\rvy K_t(m, \rvy | \mX) \rmd \rvy = 1$ and $\int_\rvy K_t(m=n, \rvy | \mX) \rmd \rvy = 0$. The rate at which jumps occur (jumps per unit time) is given by a rate function $\lambda_t(\mX): \mathcal{X} \rightarrow \mathbb{R}_{\geq 0}$. 
+Our forward and reverse processes will be defined through jump diffusions. A jump diffusion process has two components, the diffusion part and the jump part. Between jumps, the process evolves according to a standard SDE. When a jump occurs, the process transitions to a different dimensional space with the new value for the process being drawn from a transition kernel $K_t(\mV | \mX): \gX \times \gX \rightarrow  \mathbb{R}_{\geq 0}$. Letting $\mV = (m, \rvy)$, the transition kernel satisfies $\sum_m \int_\rvy K_t(m, \rvy | \mX) \rmd \rvy = 1$ and $\int_\rvy K_t(m=n, \rvy | \mX) \rmd \rvy = 0$. The rate at which jumps occur (jumps per unit time) is given by a rate function $\lambda_t(\mX): \mathcal{X} \rightarrow \mathbb{R}_{\geq 0}$. 
 We can describe a jump diffusion in terms of an infinitesimal timestep $\rmd t$. For the forward process we call the transition kernel $\ftk_t(\mV|\mX)$ and rate function $\forwardrate_t(\mX_t)$. We will give their precise definitions shortly. Given this notation, we write the forward jump diffusion as
 \begin{align}
     \textbf{Jump} \hspace{1cm} & \mX_t' = \begin{cases}
@@ -72,8 +72,8 @@ component is ever deleted at a time meaning $\ftk_t(m, \rvy | \mX) = 0$ for $m \
 The forward noising process is simulated from $t=0$ to $t=T$ and should be such that at time $t=T$, the marginal probability $p_t(\mX)$ should be close to a reference measure $\pref(\mX)$ that can be sampled from. 
 We set $\pref(\mX) = \mathbb{I} \{ n = 1\} \mathcal{N}(\rvx; 0, I_{d})$ where $\mathbb{I} \{ n = 1\}$ is $1$ when $n=1$ and $0$ otherwise. To be close to $\pref$, for the jump part, we set $\forwardrate_t$ high enough such that at time $t=T$ there is a high probability that all but one of the components in the original datapoint have been deleted. For simplicity, we also set $\forwardrate_t$ to depend only on the current dimension $\forwardrate_t(\mX) = \forwardrate_t(n)$ with $\forwardrate_t(n=1) = 0$ so that the forward process stops deleting components when there is only $1$ left. In our experiments in \cref{sec:tddm-experiments} we demonstrate the trade-offs between different rate schedules in time. For the diffusion part, we use standard $g(t)$ schedules which ensure that we are close to $\mathcal{N}(\rvx; 0, I_{d})$.
 
-\subsection{Backward Process}
-The backward generative process will simultaneously denoise and add dimensions back in order to construct the final datapoint. Its drift term corresponds to that of a standard reverse diffusion SDE from \cref{ch:diffusion}, consisting of the sum of the forward drift term and a scaled score function. We will call the backwards rate function $\backwardrate_t(\mX)$, the backwards transition kernel $\btk_t(\mV | \mX)$, the backwards drift term $\backwarddrift(\mX)$ and the backwards diffusion coefficient $\backwarddiffcoeff_{t}$ so write the backwards jump diffusion as
+\subsection{Reverse process}
+The reverse generative process will simultaneously denoise and add dimensions back in order to construct the final datapoint. Its drift term corresponds to that of a standard reverse diffusion SDE from \cref{ch:diffusion}, consisting of the sum of the forward drift term and a scaled score function. We will call the reverses rate function $\backwardrate_t(\mX)$, the reverse transition kernel $\btk_t(\mV | \mX)$, the reverse drift term $\backwarddrift(\mX)$ and the backwards diffusion coefficient $\backwarddiffcoeff_{t}$ so write the reverse jump diffusion as
 \begin{align}
     \label{eq:tddm-reverse-jump}
     \textbf{Jump} \hspace{.4cm} & \mX_t' = \begin{cases}
@@ -86,7 +86,7 @@ The backward generative process will simultaneously denoise and add dimensions b
     % \left(b(t)\rvx_t + g(t)^2 \rvs_\theta(\mX, t) \right) 
     \rmd t + \backwarddiffcoeff(t) \rmd \brown_t \hspace{.5cm} n_{t+\rmd t} = n_t'
 \end{align}
-We would now like to specify the form of $\backwardrate_t(\mX)$, $\btk(\mV|\mX)$, and $\backwarddrift(\mX)$ which ensure that the backward process is the time-reversal of the forward process. 
+We would now like to specify the form of $\backwardrate_t(\mX)$, $\btk(\mV|\mX)$, and $\backwarddrift(\mX)$ which ensure that the reverse process is the time-reversal of the forward process. 
 % In order to find the time-reversal of the forward process, we must first introduce some notation to describe $\btk_t(\mV | \mX)$.
 $\btk_t(\mV | \mX)$ should undo the forward deletion operation. Since $\ftk_t(\mV | \mX)$ chooses a component and then deletes it, $\btk_t(\mV | \mX)$ will need to generate the state values for a new component, decide where the component should be placed and then insert it at this location. 
 Our new component will be denoted $\yadd \in \mathbb{R}^{d}$. 
@@ -94,7 +94,7 @@ The insertion operator is defined as $\text{ins}: \gX \times \mathbb{R}^{d} \tim
 We denote the joint conditional distribution over the newly added component and the index at which it is inserted as $\autonet_t(\yadd, i | \mX)$.
 We therefore have $\btk_t(\mV | \mX) = \int_{\yadd} \sum_{i=1}^{n+1}  \autonet_t(\yadd, i | \mX) \updelta_{\text{ins}(\mX, \yadd, i)}(\mV) \rmd \yadd$. Noting that only one component is ever added at a time, we have $\btk_t(m, \rvy | \mX) = 0$ for $m \neq n+1$. 
 
-This backward process formalism can be seen as a unification of diffusion models with autoregressive models. The diffusion part $\backwarddrift_t$ denoises the current set of components in parallel, whilst the autoregressive part $\autonet_t(\yadd, i | \mX)$ predicts a new component and its location. $\backwardrate_t(\mX)$ is the glue between these parts controlling when and how many new components are added during generation.
+This reverse process formalism can be seen as a unification of diffusion models with autoregressive models. The diffusion part $\backwarddrift_t$ denoises the current set of components in parallel, whilst the autoregressive part $\autonet_t(\yadd, i | \mX)$ predicts a new component and its location. $\backwardrate_t(\mX)$ is the glue between these parts controlling when and how many new components are added during generation.
 
 % \begin{table}
 % \caption{Summary of forward and parameterized backward processes}
@@ -109,7 +109,7 @@ This backward process formalism can be seen as a unification of diffusion models
 % \end{tabular}
 % \end{table}
 
-The following proposition states the values for $\backwarddrift_t(\mX)$, $\backwarddiffcoeff_t(\mX)$, $\backwardrate_t(\mX)$ and $A_t(\yadd, i | \mX)$ which ensure that the backward process is the time-reversal of the forward process.
+The following proposition states the values for $\backwarddrift_t(\mX)$, $\backwarddiffcoeff_t(\mX)$, $\backwardrate_t(\mX)$ and $A_t(\yadd, i | \mX)$ which ensure that the reverse process is the time-reversal of the forward process.
 \begin{proposition}
 \label{prop:time_reversal}
 The time reversal of a forward jump diffusion process given by drift $b(t)$, diffusion coefficient $g(t)$, rate $\forwardrate_t(n)$ and transition kernel $\sum_{i=1}^n \delidxdist(i | n) \updelta_{\textup{del}(\mX, i)}(\mV)$ is given by a jump diffusion process with drift term $\backwarddrift$, diffusion coefficient $\backwarddiffcoeff_{t}^*$ and rate $\backwardrate_t^*(\mX)$ and transition kernel $\int_{\yadd} \sum_{i=1}^{n+1}  \autonet^*_t(\yadd, i | \mX) \updelta_{\textup{ins}(\mX, \yadd, i)}(\mV) \rmd \yadd$ as defined below
@@ -123,7 +123,7 @@ All proofs are given in \cref{sec:tddm-Proofs}. The expressions for $\backwarddr
 The expression for $\backwardrate_t^*$ can be understood intuitively by noting that the numerator in the probability ratio is the probability that at time $t$, given a deletion occurs, the forward process will arrive at $\mX$. If this is higher than the raw probability at time $t$ that the forward process is at $\mX$ (the denominator) then we should have high $\backwardrate_t^*$ because $\mX$ is likely the result of a deletion of a larger datapoint.
 Finally the optimum $\autonet^*_t(\yadd, i | \mX)$ is simply the conditional distribution of $\yadd$ and $i$ given $\mX$ when the joint distribution over $\yadd, i, \mX$ is given by $p_{t}(\text{ins}(\mX, \yadd, i) ) \delidxdist(i| n+1)$. 
 
-\subsection{Objective for Learning the Backward Process}
+\subsection{Objective for learning the reverse process}
 The true $\backwarddrift_t^*$, $\backwardrate_t^*$ and $\autonet_t^*$ are unknown so we need to learn approximations to them, $\backwarddrift_t^\theta$, $\backwardrate_t^\theta$ and $\autonet_t^\theta$. 
 To parameterise the diffusion component of the reverse process, we can follow the procedure used in a standard diffusion model to learn the score function $\rvs_\theta(\mX, t) \approx \nabla_{\rvx_t} \log q(\mX_t)$. To parameterise the jump component, which relies on an unknown optimal rate $\backwardrate_t^*$ and unknown distribution $\autonet_t^*$, we will need a novel objective to learn approximations to $\backwardrate_t^\theta$ and $\autonet_t^\theta$.
 
@@ -132,7 +132,7 @@ We derive here an equivalent loss to learn all of $\rvs_\theta$, $\smash{\backwa
 
 \begin{proposition}
 \label{prop:elbo}
-For the backward generative jump diffusion process starting at $\pref(\mX_T)$ and finishing at $ p_0^\theta(\mX_0)$, an evidence lower bound on the model log-likelihood $ \mathbb{E}_{\rvx_0 \sim \pdata} [ \log p_\theta(\rvx_0) ]$ is given by
+For the reverse generative jump diffusion process starting at $\pref(\mX_T)$ and finishing at $ p_0^\theta(\mX_0)$, an evidence lower bound on the model log-likelihood $ \mathbb{E}_{\rvx_0 \sim \pdata} [ \log p_\theta(\rvx_0) ]$ is given by
 \begin{align}
     \label{eq:elbo_line_1}
     \mathcal{L}(\theta) = -\frac{T}{2} \mathbb{E}\Big[& \diffcoeff_t^2 \norm{s_\theta(\mX_t, t) - \nabla_{\rvx_t} \log q(\rvx_t | \mX_0, n_t, M_t)   }^2 \Big] + \\
@@ -171,7 +171,7 @@ We use neural networks to parameterise all of $s_\theta(\mX_t, t)$, $\autonet_t^
 
 \subsection{Sampling}
 
-\begin{algorithm}
+\begin{algorithm}[t]
 \caption{Sampling with the generative process.}
 \begin{algorithmic}[1] % The [1] option enables line numbering
 \State $t \leftarrow T$
@@ -190,10 +190,11 @@ We use neural networks to parameterise all of $s_\theta(\mX_t, t)$, $\autonet_t^
 \end{algorithmic}
 \label{alg:backwardsampling}
 \end{algorithm}
-To sample the generative process, we numerically integrate the learned backward jump diffusion process using time-step  $\updelta t$. Intuitively, it is simply the standard continuous time diffusion sampling scheme \cite{song2020score} but at each timestep we check whether a jump has occurred and if it has, sample the new component and insert it at the chosen index as explained by \cref{alg:backwardsampling}.
+
+To sample the generative process, we numerically integrate the learned reverse jump diffusion process using time-step  $\updelta t$. Intuitively, it is simply the standard continuous time diffusion sampling scheme \cite{song2020score} but at each timestep we check whether a jump has occurred and if it has, sample the new component and insert it at the chosen index as explained by \cref{alg:backwardsampling}.
 
 
-\section{Related Work}
+\section{Related work}
 
 Our method jointly generates both dimensions and state values during the generative process whereas prior approaches \cite{hoogeboom2022equivariant, igashov2022equivariant} are forced to first sample the number of dimensions and then run the diffusion process in this fixed dimension. When diffusion guidance is applied to these unconditional models \cite{weiss2023guided, zhang2023towards}, users need to pick by hand the number of dimensions independent of the conditioning information even though the number of dimensions can be correlated with the conditioning parameter.
 
@@ -217,7 +218,7 @@ We visualise sampling from our learned generative process in \cref{fig:tddm-unco
 \begin{figure}[t]
     \centering
     \includegraphics[width=\textwidth]{figs/tddm/genprog.pdf}
-    \caption{Visualisation of the jump-diffusion backward generative process on molecules.}
+    \caption{Visualisation of the jump-diffusion reverse generative process on molecules.}
     \label{fig:tddm-uncond_chain_vis}
 \end{figure}
 
