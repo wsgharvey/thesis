@@ -78,7 +78,7 @@ The forward noising process is simulated from $t=0$ to $t=T$ and should be such 
 We set $\pref(\mX_T) = \mathbb{I} \{ n_T = 1\} \mathcal{N}(\rvx_T; 0, I_{d})$ where $\mathbb{I} \{ n_T = 1\}$ is $1$ when $n_T=1$ and $0$ otherwise. To be close to $\pref$, for the jump part, we set $\forwardrate_t$ high enough such that at time $t=T$ there is a high probability that all but one of the components in the original datapoint have been deleted. For simplicity, we also set $\forwardrate_t$ to depend only on the current dimension $\forwardrate_t(\mX_t) = \forwardrate_t(n_t)$ with $\forwardrate_t(n_t=1) = 0$ so that the forward process stops deleting components when there is only $1$ left. In our experiments in \cref{sec:tddm-experiments} we demonstrate the trade-offs between different rate schedules in time. For the diffusion part, we use standard $g(t)$ schedules which ensure that we are close to $\mathcal{N}(\rvx_t; 0, I_{d})$.
 
 \subsection{Reverse process}
-The reverse generative process will simultaneously denoise and add dimensions back in order to construct the final datapoint. Its drift term corresponds to that of a standard reverse diffusion SDE from \cref{ch:diffusion}, consisting of the sum of the forward drift term and a scaled score function. We will call the reverses rate function $\backwardrate_t(\mX_t)$, the reverse transition kernel $\btk_t(\mV | \mX_t)$, the reverse drift term $\backwarddrift(\mX_t)$ and the backwards diffusion coefficient $\backwarddiffcoeff(t)$ so write the reverse jump diffusion as
+The reverse generative process will simultaneously denoise and add dimensions back in order to construct the final datapoint. Its drift term corresponds to that of a standard reverse diffusion SDE from \cref{ch:diffusion}, consisting of the sum of the forward drift term and a scaled score function. We will call the reverse rate function $\backwardrate_t(\mX_t)$, the reverse transition kernel $\btk_t(\mV | \mX_t)$, the reverse drift term $\backwarddrift(\mX_t)$ and the backwards diffusion coefficient $\backwarddiffcoeff(t)$ so write the reverse jump diffusion as
 \begin{align}
     \label{eq:tddm-reverse-jump}
     \textbf{Jump} \hspace{.4cm} & \mX_t' = \begin{cases}
@@ -198,6 +198,29 @@ We use neural networks to parameterise all of $s_\theta(\mX_t, t)$, $\autonet_t^
 
 To sample the generative process, we numerically integrate the learned reverse jump diffusion process using time-step  $\updelta t$. Intuitively, it is simply the standard continuous time diffusion sampling scheme \cite{song2020score} but at each timestep we check whether a jump has occurred and if it has, sample the new component and insert it at the chosen index as explained by \cref{alg:backwardsampling}.
 
+\subsection{Trans-dimensional reconstruction guidance} \label{sec:tddm-reconstruction-guidance}
+We now detail how we transport the diffusion guidance method from \cref{sec:reconstruction-guidance} to the trans-dimensional case to enable conditional sampling from unconditional jump diffusion models. Similarly to \cref{sec:reconstruction-guidance} we will condition on $\mY = (n_\rvy, \rvy) = \Omega(\mX_0)$, where $n_\rvy$ is  the number of observed components and $\rvy$ is the values of any observed components of $\rvx_0$. Naturally, conditioning on $\mY$ will be informative about the data values $\rvx_0$ and also about the number of components in the original data, $n$. The dependence of the number of components $n$ of the observations $\mY$ comes both in the form of a bound $n \geq n_\rvy$ and in any data-dependent relationships between $n$ and the observed values $\rvy$.
+
+In principle, making a conditional model involves modifying all of the score function estimator $\rvs_\theta$, the reverse rate function $\backwardrate_t^\theta$ and the autoregressive conditional distribution $\autonet_t^\theta$ to be conditional on $\rvy$. In practice, we found that we only needed to modify the score function estimate to obtain good results. Analogously to \cref{sec:reconstruction-guidance}, we have $\rvs_\theta(\mX_t, t) \approx \nabla_{\rvx_t} q_{t|0} (\mX_t) = \nabla_{\rvx_t} q_{t|0} (\rvx_t, n_t)$ but need an approximation of $\nabla_{\rvx_t} q_{t|0} (\mX_t | \Omega(\mX_0))$. We derive one as
+\begin{align}
+    \nabla_{\rvx_t} q_{t|0} (\mX_t | \Omega(\mX_0)) = \underbrace{\nabla_{\rvx_t} q_{t|0} (\mX_t)}_{\approx \rvs_\theta(\mX_t, t)} + \underbrace{\nabla_{\rvx_t} q_{0|t} (\Omega(\mX_0) | \mX_t)}_\text{intractable likelihood gradient}.
+\end{align}
+The intractable likelihood gradient can be estimated using the score function of a Gaussian approximation as in \cref{sec:reconstruction-guidance} leading to the estimate
+\begin{equation} \label{eq:tddm-guidance-term}
+    \nabla_{\rvx_t} \log q_{0|t}(\Omega(\mX_0) | \mX_t) \approx - \frac{\alpha(t)^2}{2\sigma(t)^2} \nabla_{\rvx_t} \norm{\Omega(\rvx_0) - \Omega(\hat{\rvx}_\theta(\mX_t, t)) }^2_2
+\end{equation}
+where $\Omega(\rvx_0) = \rvy$ and $\Omega(\hat{\rvx}_\theta(\mX_t, t))$ are the predicted values of $\rvx_0$ corresponding to observed components. \Cref{eq:tddm-guidance-term} can be computed by differentiating through the score network $\rvs_\theta$. Including the guidance weight $w$ introduced in \cref{sec:reconstruction-guidance}, which we set to $w = 1$ in our experiments, our final score function estimate is
+\begin{equation} \label{eq:tddm-guidance-score}
+    \nabla_{\rvx_t} q_{t|0} (\mX_t | \Omega(\mX_0)) = \nabla_{\rvx_t} q_{t|0} (\mX_t) - \frac{w \cdot \alpha(t)^2}{2\sigma(t)^2} \nabla_{\rvx_t} \norm{\Omega(\rvx_0) - \Omega(\hat{\rvx}_\theta(\mX_t, t)) }^2_2.
+\end{equation}
+
+As mentioned, we approximate $\backwardrate_t^*(\mX_t | \mY)$ and $\autonet_t^*(\yadd, i | \mX_t, \mY)$, with their unconditional forms $\backwardrate_t^\theta(\mX_t)$ and $\autonet_t^\theta(\yadd, i | \mX_t)$. We find this approximation still leads to valid generations because the guidance of the score network $s_t^\theta$, results in $\mX_t$ containing the conditioning information which in turn leads to $\backwardrate_t^\theta(\mX_t)$ guiding the number of components in $\mX_t$ to be consistent with the conditioning information too as verified in our experiments. Further, any errors in the approximation for $\autonet_t^\theta(\yadd, i | \mX_t)$ are fixed by further applications of the guided score function, highlighting the benefits of our combined autoregressive and diffusion based approach.
+
+
+% We use guidance weight $w = 1$.
+
+% To do so we will make changes in our estimated score function so that it approximates $\nabla_{\rvx_t} q_{t|0} (\rvx_t | \Omega(\mX_0))$, where $\Omega(\mX_0)$ refers to the observed 
+
 
 \section{Related work}
 
@@ -208,7 +231,7 @@ Instead of automatically learning when and how many dimensions to add during the
 
 The first term in our learning objective in \cref{prop:elbo} corresponds to learning the continuous part of our process (the diffusion) and the second corresponds to learning the discrete part of our process (the jumps). The first term can be seen as a trans-dimensional extension of standard denoising score matching \cite{vincent2011connection} whilst the second bears similarity to the discrete space ELBO derived in \cite{campbell2022continuous}.
 
-Finally, jump diffusions also have a long history of use in Bayesian inference, where one aims to draw samples from a trans-dimensional target posterior distribution based on an unnormalized version of its density \cite{grenander1994representations}: an ergodic jump diffusion is designed which admits the target as the invariant distribution \cite{grenander1994representations,phillips1995bayesian,miller1997automatic}. The invariant distribution is not preserved when time-discretizing the process.
+Finally, jump diffusions also have a long history of use in Bayesian inference, where one aims to draw samples from a trans-dimensional target posterior distribution based on an unnormalised version of its density \cite{grenander1994representations}: an ergodic jump diffusion is designed which admits the target as the invariant distribution \cite{grenander1994representations,phillips1995bayesian,miller1997automatic}. The invariant distribution is not preserved when time-discretising the process.
 However, it was shown in  \cite{green1995reversible,green2003trans} how general jump proposals could be built and how this process could be ``Metropolized'' to obtain a discrete-time Markov process admitting the correct invariant distribution, yielding the popular Reversible Jump Markov Chain Monte Carlo algorithm.
 Our setup differs significantly as we only have access to samples in the form of data, not an unnormalised target.
 
@@ -218,7 +241,7 @@ Our setup differs significantly as we only have access to samples in the form of
 \subsection{Molecules}
 We now show how our model provides significant benefits for diffusion guidance and interpolation tasks. We model the QM9 dataset \cite{ruddigkeit2012enumeration, ramakrishnan2014quantum} of 100\,000 varying size molecules. Following \cite{hoogeboom2022equivariant}, we consider each molecule as a 3-dimensional point cloud of atoms, each atom having the features: $(x,y,z)$ coordinates, a one-hot encoded atom type, and an integer charge value. Bonds are inferred from inter-atomic distances. We use an EGNN \cite{satorras2021n} backbone with three heads to predict $\smash{s_\theta}$, $\smash{p_{0|t}^\theta(n_0 | \mX_t)}$, and $\smash{\autonet_t^\theta}$. We uniformly delete dimensions, $K^{\text{del}}(i | n) = 1/n$, and since a point cloud is permutation invariant, $\smash{\autonet_t^\theta(\yadd | \mX_t)}$ need only predict new dimension values. We set $\smash{\forwardrate_t}$ to a constant except for $t < 0.1T$, where we set $\smash{\forwardrate_{t < 0.1T} = 0}$. This ensures that all dimensions are added with enough generation time remaining for the diffusion process to finalise all state values. 
 
-We visualise sampling from our learned generative process in \cref{fig:tddm-uncond_chain_vis}; note how the process jointly creates a suitable number of atoms whilst adjusting their positions and identities. Before moving on to apply diffusion guidance, which is the focus of our experiments, we first verify our unconditional sample quality in \cref{tab:uncond_mol} and find we perform comparably to the results reported in \cite{hoogeboom2022equivariant} which use an FDDM. We ablate our choice of $\smash{\forwardrate_t}$ by comparing with setting $\smash{\forwardrate_t}$ to a constant for all $t$ and with setting $\smash{\forwardrate_t}=0$ for $t<0.9T$ (rather than just for $t<0.1T$). We find that the constant $\smash{\forwardrate_t}$ performs worse due to the occasional component being added late in the generation process without enough time for the diffusion process to finalise its value. We find the $\smash{\forwardrate_{t<0.9T} = 0}$ setting to have satisfactory sample quality however this choice of $\smash{\forwardrate_t}$ introduces issues during diffusion guided generation as we see next. Finally, we ablate the parameterisation of \cref{prop:backwardrateparam} by learning $\backwardrate_t^\theta(\mX_t) \in \mathbb{R}$ directly as the output of a neural network head. We find that this reduces sample quality due to the more well-behaved nature of the target, $p_{0|t}^\theta(n_0 | \mX_t)$ when using \cref{prop:backwardrateparam}. We note pure autoregressive models perform significantly worse than diffusion based models as found in \cite{hoogeboom2022equivariant}.
+We visualise sampling from our learned generative process in \cref{fig:tddm-uncond_chain_vis}; note how the process jointly creates a suitable number of atoms whilst adjusting their positions and identities. Before moving on to apply diffusion guidance, which is the focus of our experiments, we first verify our unconditional sample quality in \cref{tab:uncond_mol} and find we perform comparably to the results reported in \cite{hoogeboom2022equivariant} which use an FDDM. We ablate our choice of $\smash{\forwardrate_t}$ by comparing with setting $\smash{\forwardrate_t}$ to a constant for all $t$ and with setting $\smash{\forwardrate_t}=0$ for $t<0.9T$ (rather than just for $t<0.1T$). We find that the constant $\smash{\forwardrate_t}$ performs worse due to the occasional component being added late in the generation process without enough time for the diffusion process to finalise its value. We find the $\smash{\forwardrate_{t<0.9T} = 0}$ setting to have satisfactory sample quality however this choice of $\smash{\forwardrate_t}$ introduces issues during diffusion guided generation as we see next. Finally, we ablate the parameterisation of \cref{prop:backwardrateparam} by learning $\backwardrate_t^\theta(\mX_t) \in \mathbb{R}$ directly as the output of a neural network head. We find that this reduces sample quality due to the more well-behaved nature of the target, $p_{0|t}^\theta(n_0 | \mX_t)$ when using \cref{prop:backwardrateparam}. We note pure autoregressive models perform significantly worse than diffusion based models as found by \citet{hoogeboom2022equivariant}.
 
 \begin{figure}[t]
     \centering
@@ -234,22 +257,22 @@ We visualise sampling from our learned generative process in \cref{fig:tddm-unco
 \centering
 \begin{tabular}{@{}lccc@{}}
 \toprule
-Method & \shortstack{\% Atom \\ Stable ($\uparrow$)} & \shortstack{ \% Molecule \\ Stable ($\uparrow$)} & \% Valid ($\uparrow$) \\ \midrule
+Method & \shortstack{\% Atom Stable ($\uparrow$)} & \shortstack{ \% Molecule Stable ($\uparrow$)} & \% Valid ($\uparrow$) \\ \midrule
 FDDM \cite{hoogeboom2022equivariant} & $\mathbf{98.7}$ & $82.0$ & $91.9$  \\ \midrule
 TDDM (ours) & $98.3$  & $\mathbf{87.2}$ & $\mathbf{92.3}$ \\
 TDDM, const $\smash{\forwardrate_t}$ & $96.7$ & $79.1$ & $86.7$ \\
 TDDM, $\smash{\forwardrate_{t<0.9T} = 0}$ & $97.7$ & $82.6$ & $89.4$ \\
-TDDM w/o \cref{prop:backwardrateparam} & $97.0$ & $66.9$ & $87.1$ \\ \bottomrule
+TDDM w/o Prop. \ref{prop:backwardrateparam} & $97.0$ & $66.9$ & $87.1$ \\ \bottomrule
 \end{tabular}
 \end{table}
  
 
-\subsubsection{Trans-Dimensional Diffusion Guidance}
+\subsubsection{Trans-dimensional reconstruction guidance}
 \label{sec:mol_diff_guide}
-We now apply diffusion guidance to our unconditional model in order to generate molecules that contain a certain number of desired atom types, e.g. 3 carbons or 1 oxygen and 2 nitrogens. The distribution of molecule sizes changes depending on these conditions. We generate molecules conditioned on these properties by using the reconstruction guided sampling approach introduced in \cite{ho2022video}. This method augments the score $s_{t}^\theta(\mX_t)$ such that it approximates $\nabla_{\rvx_t} \log p_{t}(\mX_t | y)$ rather than $\nabla_{\rvx_t} \log p_{t}(\mX_t)$ (where $y$ is the conditioning information) by adding on a term approximating $\nabla_{\rvx_t} \log p_{t}(y | \mX_t)$ with $q_t(y | \mX_t) = \sum_{n_0} \int_{\rvx_0} p(y | \mX_0) p_{0|t}(\mX_0 | \mX_t) \rmd \rvx_0 $. This guides $\rvx_t$ such that it is consistent with $y$. Since $\smash{\backwardrate_t^\theta(\mX_t)}$ has access to $\rvx_t$, it will cause $n_t$ to automatically also be consistent with $y$ without the user needing to input any information on how the conditioning information relates to the size of the datapoints. We give further details on diffusion guidance in \cref{sec:tddm-ApdxDiffGuide}.
+We now apply reconstruction guidance as described in \cref{sec:tddm-reconstruction-guidance} to our unconditional model in order to generate molecules that contain a certain number of desired atom types, e.g. 3 carbons or 1 oxygen and 2 nitrogens. The distribution of molecule sizes changes depending on these conditions.
 
 \begin{table}[tb]
-\caption{Conditional Molecule Generation for 10 conditioning tasks that each result in a different dimension distribution. We report dimension error as the average Hellinger distance between the generated and ground truth dimension distributions for that property as well as average sample quality metrics. Standard deviations are given across the 10 conditioning tasks. We report in bold values that are statistically indistinguishable from the best result at the $5\%$ level using a two-sided Wilcoxon signed rank test across the 10 conditioning tasks.}
+\caption{Conditional molecule generation for 10 conditioning tasks that each result in a different dimension distribution. We report dimension error as the average Hellinger distance between the generated and ground truth dimension distributions for that property as well as average sample quality metrics. Standard deviations are given across the 10 conditioning tasks. We report in bold values that are statistically indistinguishable from the best result at the $5\%$ level using a two-sided Wilcoxon signed rank test across the 10 conditioning tasks.}
 \label{tab:cond_mol}
 \centering
 \begin{tabular}{@{}lcccc@{}}
@@ -263,7 +286,7 @@ TDDM  & $\mathbf{0.134 {\scriptstyle \pm 0.076}}$ & $93.5 {\scriptstyle \pm 2.6}
 \end{tabular}
 \end{table}
 
-We show our results in \cref{tab:cond_mol}. In order to perform guidance on the FDDM baseline, we implement the model from \cite{hoogeboom2022equivariant} in continuous time and initialise the dimension from the empirically observed dimension distribution in the dataset.  This accounts for the case of an end user attempting to guide a unconditional model with access to no further information. We find that TDDM produces samples whose dimensions much more accurately reflect the true conditional distribution of dimensions given the conditioning information.
+We show our results in \cref{tab:cond_mol}. In order to perform reconstruction guidance on the FDDM baseline, we implement the model from \cite{hoogeboom2022equivariant} in continuous time and initialise the dimension from the empirically observed dimension distribution in the dataset.  This accounts for the case of an end user attempting to guide a unconditional model with access to no further information. We find that TDDM produces samples whose dimensions much more accurately reflect the true conditional distribution of dimensions given the conditioning information.
 The $\forwardrate_{t<0.9T} = 0$ ablation on the other hand only marginally improves the dimension error over FDDM because all dimensions are added in the generative process at a time when $\mX_t$ is noisy and has little relation to the conditioning information. This highlights the necessity of allowing dimensions to be added throughout the generative process to gain the trans-dimensional diffusion guidance ability. The ablation with constant $\forwardrate_t$ has increased dimension error over TDDM as we find that when $\forwardrate_t > 0$ for all $t$, $\backwardrate_t^\theta$ can become very large when $t$ is close to 0 when the model has perceived a lack of dimensions. This occasionally results in too many dimensions being added hence an increased dimension error. Not using the \cref{prop:backwardrateparam} parameterisation also increases dimension error due to the increased difficulty in learning $\backwardrate_t^\theta$.
 
 \begin{figure}[t]
@@ -273,13 +296,12 @@ The $\forwardrate_{t<0.9T} = 0$ ablation on the other hand only marginally impro
     \label{fig:tddm-interp_plot}
 \end{figure}
 
-\subsubsection{Trans-Dimensional Interpolation}
+\subsubsection{Trans-dimensional interpolation}
 \label{sec:mol_interp}
-Interpolations are a unique way of gaining insights into the effect of some conditioning parameter on a dataset of interest.
-To create an interpolation, a conditional generative model is first trained and then sampled with a sweep of the conditioning parameter but using fixed random noise \cite{hoogeboom2022equivariant}.
+Interpolations are a unique way of gaining insight into the effect of some conditioning parameter on a dataset of interest.
+To create an interpolation, a conditional generative model is first trained and then sampled with a sweep of the conditioning parameter but using fixed random noise~\citep{hoogeboom2022equivariant}.
 The resulting series of synthetic datapoints share similar features due to the fixed random noise but vary in ways that are very informative as to the effect of the conditioning parameter. 
-Attempting to interpolate with an FDDM is fundamentally limited because the entire interpolation occurs in the same dimension which is unrealistic when the conditioning parameter is heavily correlated with the dimension of the datapoint. We demonstrate this by following the setup of \cite{hoogeboom2022equivariant} who train a conditional FDDM conditioned on polarizability.
-Polarizability is the ability of a molecule's electron cloud to distort in response to an external electric field \cite{modernphysicalorganicchemistry} with larger molecules tending to have higher polarizability. To enable us to perform a trans-dimensional interpolation, we also train a conditional version of our model conditioned on polarizability. An example interpolation with this model is shown in \cref{fig:tddm-interp}. We find that indeed the size of the molecule increases with increasing polarizability, with some molecular substructures e.g.~rings, being maintained across dimensions.
+Attempting to interpolate with an FDDM is fundamentally limited because the entire interpolation occurs in the same dimension which is unrealistic when the conditioning parameter is heavily correlated with the dimension of the datapoint. We demonstrate this by following the setup of \citet{hoogeboom2022equivariant} who train a conditional FDDM conditioned on polarizability. Polarizability is the ability of a molecule's electron cloud to distort in response to an external electric field~\citep{modernphysicalorganicchemistry} with larger molecules tending to have higher polarizability. To enable us to perform a trans-dimensional interpolation, we also train a conditional version of our model conditioned on polarizability. An example interpolation with this model is shown in \cref{fig:tddm-interp}. We find that indeed the size of the molecule increases with increasing polarizability, with some molecular substructures e.g.~rings, being maintained across dimensions.
 We show how the dimension changes with polarizability during 3 interpolations in \cref{fig:tddm-interp_plot}. We find that these match the true dataset statistics much more accurately than interpolations using FDDM which first pick a dimension and carry out the entire interpolation in that fixed dimension.
 
 \begin{figure}[t]
@@ -293,11 +315,12 @@ We show how the dimension changes with polarizability during 3 interpolations in
 
 \subsection{Video}
 
-We finally demonstrate our model on a video modelling task. Specifically we model the RoboDesk dataset~\citep{tian2023control}, a video benchmark to measure the applicability of video models for planning and control problems. The videos are renderings of a robotic arm~\citep{kannan2021robodesk} performing a variety of different tasks including opening drawers and moving objects.
-We first train an unconditional model on videos of varying length and then perform planning by applying diffusion guidance to generate videos conditioned on an initial starting frame and a final goal frame \cite{janner2022diffuser}. The planning problem is then reduced to ``filling in'' the frames in between. Our trans-dimensional model automatically varies the number of in-filled frames during generation so that the final length of video matches the length of time the task should take, whereas the fixed dimension model relies on the unrealistic assumption that the length of time the task should take is known before generation.
+We finally demonstrate our model on a video modelling task. Specifically we model the RoboDesk dataset~\citep{tian2023control}, a video benchmark to measure the applicability of video models for planning and control problems. The videos are renderings of a robotic arm~\citep{kannan2021robodesk} performing a variety of tasks including opening drawers and moving objects.
+We first train an unconditional model on videos of varying length and then perform planning by using diffusion guidance to generate videos conditioned on an initial starting frame and a final goal frame \cite{janner2022diffuser}. The planning problem is then reduced to ``filling in'' the frames in between. Our trans-dimensional model automatically varies the number of in-filled frames during generation so that the final length of video matches the length of time the task should take, whereas the fixed dimension model relies on the unrealistic assumption that the length of time the task should take is known before generation.
 
-We model videos at $32 \times 32$ resolution and with varying length from $2$ to $35$ frames. For the network backbone, we use a UNet adapted for video \cite{harvey2022flexible}. In contrast to molecular point clouds, our data is no longer permutation invariant hence $A_t^\theta(\yadd, i | \mX_t)$ includes a prediction over the location to insert the new frame. Full experimental details are provided in \cref{sec:tddm-ExperimentDetails}.
-We evaluate our approach on three planning tasks, holding stationary, sliding a door and pushing an object. An example generation conditioned on the first and last frame for the slide door task is shown in \cref{fig:tddm-video_example}, with the model in-filling a plausible trajectory. We quantify our model's ability to generate videos of a length appropriate to the task in \cref{tab:video_results} finding on all three tasks we generate a more accurate length of video than FDDM which is forced to sample video lengths from the unconditional empirically observed length distribution in the training dataset.
+We model videos at $32 \times 32$ resolution and with varying length distributed uniformly between $2$ and $35$ frames. For the network backbone, we use a UNet adapted for video \cite{harvey2022flexible}. In contrast to molecular point clouds, our data is no longer permutation invariant hence $A_t^\theta(\yadd, i | \mX_t)$ includes a prediction over the location to insert the new frame. Also, since each component of a datapoint is an entire video frame, we found that it was difficult to obtain good results when adding components at $t$ far from $T$ with any simple parameterisation of $A_t^\theta(\yadd, i | \mX_t)$. We therefore adapt our diffusion process to be non-isotropic, meaning that different components (frames) have differing amounts of noise applied. This means that, whenever a component is added, a very noisy version of its values can be initialised by $A_t^\theta(\yadd, i | \mX_t)$ even if there is less noise added to the presently-existing components. For simplicity, our formalisation of this, as detailed in \cref{sec:tddm-ExperimentDetails}, removes all noise from each existing component before adding new components. As such, while we describe this model in the jump diffusion framework, it can be equivalently interpreted as an any-order autoregressive model~\citep{shih2022training} that uses a conditional diffusion model within each sampling stage. 
+
+We evaluate our approach on three planning tasks, holding stationary, sliding a door and pushing an object. An example generation conditioned on the first and last frame for the slide door task is shown in \cref{fig:tddm-video_example}, with the model in-filling a plausible trajectory. We quantify our model's ability to generate videos of a length appropriate to the task in \cref{tab:video_results} finding on all three tasks we generate a more accurate length of video than FDDM which is forced to sample video lengths from the unconditional empirically observed length distribution in the training dataset. Full experimental details are provided in \cref{sec:tddm-ExperimentDetails}.
 
 \definecolor{videored}{HTML}{f00606}
 \definecolor{videoblue}{HTML}{4b4bfc}
@@ -320,3 +343,14 @@ We evaluate our approach on three planning tasks, holding stationary, sliding a 
    \end{tabular}
    \label{tab:video_results}
 \end{table}
+
+
+\section{Discussion}
+
+We showed jump diffusion models for trans-dimensional generative modelling.
+
+Not necessarily a flexible generative model as we've defined it but certainly a flexible generative model.
+
+These insights could be combined to make a flexible diffusion model capable of trans-dimensional modelling but we didn't find this necessary on our experiments. Potential applications would be ..., ..., ...
+
+Most importantly, we have shown that you can use diffusion models even when the dimensionality is varying and obtained great performance on molecule generation tasks especially.
