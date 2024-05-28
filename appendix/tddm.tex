@@ -1173,7 +1173,7 @@ During sampling we found that adding corrector steps~\citep{song2020score} impro
 \begin{algorithm}
 \begin{algorithmic}[1]
     \State $t \leftarrow T$
-    \State $\mX \sim \pref(\mX) = \mathbb{I}\{ n=1\} \mathcal{N}(\rvx; 0, I_{d})$
+    \State $\mX \sim \mathbb{I}\{ n=1\} \mathcal{N}(\rvx; 0, I_{d})$
     \While{ $t > 0$}
     \State $u \sim \mathcal{U}(0, 1)$
     \If{$u < \backwardrate_{t}^\theta(\mX) \updelta t$}
