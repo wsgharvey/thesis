@@ -668,7 +668,7 @@ two higher values and two lower values.
 \end{figure}
 
 \begin{figure}
-  \includegraphics[width=\textwidth]{figs/cigcvae/fwv_sigma}
+  \includegraphics[width=0.95\textwidth]{figs/cigcvae/fwv_sigma}
   \caption{The faithfulness weighted variance for inpainting on CIFAR-10,
     FFHQ-256, and ImageNet-64, for various values of $\sigma$. IPA obtains the
     best performance on almost all datasets and values of $\sigma$, only being
@@ -809,10 +809,9 @@ randomly sampling a set of such sequences, and choosing the best from this set.
   \centering
   \includegraphics[width=0.98\textwidth]{figs/cigcvae/boed-visualisation-4960-compressed.pdf}
   \includegraphics[width=0.98\textwidth]{figs/cigcvae/boed-visualisation-4970-compressed.pdf}
-  \includegraphics[width=\textwidth]{figs/cigcvae/boed-visualisation-4980-compressed.pdf}
   \caption{Visualisations of BOED processes. On the top, the task is to detect
     `Edema'. In the middle, we aim to detect `Effusion' in a different patient.
-    The task at the bottom is to detect `Infiltration'. Four scan locations are
+    Four scan locations are
     selected for each. The left column shows the observations made before
     selecting each scan location. The next five columns show five of the $N=10$
     sampled image completions conditioned on these observations. Each is
@@ -821,8 +820,15 @@ randomly sampling a set of such sequences, and choosing the best from this set.
     location, given by averaging the information gains arising from each sampled
     image completion. A red cross marks the maximum. The final column shows the
     updated observations after scanning the location which maximises the
-    expected information gain.}
+    expected information gain. We show one more example in \cref{fig:cigcvae-extra-xray-boed-extra}.}
   \label{fig:cigcvae-extra-xray-boed}
+\end{figure*}
+
+\begin{figure*}[p]
+  \centering
+  \includegraphics[width=\textwidth]{figs/cigcvae/boed-visualisation-4980-compressed.pdf}
+  \caption{Another visualisations of a BOED process similar to \cref{fig:cigcvae-extra-xray-boed}, where the task is to detect `Infiltration'.}
+\label{fig:cigcvae-extra-xray-boed-extra}
 \end{figure*}
 
 \subsection{Additional BOED results} \label{supp:cigcvae-boed-results}

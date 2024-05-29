@@ -1,9 +1,7 @@
 \chapter{Flexible variational auto-encoders}
 \label{ch:cigcvae}
 
-So far in this dissertation we have now demonstrated the flexible diffusion framework, building upon the diffusion modelling framework to construct flexible generative models that are capable of a wide variety of different conditioning tasks at test-time without retraining.
-
-One question we attempt to answer in this chapter is whether diffusion models are uniquely suitable for flexible generative modelling or whether other modelling frameworks are compatible with our flexible approach. Our reason for asking this is that the dominant methodologies for deep generative modelling have changed over time. Variational auto-encoders (VAEs) showed good performance on image generation benchmarks in 2013 after being proposed by \citet{kingma2013auto}. Generative adversarial networks~\citep{goodfellow2014generative} were proposed shortly after, and within a few years were clearly preferred for e.g. image generation~\citep{karras2018style}. Autoregressive methods~\citep{van2016pixel} were proposed shortly after and obtained state-of-the-art likelihoods while exhibiting drawbacks including slow sampling. The view that diffusion models are the best method for image generation has been widespread since roughly 2021~\citep{dhariwal2021diffusion}. Since then, MaskGIT~\citep{chang2022maskgit} has gained popularity. Even more recently, methods like rectified flow~\citep{esser2024scaling} and consistency models~\citep{song2023consistency}, which build on the diffusion framework, have been shown to exhibit better sampling speed than true diffusion models. As we saw in \cref{ch:conditional-diffusion}, even using two diffusion models to construct a simple multi-stage generative model (2SDM) can outperform a pure diffusion model. All this is to say that, while diffusion models are currently a highly-competitive approach for image and video generation tasks, this is likely not to remain the case forever. Furthermore, even now, many approaches use latent diffusion models~\citep{rombach2022high} that combine are a combination of a diffusion model and a variational auto-encoder. Implementing a flexible generative model that builds on the variational auto-encoder framework will give some improved indication that flexible generative modelling is a future-proof concept.
+So far in this dissertation we have demonstrated flexible generative models within the diffusion modelling context. We now ask whether diffusion models are uniquely suitable for flexible generative modelling or whether flexible generative models can be built with other modelling methodologies.  Our reason for asking this is that the dominant methodologies for deep generative modelling have changed over time. Variational auto-encoders (VAEs) showed good performance on image generation benchmarks in 2013 after being proposed by \citet{kingma2013auto}. Generative adversarial networks~\citep{goodfellow2014generative} were proposed shortly after, and within a few years were clearly preferred for e.g. image generation~\citep{karras2018style}. Autoregressive methods~\citep{van2016pixel} were proposed shortly after and obtained state-of-the-art likelihoods while exhibiting drawbacks including slow sampling. The view that diffusion models are the best method for image generation has been widespread since roughly 2021~\citep{dhariwal2021diffusion}. Since then, MaskGIT~\citep{chang2022maskgit} has gained popularity. Even more recently, methods like rectified flow~\citep{esser2024scaling} and consistency models~\citep{song2023consistency}, which build on the diffusion framework, have been shown to exhibit better sampling speed than true diffusion models. As we saw in \cref{ch:conditional-diffusion}, even using two diffusion models to construct a simple multi-stage generative model (2SDM) can outperform a pure diffusion model. All this is to say that, while diffusion models are currently a highly-competitive approach for image and video generation tasks, this is likely not to remain the case forever. Furthermore, even now, many approaches use latent diffusion models~\citep{rombach2022high} that are a combination of a diffusion model and a variational auto-encoder. In this chapter we will demonstrate a flexible variational auto-encoder; that is, a flexible generative model that is based on the variational auto-encoder framework~\citep{kingma2013auto,rezende2014stochastic}. Its good performance shows that flexible generative modelling as a concept is not tied to the diffusion framework and therefore could prove to be future-proof as modelling methodologies change.
 
 \begin{figure*}[t]
   \centering
@@ -15,21 +13,21 @@ One question we attempt to answer in this chapter is whether diffusion models ar
   \label{fig:cigcvae-headline}
 \end{figure*}
 
-We will demonstrate flexible variational auto-encoders on the image inpainting problem. In particular, we train a single model which is capable of generating an image conditioned on a masked image containing any subset of that image's pixel values. We demonstrate that variational auto-encoders can achieve excellent performance at this task; see results in \cref{fig:cigcvae-headline}. Furthermore, to mitigate the slow and expensive training usually associated with VAEs, we demonstrate that a flexible VAE can be trained with little computational cost by initialising training with a pretrained unconditional VAE. This is even more encouraging in terms of the applicability of flexible generative modelling; it suggests that the representations needed inside a deep generative model to enable flexible generation are similar to those needed to enable unconditional generation. This finding gives us hope that other model classes that are good at unconditional generation will also be amenable to flexibly conditional generation.
+We will demonstrate flexible variational auto-encoders primarily on the image inpainting problem. In particular, we train a single model which is capable of generating an image conditioned on any subset of that image's pixel values. We demonstrate that variational auto-encoders can achieve excellent performance at this task; see results in \cref{fig:cigcvae-headline}. Furthermore, to mitigate the slow and expensive training usually associated with VAEs, we demonstrate that a flexible VAE can be trained with little computational cost by initialising training with a pretrained unconditional VAE. We belive that this finding is extremely encouraging in terms of the applicability of flexible generative modelling; it suggests that the learned representations that are useful for flexible generation are similar to those that are good for unconditional generation, at least within the VAE framework. This provides evidence that flexible generative modelling and unconditional generative modelling are tightly-related tasks, giving us hope that other model classes that are good at unconditional generation will also be amenable to flexibly conditional generation.
 
-We will continue this chapter by reviewing background material on variational auto-encoders. We will then further motivate and explain our proposed method in \cref{sec:ipa} before reporting experimental results in \cref{sec:cigcvae-experiments} and describing a hypothetical application of an inpainting model with the capabilities ours exhibits in \cref{sec:cigcvae-boed}.
+
+Before introducing flexible VAES, we will now review background material on variational auto-encoders. We will then further motivate and explain our proposed method for training flexible VAEs in \cref{sec:ipa}; report experimental results in \cref{sec:cigcvae-experiments}; and describe a hypothetical application of an inpainting model with the capabilities ours exhibits in \cref{sec:cigcvae-boed}.
 
 
 \section{A review of variational auto-encoders}
 \label{sec:vae}
-As with our review of diffusion models in \cref{ch:diffusion}, we will start by describing VAEs~\citep{kingma2013auto,rezende2014stochastic}, as unconditional generative models. We will then explain a conditional variant in \cref{sec:conditional-vae}. Like a diffusion model, a VAE is trained to approximate a data distribution $\pdata(\rvx)$ using samples from that data distribution. Given a VAE with parameters $\theta$, we will denote the distribution it parameterises $p_\theta(\rvx)$. The key feature of a VAE is that it breaks the process of generating data into two steps: in the first step a VAE samples a latent variable $\rvz$ from a ``prior'' distribution $p_\theta(\rvz)$. The prior distribution can be fixed, \eg a unit Gaussian, or can have learnable parameters that are included in $\theta$. In the second step, the VAE parameterises a ``likelihood'' $p_\theta(\rvx|\rvz)$. This can be, \eg, a Gaussian for continuous data~\citep{kingma2013auto} or a categorical for discrete data~\citep{child2020very}, with parameters output in either case by a neural network as a function of $\rvz$. We can therefore write the parameterised distribution $p_\theta(\rvx)$ as the marginal of $p_\theta(\rvx|\rvz)$ over the latent variable $\rvz$,
-% that is $p_\theta(\rvx) = \int p_\theta(\rvx|\rvz) p_\theta(\rvz) \mathrm{d}\rvz$.
+As with our review of diffusion models in \cref{ch:diffusion}, we will start by describing VAEs~\citep{kingma2013auto,rezende2014stochastic} as unconditional generative models. We will then explain a conditional variant in \cref{sec:conditional-vae}. Like a diffusion model, a VAE is trained to approximate a data distribution $\pdata(\rvx)$ using samples from that data distribution. Given a VAE with parameters $\theta$, we will denote the distribution over data it parameterises $p_\theta(\rvx)$. The key feature of a VAE is that it breaks the process of generating data into two steps: in the first step a VAE samples a latent variable $\rvz$ from a ``prior'' distribution $p_\theta(\rvz)$. The prior distribution can be fixed, e.g. a unit Gaussian, or can have learnable parameters that are included in $\theta$. In the second step, the VAE parameterises a ``likelihood'' $p_\theta(\rvx|\rvz)$. This can be, e.g., a Gaussian for continuous data~\citep{kingma2013auto} or a categorical for discrete data~\citep{child2020very}, with parameters output in either case by a neural network as a function of $\rvz$. We can therefore write the parameterised distribution $p_\theta(\rvx)$ as the marginal of $p_\theta(\rvx|\rvz)$ over the latent variable $\rvz$,
 \begin{equation} \label{eq:vae-marginal}
 p_\theta(\rvx) = \int p_\theta(\rvx|\rvz)p_\theta(\rvz) \mathrm{d}\rvz.
 \end{equation}
-Even if both the prior $p_\theta(\rvz)$ and likelihood $p_\theta(\rvx|\rvz)$ are simple distributions, the marginal $p_\theta(\rvx)$ can be complex since the likelihood can be given by an arbitrarily complex function of $\rvz$.
+Even if both the prior $p_\theta(\rvz)$ and likelihood $p_\theta(\rvx|\rvz)$ are simple distributions, the marginal $p_\theta(\rvx)$ can be complex since the parameters of the likelihood can be given by arbitrarily complex functions of $\rvz$.
 
-As we discussed for diffusion models in \cref{ch:diffusion}, an ideal training objective would maximise the data likelihood $p_\theta(\rvx)$ averaged over all training examples since this corresponds to learning parameters which maximise the likelihood of the dataset under the learned distribution. The required marginalisation in \cref{eq:vae-marginal}, however, means that directly estimating the data likelihood is intractable. Therefore, as for diffusion models, we instead derive a training objective that lower-bounds the data likelihood. Starting by taking an expectation of the log of the data likelihood in \cref{eq:vae-marginal}, we can obtain a lower-bound using a proposal distribution $q_\phi(\rvz|\rvx)$ which can be given by a neural network with parameters $\phi$: % our objective can be converted to the log of an expectation over $q_\phi(\rvz)$:
+As we discussed for diffusion models in \cref{ch:diffusion}, an ideal training objective would maximise the data likelihood $p_\theta(\rvx)$ averaged over all training examples since this corresponds to a maximum-likelihood estimate of the parameters given the dataset. The required marginalisation in \cref{eq:vae-marginal}, however, means that directly estimating the data likelihood is intractable. Therefore, as for diffusion models, we instead derive a training objective that lower-bounds the data likelihood. Starting by taking an expectation of the log of the data likelihood in \cref{eq:vae-marginal}, we can obtain a lower-bound using a proposal distribution $q_\phi(\rvz|\rvx)$ which can be given by a neural network with parameters $\phi$: % our objective can be converted to the log of an expectation over $q_\phi(\rvz)$:
 \begin{align}
     \EX_{\pdata(\rvx)} \left[ \log p_\theta(\rvx) \right] &= \EX_{\pdata(\rvx)} \left[ \log \int p_\theta(\rvx|\rvz)p_\theta(\rvz) \mathrm{d}\rvz \right] \\
     &= \EX_{\pdata(\rvx)} \left[ \log \int p_\theta(\rvx|\rvz) \frac{p_\theta(\rvz)}{q_\phi(\rvz|\rvx)} q_\phi(\rvz|\rvx) \mathrm{d}\rvz \right] \\
@@ -37,16 +35,16 @@ As we discussed for diffusion models in \cref{ch:diffusion}, an ideal training o
 \end{align}
 Ideally we would be able to obtain an unbiased estimate of this objective. Due to the logarithm operator outside an intractable expectation this is not feasible but, using Jensen's inequality, we can obtain a training objective that lower bounds it by switching their order: 
 \begin{align}
-    \gL(\theta, \phi) := \EX_{\pdata(\rvx)q_\phi(\rvz|\rvx)} \left[ \log p_\theta(\rvx|\rvz) + \log \frac{p_\theta(\rvz)}{q_\phi(\rvz|\rvx)} \right] \leq \EX_{\pdata(\rvx)} \left[ \log p_\theta(\rvx) \right].
+    \gL_\text{VAE}(\theta, \phi) := \EX_{\pdata(\rvx)q_\phi(\rvz|\rvx)} \left[ \log p_\theta(\rvx|\rvz) + \log \frac{p_\theta(\rvz)}{q_\phi(\rvz|\rvx)} \right] \leq \EX_{\pdata(\rvx)} \left[ \log p_\theta(\rvx) \right].
     \label{eq:vae-objective}
 \end{align}
-This lower-bound can be stochastically estimated by sampling data $\rvx$ and then sampling $\rvz$ from $q_\phi(\rvz|\rvx)$ and evaluating the terms inside the expectation with that given $\rvz$. Since $q_\phi(\rvz|\rvx)$ ``encodes'' data $\rvx$ into latent variables $\rvz$ we will from now on refer to it as the encoder. The tightness of this lower-bound is strongly dependent on how ``good'' the encoder $q_\phi(\rvz|\rvx)$ is, and we can make this insight clear by rewriting \cref{eq:vae-objective} as
+This lower-bound can be stochastically estimated by sampling data $\rvx$ and then sampling $\rvz$ from $q_\phi(\rvz|\rvx)$ and evaluating the terms inside the expectation with that $\rvz$. Since $q_\phi(\rvz|\rvx)$ ``encodes'' data $\rvx$ into latent variables $\rvz$ we will from now on refer to it as the encoder. The tightness of this lower-bound is strongly dependent on how ``good'' the encoder $q_\phi(\rvz|\rvx)$ is, as we can make clear by rewriting \cref{eq:vae-objective} as
 \begin{equation}
-    \gL(\theta, \phi) := \EX_{\pdata(\rvx)} \left[ \log p_\theta(\rvx) - \kl{q_\phi(\rvz|\rvx)}{p_\theta(\rvz|\rvx)} \right].
+    \gL_\text{VAE}(\theta, \phi) := \EX_{\pdata(\rvx)} \left[ \log p_\theta(\rvx) - \kl{q_\phi(\rvz|\rvx)}{p_\theta(\rvz|\rvx)} \right].
 \end{equation}
-This formulation reveals that the lower-bound is tight if and only if the proposal $q_\phi(\rvz|\rvx)$ is equal to the generally intractable posterior $p_\theta(\rvz|\rvx)$ causing the KL divergence term to be zero. Fortunately, maximising this objective with respect to $\theta$ and $\phi$ will optimise the proposal parameters $\phi$ to better match the intractable posterior as well as optimising $\theta$ to increase the model likelihood, and so it is possible to train both $\theta$ and $\phi$ with a unified objective. The full optimisation objective is thus
+This formulation reveals that the lower-bound is tight if and only if the proposal $q_\phi(\rvz|\rvx)$ is equal to the generally intractable posterior $p_\theta(\rvz|\rvx)$ for all $\rvx$, causing the KL divergence term to be zero. Fortunately, maximising this objective with respect to $\theta$ and $\phi$ will optimise the proposal parameters $\phi$ to better match the intractable posterior as well as optimising $\theta$ to increase the model likelihood, and so it is possible to train both $\theta$ and $\phi$ with a unified objective. The full optimisation problem is therefore to find
 \begin{align}
-    \argmin_{\theta,\phi} \gL(\theta, \phi).
+    \argmin_{\theta,\phi} \gL_\text{VAE}(\theta, \phi).
 \end{align}
 
 \subsection{Hierarchical variational auto-encoders}
@@ -63,15 +61,18 @@ A hierarchical VAE~\citep{gregor2015draw,kingma2016improving,sonderby2016ladder,
 \end{equation}
 where $\rvz_{<l}$ is the set of all latent variable groups from $\rvz_1$ (inclusive) to $\rvz_{l}$ (exclusive) if $l > 1$ and is null otherwise. We show this dependency structure graphically in \cref{fig:vae-vs-hierarchical-vae}.
 
+\subsection{Relationship to diffusion models}
 Hierarchical VAEs are closely related to diffusion models, and in fact diffusion models can be interpreted as a special case of a hierarchical VAE. Given an increasing sequence of noise standard deviations $\sigma(1),\ldots,\sigma(L)$, we can present a variance-exploding diffusion model as a top-down hierarchical VAE with an encoder
 \begin{align}
     q(\rvz|\rvx) &= q(\rvz_1|\rvx) \prod_{l=2}^L q(\rvz_l | \rvx, \rvx_{l-1}) \\
     &= \gN( \rvz_1 ; \rvx, \sigma(L)^2 \mI ) \prod_{l=2}^L \gN( \rvz_l | \mu^l_Q(\rvz_{l-1}, \rvx), {\sigma_Q^l}^2 \mI )
 \end{align}
 where $\mu^l_Q(\rvz_{l-1}, \rvx) := \mu_Q(\rvz_{l-1}, \rvx; \rho, \sigma)$ and $\sigma^l_Q := \sigma_Q(\rho, \sigma)$ with $\mu_Q$ and $\sigma_Q$ as defined in \cref{eq:mu-q,eq:sigma-q} and $\rho := \sigma(L-l)$, $\sigma := \sigma(L+1-l)$. Note that this encoder has no learnable parameters, i.e. $\phi$ is empty. In the setting described in \cref{sec:diffusion-likelihood}, a diffusion model then approximates each $p_\theta(\rvz_l|\rvz_{<l})$ as a Gaussian. The use of a fixed encoder and Gaussian forms enables many tricks to be used in diffusion models that are not possible for most variational auto-encoders. In particular, diffusion models allow an efficient training objective that can sample a single layer $l$ and compute a loss estimate for a data point using this single value of $l$ (i.e. a single signal-to-noise ratio), whereas the loss for a hierarchical VAE must typically be summed over all layers for each data point. The diffusion framework also enables weighting of the loss to improve perceptual quality, as we described in \cref{sec:diffusion-perceptual-quality}, and the use of ODEs or SDEs for improved performance at test-time versus explicitly sampling from each $p_\theta(\rvz_l|\rvz_{<l})$.
-A major advantage of VAEs, on the other hand, is the learnable encoder which makes it theoretically possible to learn fast and effective procedures for sampling datapoints other than simply progressively removing Gaussian noise. 
+A major advantage of VAEs, on the other hand, is the learnable encoder which makes it theoretically possible to learn fast and effective procedures for sampling datapoints other than the gradual removal of Gaussian noise.
 
-Although diffusion models currently dominate at the core tasks of e.g. image and video generation~\citep{esser2024scaling,brooks2024video}, variants of VAEs are used for other purposes including as tools to compress data $\rvx$ into latent variables $\rvz$ that are then modelled with other techniques like diffusion models. We also note that the two-stage diffusion model~\cref{sec:2sdm-2sdm-method} could be interpreted as a form of variational auto-encoder in which the prior $p_\theta(\rvz)$ and decoder $p_\theta(\rvx|\rvz)$ are both parameterised by diffusion models and the encoder is frozen to a pretrained value. We believe that it is valuable to demonstrate that flexible generative modelling works within the variational auto-encoder framework and for these reasons, and to provide more reason to believe that it could apply to other generative modelling frameworks in addition.
+Although diffusion models currently dominate at the core tasks of e.g. image and video generation~\citep{esser2024scaling,brooks2024video}, variants of VAEs are still a tool used in state-of-the-art workflows~\citep{rombach2022high,brooks2024video}. One primary benefit is that they can be used to compress data $\rvx$ into latent variables $\rvz$ that are then modelled with other techniques like diffusion models~\citep{rombach2022high}. Taking a broader perspective, the two-stage diffusion model from \cref{sec:2sdm-2sdm-method} could also be interpreted as a form of variational auto-encoder in which the prior $p_\theta(\rvz)$ and decoder $p_\theta(\rvx|\rvz)$ are both parameterised by diffusion models and the encoder $q_\phi(\rvz|\rvx)$ is frozen to be a Dirac distribution on the CLIP image embedding of $\rvx$. 
+
+% We believe that it is valuable to demonstrate that flexible generative modelling works within the variational auto-encoder framework and for these reasons, and to provide more reason to believe that it could apply to other generative modelling frameworks in addition.
 
 \subsection{Conditional variational auto-encoders}
 \label{sec:conditional-vae}
@@ -97,21 +98,21 @@ and we can re-derive the training objective in \cref{eq:vae-objective} as a lowe
     &= \EX_{\pdata(\rvx, \rvy)} \left[ \log \int p_\theta(\rvx|\rvz)\frac{p_\theta(\rvz|\rvy)}{q_\phi(\rvz|\rvx)}q_\phi(\rvz|\rvx) \mathrm{d}\rvz \right] \\
     &= \EX_{\pdata(\rvx, \rvy)} \left[ \log \EX_{q_\phi(\rvz|\rvx)} \left[ p_\theta(\rvx|\rvz)\frac{p_\theta(\rvz|\rvy)}{q_\phi(\rvz|\rvx)} \right] \right] \\
     &\geq \EX_{\pdata(\rvx, \rvy)} \left[ \EX_{q_\phi(\rvz|\rvx)} \left[ \log p_\theta(\rvx|\rvz) + \log \frac{p_\theta(\rvz|\rvy)}{q_\phi(\rvz|\rvx)} \right] \right] \\
-    &:= \gL(\theta, \phi)
+    &:= \gL_\text{CVAE}(\theta, \phi).
 \end{align}
 Similarly to the unconditional VAE training objective, we can break this down as
 \begin{align} \label{eq:conditional-vae-objective}
-    \gL(\theta, \phi) = \EX_{\pdata(\rvx,\rvy)} \left[ \underbrace{\EX_{q_\phi(\rvz|\rvx)}\left[\log p_\theta(\rvx|\rvz) \right]}_\text{reconstruction loss} - \underbrace{\kl{q_\phi(\rvz|\rvx)}{p_\theta(\rvz|\rvy)}}_\text{KL divergence} \right]
+    \gL_\text{CVAE}(\theta, \phi) = \EX_{\pdata(\rvx,\rvy)} \left[ \underbrace{\EX_{q_\phi(\rvz|\rvx)}\left[\log p_\theta(\rvx|\rvz) \right]}_\text{reconstruction loss} - \underbrace{\kl{q_\phi(\rvz|\rvx)}{p_\theta(\rvz|\rvy)}}_\text{KL divergence} \right]
 \end{align}
 showing that training the conditional VAE involves balancing maximising a ``reconstruction'' term with minimising an expected KL divergence between the encoder's distribution $q_\phi(\rvz|\rvx)$ and the conditional prior $p_\theta(\rvz|\rvy)$.
 
-We now consider one further decomposition of $\gL(theta, \phi)$ which yields additional insights about the properties of conditional VAEs:
+We now consider one further decomposition of $\gL_\text{CVAE}(\theta, \phi)$ which yields additional insights about the properties of conditional VAEs:
 \begin{align}
-    \gL(\theta, \phi) =& \EX_{\pdata(\rvx,\rvy)} \left[ \log \frac{\log p_\theta(\rvx|\rvz)p_\theta(\rvz|\rvy)}{q_\phi(\rvz|\rvx)} \right] \\
+    \gL_\text{CVAE}(\theta, \phi) =& \EX_{\pdata(\rvx,\rvy)} \left[ \log \frac{\log p_\theta(\rvx|\rvz)p_\theta(\rvz|\rvy)}{q_\phi(\rvz|\rvx)} \right] \\
     =& \EX_{\pdata(\rvx,\rvy)} \left[ \log \pdata(\rvx|\rvy) + \log \frac{\log p_\theta(\rvx|\rvz)p_\theta(\rvz|\rvy)}{q_\phi(\rvz|\rvx)\pdata(\rvx|\rvy)} \right] \\
     \label{eq:elbo-kl-joints}
     =& \EX_{\pdata(\rvx,\rvy)} \left[ \log \pdata(\rvx|\rvy) \right] \\
-    &- \EX_{\pdata(\rvy)} \left[ \kl{q_\phi(\rvz|\rvx)\pdata(\rvx|\rvy)}{p_\theta(\rvx|\rvz)p_\theta(\rvz|\rvy)} \right] \nonumber
+    &- \EX_{\pdata(\rvy)} \left[ \kl{q_\phi(\rvz|\rvx)\pdata(\rvx|\rvy)}{p_\theta(\rvx|\rvz)p_\theta(\rvz|\rvy)} \right] \nonumber .
 \end{align}
 \Cref{eq:elbo-kl-joints} states that the conditional VAE objective is the average likelihood of $\rvx$ given $\rvy$ under the data distribution minus a KL divergence describing the match between the model's distribution $p_\theta(\rvx|\rvz)p_\theta(\rvz)$ and a distribution given by encoding sampled data $q_\phi(\rvz|\rvx)\pdata(\rvx|\rvy)$. Given that asymmetry of the KL divergence~\citep{bishop2006pattern}, it also reveals that the learned $p_\theta(\rvx|\rvz)p_\theta(\rvz)$ will be mass-covering and so can be expected to produce more diverse samples than are realistic if it is unable to perfectly match $q_\phi(\rvz|\rvx)\pdata(\rvx|\rvy)$.
 
@@ -122,7 +123,7 @@ We end with a note on how the conditional VAE objective (\cref{eq:conditional-va
     &= \EX_{q_\phi(\rvz|\rvx)} \left[ \sum_{l=1}^L \log \frac{q_\phi(\rvz_l|\rvx,\rvz_{<l})}{p_\theta(\rvz_l|\rvy,\rvz_{<l})} \right] \\
     &= \EX_{q_\phi(\rvz|\rvx)} \left[ \sum_{l=1}^L \kl{q_\phi(\rvz_l|\rvx,\rvz_{<l})}{p_\theta(\rvz_l|\rvy,\rvz_{<l})} \right]
 \end{align}
-which is an expectation of the sum of layer-wise KL divergences. Each layer-wise KL divergence is tractable under common parameterisations of $p_\theta(\rvz_l|\rvy,\rvz_{<l})$ and $q_\phi(\rvz_l|\rvx,\rvz_{<l})$ like Gaussian distributions. We can therefore estimate the overall KL divergence by simply drawing one sample of $\rvz$ from he encoder and using it to compute layer-wise KL divergences. Any modes of the true conditional distribution that the model's distribution misses will be heavily penalised by $\gL(\theta,\phi)$. 
+which is an expectation of the sum of layer-wise KL divergences. Each layer-wise KL divergence is tractable under common parameterisations of $p_\theta(\rvz_l|\rvy,\rvz_{<l})$ and $q_\phi(\rvz_l|\rvx,\rvz_{<l})$ like Gaussian distributions. We can therefore estimate the overall KL divergence by simply drawing one sample of $\rvz$ from the encoder and using it to compute layer-wise KL divergences. Any modes of the true conditional distribution that the model's distribution misses will be heavily penalised by $\gL_\text{CVAE}(\theta,\phi)$. 
 
 \begin{figure*}[t]
   \centering
@@ -161,12 +162,8 @@ which is an expectation of the sum of layer-wise KL divergences. Each layer-wise
 \section{Inference in a pretrained auto-encoder}
 \label{sec:ipa}
 
-We now describe our approach to training flexible VAEs. A key features of it is that we design it to be amenable to initialisation from a pretrained unconditional VAE to allow for fast and cheap training.  This is particularly important in the VAE setting because of VAE's typically slow training times. For example,
-training a state-of-the-art VAE~\citep{vahdat2020nvae,child2020very} on the
-$256\times256$ FFHQ dataset~\citep{karras2019style} takes on the order of 1
-GPU-year, but a state-of-the-art generative adversarial network
-(GAN)~\citep{lin2021anycost,karras2020analyzing} can be trained on the same
-dataset in a matter of GPU-weeks. One hypothesis for the cause of this disparity
+We now describe our approach to training flexible VAEs. It is designed to allow initialisation from a pretrained unconditional VAE, enabling fast and cheap training.  This is particularly important in the VAE setting because of the typically slow training times seen with VAEs. For example, in this paper we will build on the VD-VAE~\citep{child2020very}. The VD-VAE takes on the order of 1 GPU-year to train on the $256\times256$ FFHQ dataset~\citep{karras2019style} whereas the generative adversarial networks (GANs) that were state-of-the-art at the time of VD-VAE's publication could be trained on the same
+dataset in a matter of GPU-weeks~\citep{lin2021anycost,karras2020analyzing}. One hypothesis for the cause of this disparity
 is that, whereas the ``mass-covering'' training objective for a VAE forces it to
 assign probability mass over the entirety of the data distribution, a GAN can
 ``cut corners'' by dropping modes~\citep{arora2017gans,arora2017generalization}. Conditional GANs~\citep{zheng2019pluralistic,zhao2021large} and conditional VAEs~\citep{sohn2015learning,ivanov2018variational} suffer from the same disparity in training times as their unconditional counterparts. We will show that re-using publicly available pretrained models to initialise our flexible VAEs can lead to training times and sample quality competitive with GAN-based appraoches while avoiding mode dropping.
@@ -211,11 +208,11 @@ To denote the conditional prior's approximate posterior over the latent variable
 Our approximation of $\pdata(\rvx|\rvy)$ becomes
 \begin{equation}
   \label{eq:marginal-image-posterior}
-  p_{\theta,\psi}(\rvx|\rvy) := \int p_\theta(\rvx|\rvz)q_\psi(\rvz|\rvy) \mathrm{d}\rvz
+  p_{\theta,\psi}(\rvx|\rvy) := \int p_\theta(\rvx|\rvz)p_\psi(\rvz|\rvy) \mathrm{d}\rvz
 \end{equation}
 with learnable parameters $\theta$ and $\psi$. We can sample from
 $p_{\theta,\psi}(\rvx|\rvy)$ by sampling $\rvz\sim p_\psi(\cdot|\rvy)$ and then
-$\rvx\sim p_\theta(\cdot|\rvz)$ as shown in \cref{fig:cigcvae-reverse-arch}. 
+$\rvx\sim p_\theta(\cdot|\rvz)$ as illustrated in \cref{fig:cigcvae-reverse-arch}. 
 %
 
 We introduce some more notation before describing our method further. Let the
@@ -268,11 +265,10 @@ is that the prior, $p_\theta(\rvz)$, is replaced by $p_\psi(\rvz|\rvy)$.
 This is reflected in \cref{fig:cigcvae-forward-arch} where each $\rvz_l$ is conditioned
 on $\rvy$ via the conditional prior.
 %
-Similar to standard estimators for an unconditional hierarchical VAE's ELBO,
+As described in \cref{sec:conditional-vae},
 reduced-variance estimates of \cref{eq:forward-elbo} can be obtained by
 computing KL divergences between $q(\rvz_l|\rvz_{<l},\rvx)$ and
-$p_\psi(\rvz_l|\rvz_{<l},\rvy)$ analytically for each layer $l$ (see
-\cref{supp:cigcvae-kl-estimates} for details).
+$p_\psi(\rvz_l|\rvz_{<l},\rvy)$ analytically for each layer $l$..
 
 We are particularly interested in the properties of the learned conditional prior.
 Recall the joint distribution $q_\phi(\rvz, \rvx, \rvy) = \pdata(\rvx,
@@ -387,30 +383,25 @@ makes impossible the ``posterior collapse'' phenomenon discussed by
 ignore $\rvz$ and produce outputs conditioned solely on $\mathbf{y}$.
 
 
-\paragraph{Image completion}
-Early work on image completion, both
-before~\citep{bertalmio2000image,bertalmio2001navier,ballester2001filling,levin2003learning,criminisi2003object}
-and after~\citep{kohler2014mask,ren2015shepard} deep learning became the
-dominant approach, aimed to deterministically fill in missing pixels in images.
+\paragraph{Image completion/flexible generative modelling}
+As we have defined it, image completion is essentially the same as flexible generative modelling in the image domain. 
+This correspondence holds poorly, though, when considering early work on image completion~\citep{bertalmio2000image,bertalmio2001navier,ballester2001filling,levin2003learning,criminisi2003object,kohler2014mask,ren2015shepard} which aimed to deterministically fill in missing pixels in images rather than learning a generative model.
 Even many methods incorporating generative adversarial networks (GANs), which
 were introduced by \citet{goodfellow2014generative} as a tool to learn
 distributions, have been found to result in little or no diversity in the
 completions produced for a given
 input~\citep{song2018spg,yu2018generative,yu2019free,pathak2016context,iizuka2017globally}.
-%
-However, some recent methods have managed to obtain diverse completions using
+
+More recent approaches which we would consider ``flexible generative models'' include some which have managed to obtain diverse completions using
 the GAN framework~\citep{zhao2020uctgan,zhao2021large,liu2021pd}.
 %
-Another approach is to sample low-resolution images using
+Other approaches include sampling low-resolution images using
 VAEs~\citep{zheng2019pluralistic,peng2021generating} or transformer-based
 sequence models~\citep{zheng2021tfill,wan2021high}, and then use a GAN for
-upsampling. In contrast, we use a VAE to model image completions at the full
+upsampling. In contrast, we use a pure ``flexible VAE'' which models image completions at the full
 resolution. As well as ensuring diverse coverage of the posterior, using such a
 likelihood-based model enables applications such as out-of-distribution
-detection for inputs $\rvy$, which we demonstrate in \cref{supp:cigcvae-ood}.
-Another related approach is that of \citet{song2020score}, who present a
-stochastic differential equation-based image model. This can be used for image
-completion but sampling is slow.
+detection for inputs $\rvy$, which we demonstrate in \cref{supp:cigcvae-ood}. We are aware of one prior flexible VAE~\citep{ivanov2018variational} but it was demonstrated on lower resolution and less diverse image datasets. More recent approaches to image completion include those of \citet{song2020score} and that of \citet{tian2023control} who use diffusion models.
 
 
 
@@ -449,7 +440,7 @@ We create an IPA image completion model based on the VD-VAE unconditional
 architecture~\citep{child2020very}, and evaluate it for image completion on
 three datasets: CIFAR-10~\citep{krizhevsky2009learning},
 ImageNet-64~\citep{deng2009imagenet}, and FFHQ-256~\citep{karras2019style}. We
-compare against four baselines: Co-Modulated Generative Adversarial Networks
+compare against four baselines from the prior literature: Co-Modulated Generative Adversarial Networks
 (CoModGAN)~\citep{zhao2021large}; Pluralistic Image Completion
 (PIC)~\citep{zheng2019pluralistic}; Context Encoders
 (CE)~\citep{pathak2016context}; and Attentive Neural Processes
@@ -536,11 +527,24 @@ pretrained on ImageNet~\citep{deng2009imagenet} at this resolution by
 these tasks, and provide further discussion below. The images generated are
 diverse and photorealistic, as shown in \cref{supp:cigcvae-image-samples}.
 
-\paragraph{Effectiveness of pretraining}
+
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[scale=1]{figs/cigcvae/training-both}
+  \caption{ELBO (\cref{eq:forward-elbo} computed with $\tildeI{} := \rvx$) and
+    FID during training using IPA with pretraining on the same dataset, IPA with
+    pretraining on ImageNet, and when trained from scratch. Error bars show
+    standard deviations computed with 3 runs. IPA makes training faster and
+    lower-variance.}
+  \label{fig:cigcvae-training}
+\end{figure*}
+
+\paragraph{Effectiveness of pretrained weights}
 We now seek to determine how important the pretrained unconditional VAE weights
-are to IPA. We compare IPA with conditional VAEs which use IPA's architecture
+are to IPA. \Cref{fig:cigcvae-training} compares IPA with conditional VAEs which use IPA's architecture
 but are trained from scratch, which we will refer to as ``from-scratch''
-baselines. That is, $\theta$ and $\phi$ are randomly initialised and trained to
+baselines. In these baselines, $\theta$ and $\phi$ are randomly initialised and trained to
 maximise \cref{eq:forward-elbo} (with $\tildeI{} := \rvx$) along with
 $\psi$.
 %
@@ -575,19 +579,6 @@ In \cref{tab:cigcvae-results-completion} and \cref{fig:cigcvae-metrics}, we repo
 IPA-R, a variation of IPA with a different training objective corresponding to a
 mode-seeking KL divergence. IPA almost always outperforms IPA-R, but we
 nonetheless provide a full description of IPA-R in \cref{supp:cigcvae-ipa-r}.
-
-\begin{figure*}[t]
-  \vspace{-.1cm}
-  \centering
-  \includegraphics[scale=1]{figs/cigcvae/training-both}
-  \caption{ELBO (\cref{eq:forward-elbo} computed with $\tildeI{} := \rvx$) and
-    FID during training using IPA with pretraining on the same dataset, IPA with
-    pretraining on ImageNet, and when trained from scratch. Error bars show
-    standard deviations computed with 3 runs. IPA makes training faster and
-    lower-variance.}
-  \label{fig:cigcvae-training}
-  \vspace{-.3cm}
-\end{figure*}
 
 
 
@@ -759,3 +750,8 @@ estimated EIG for each $\coord{}_t$.
 % %
 % Preliminary experiments using normalizing flows helped improve the ELBO, but
 % with little impact on the FID scores.
+
+\section{Discussion}
+
+We have demonstrated an application of VAEs as flexible generative models in the image domain, enabling better handling of uncertainty in image inpainting than prior methods while also scaling flexible VAEs to higher resolution and more diverse data than prior work~\citep{ivanov2018variational}.
+This also serves to show that flexible generative models can be built on the VAE framework as well as on the DM framework, proving that we are not limited to a single generative modelling framework and providing a positive signal about the potential of combining flexible generative modelling with other frameworks that may show promise in the future.
