@@ -11,7 +11,7 @@ Finally, in \cref{ch:cigcvae} we showed that flexible generative modelling is po
 
 \section*{Outlook}
 
-One next step to build on this dissertation would be to simply incorporate new methods to speed up sampling. In particular, the DM-based generative models in \cref{ch:fdm,ch:tddm} both suffer from relatively slow sampling, similarly to prior DMs in other domains~\citep{ho2020denoising,song2020score}. For example, the video model presented in \cref{ch:fdm} took approximately 16 minutes to generate a 300 frame video on a GPU.  Combining our DMs with fast samplers like the Heun integrator~\citep{karras2022elucidating} is likely to greatly improve sampling speed at little cost. Incorporating newer approaches like consistency models~\citep{song2023consistency} and rectified flow~\citep{esser2024scaling} could improve speed even further. 
+One next step to build on this dissertation would be to simply incorporate recently-proposed methods to speed up sampling. In particular, the DM-based generative models in \cref{ch:fdm,ch:tddm} both suffer from relatively slow sampling, similarly to prior DMs in other domains~\citep{ho2020denoising,song2020score}. For example, the video model presented in \cref{ch:fdm} took approximately 16 minutes to generate a 300 frame video on a GPU.  Combining our DMs with fast samplers like the Heun integrator~\citep{karras2022elucidating} is likely to greatly improve sampling speed at little cost. Incorporating newer approaches like consistency models~\citep{song2023consistency} and rectified flow~\citep{esser2024scaling} could improve speed even further. 
 
 Another clear and promising direction for future research is to scale up the compute resources and amount of data with which we have trained our flexible generative models. Perceptual quality and quantitative metrics have both been demonstrated to scale smoothly with compute for images~\citep{peebles2022scalable}; we refer to \citet{esser2024scaling,brooks2024video} for examples of generative models trained with large compute in the image and video domains.
 
@@ -29,8 +29,8 @@ The above would be a joint vision-action model, but we could also integrate more
 
 \begin{itemize}
     \item inconsistency in notation between $g(t)$ and $g_t$ ? and other things with $t$ as argument vs subscript. like $\rvb_t$ the drift term.
-    \item make Fig 5.4 nicely formatted
-    \item Touch on discrete time training in background - train of Diracs in integral. more natural when writing expectation, in which case we should treat u(.) as a discrete distribution. Also time can be discrete, as in FDM
+    \item Touch on discrete time training in background - train of Diracs in integral. Change diffusion losses after background to be all expectations so this is more natural, and then u(.) is a categorical distribution in the discrete case. Also time can be discrete, as in FDM
     \item Update table of notation
+    \item write list of table/figure captions to not be horrible to read in isolation
 \end{itemize}
 
