@@ -6,14 +6,14 @@ We estimate our objective $\mathcal{L}_\text{JD}(\theta)$ by taking minibatches 
 \begin{equation}
     \mathcal{U}(t; 0, T) q_{0,t}(\mX_0, \mX_t, M_t) \delidxdist(i | n_t) \updelta_{\text{del}(\mX_t, i)}(\mV).
 \end{equation}
-We first sample $t \sim \mathcal{U}(0, T)$ and then take samples from our dataset $\mX_0 \sim \pdata(\cdot)$. In order to sample $q_{t|0}(\mX_t, M_t | \mX_0)$ we need to add noise, delete dimensions, and sample a mask variable. When the Gaussian noising process is isotropic, we can add a suitable amount of noise to all dimensions of $\mX_0$ and then delete dimensions of that noised full dimensional value. More specifically, we first sample $\tilde{\mX}_t = (n_0, \tilde{\rvx}_t)$ with $\tilde{\rvx}_t \sim \mathcal{N}(\tilde{\rvx}_t; \alpha(t) \rvx_0, \sigma(t)^2 I_{n_0 d})$. Then we sample the number of dimensions to delete. This is simple to do when our rate function is independent of $n$ except for the case when $n=1$ at which it is zero. We simply sample a Poisson random variable with mean parameter $\int_0^t \forwardrate_s \rmd s$ and then clamp its value such that the maximum number of possible components that are deleted is $n_0 - 1$. This gives the appropriate distribution over $n$, 
+We first sample $t \sim \mathcal{U}(0, T)$ and then take samples from our dataset $\mX_0 \sim \pdata(\cdot)$. In order to sample $q_{t|0}(\mX_t, M_t | \mX_0)$ we need to add noise, delete dimensions, and sample a mask variable. When the Gaussian noising process is isotropic, we can add a suitable amount of noise to all dimensions of $\mX_0$ and then delete dimensions of that noised full dimensional value. More specifically, we first sample $\tilde{\mX}_t = (n_0, \tilde{\rvx}_t)$ with $\tilde{\rvx}_t \sim \mathcal{N}(\tilde{\rvx}_t; \alpha(t) \rvx_0, \sigma(t)^2 I_{n_0 d})$. Then we sample the number of dimensions to delete. This is simple to do when our rate function is independent of $n_t$ except for the case when $n_t=1$ at which it is zero. We simply sample a Poisson random variable with mean parameter $\int_0^t \forwardrate_s \rmd s$ and then clamp its value such that the maximum number of possible components that are deleted is $n_0 - 1$. This gives the appropriate distribution over $n_t$, 
 \begin{equation}
-    q_{t|0}(n | n_0) = \begin{cases}
-         \frac{(\int_0^t \forwardrate_s \rmd s)^{n_0 - n}}{(n_0 - n)!} \text{exp}(- \int_0^t \forwardrate_s \rmd s)&\textstyle  1 < n \leq n_0 \\
-        1 -  \sum_{m=2}^{n_0} \frac{(\int_0^t \forwardrate_s \rmd s)^{n_0 - m}}{(n_0 - m)!} \text{exp}(- \int_0^t \forwardrate_s \rmd s)  &\textstyle  n = 1.
+    q_{t|0}(n_t | n_0) = \begin{cases}
+         \frac{(\int_0^t \forwardrate_s \rmd s)^{n_0 - n_t}}{(n_0 - n_t)!} \text{exp}(- \int_0^t \forwardrate_s \rmd s)&\textstyle  1 < n_t \leq n_0 \\
+        1 -  \sum_{m=2}^{n_0} \frac{(\int_0^t \forwardrate_s \rmd s)^{n_0 - m}}{(n_0 - m)!} \text{exp}(- \int_0^t \forwardrate_s \rmd s)  &\textstyle  n_t = 1.
     \end{cases}
 \end{equation}
-To sample which dimensions are deleted, we can sample $\delidxdist(i_1 | n_0) \delidxdist(i_2 | n_0-1) \dots \delidxdist(i_{n_0 - n_t} | n_t+1)$ from which we can create the mask $M_t$ and apply it to $\tilde{\mX}_t$ to obtain $\mX_t = M_t(\tilde{\mX}_t)$. When $\delidxdist(i | n) = 1/n$ this is especially simple to do by simply randomly permuting the components of $\tilde{\mX}_t$, and then removing the final $n_0 - n_t$ components. Similarly, if $\delidxdist(i | n)$ is defined to always delete the final component, this will deterministically result in a mask that always removes the final $n_0 - n_t$ components.
+To sample which dimensions are deleted, we can sample $\delidxdist(i_1 | n_0) \delidxdist(i_2 | n_0-1) \dots \delidxdist(i_{n_0 - n_t} | n_t+1)$ from which we can create the mask $M_t$ and apply it to $\tilde{\mX}_t$ to obtain $\mX_t = M_t(\tilde{\mX}_t)$. When $\delidxdist(i | n_t) = 1/n_t$ this is especially simple to do by simply randomly permuting the components of $\tilde{\mX}_t$, and then removing the final $n_0 - n_t$ components. Similarly, if $\delidxdist(i | n_t)$ is defined to always delete the final component, this will deterministically result in a mask that always removes the final $n_0 - n_t$ components.
 
 We use the $\epsilon$-prediction parameterisation described in \cref{sec:diffusion-training}, parameterising $\rvs_\theta$ in terms of a noise prediction network that predicts $\epsilon$ where $\rvx_t = \alpha(t) M_t(\rvx_0) + \sigma(t) \cdot \epsilon$ with $\epsilon \sim \mathcal{N}(0, I_{n_t d})$. We set the weighting function such that $\lambda^\epsilon(t)/u(t) = 1$ as in the uniform weighting approach used by \citet{song2020score}. Our objective to learn $\rvs_\theta$ then becomes
 \begin{equation}
@@ -63,36 +63,36 @@ When deleting dimensions, we first shuffle the ordering of the nodes and then de
 Following \citet{hoogeboom2022equivariant} we train our model to operate within the centre of mass (CoM) zero subspace of possible molecule positions. The means, throughout the forward and reverse process, the average position of an atom is $0$. In our trans-dimensional framework, this is achieved by first deleting any atoms required under the forward component deletion process. We then move the molecule such that its CoM is $0$. We then add CoM free noise such that the noisy molecule also has CoM$=0$. Our score model $\rvs_\theta$ is parameterised through a noise prediction model $\hat{\mathbf{\epsilon}}_\theta$ which is trained to predict the CoM free noise that was added. Therefore, our score network learns suitable directions to maintain the process on the CoM$=0$ subspace. For the position prediction from $\autonet_t^\theta(\yadd | \mX_t)$ we train it to predict the new atom position from the current molecules reference frame. When the new atom is added, we then update all atom positions such that CoM$=0$ is maintained.
 
 \subsubsection{Sampling}
-During sampling we found that adding corrector steps~\citep{song2020score} improved sample quality. Intuitively, corrector steps form a process that has $p_t(\mX)$ as its stationary distribution rather than the process progressing toward $p_0(\mX)$. We use the same method to determine the corrector step size $\zeta$ as \citet{song2020score}. For the conditional generation tasks, we also found it useful to include corrector steps for the component generation process. As shown by \citet{campbell2022continuous}, corrector steps in discrete spaces can be achieved by simulating with a rate that is the addition of the forward and reverse rates. We achieve this in the context of trans-dimensional modelling by first simulating a possible insertion using $\backwardrate_t^\theta$ and then simulating a possible deletion using $\forwardrate_t$. We describe our overall sampling algorithm in \cref{alg:backwardsamplingWithCorrector}.
+During sampling we found that adding corrector steps~\citep{song2020score} improved sample quality. Intuitively, corrector steps form a process that has $q_t(\cdot)$ as its stationary distribution rather than the process progressing toward $\pdata(\cdot)$. We use the same method to determine the corrector step size $\zeta$ as \citet{song2020score}. For the conditional generation tasks, we also found it useful to include corrector steps for the component generation process. As shown by \citet{campbell2022continuous}, corrector steps in discrete spaces can be achieved by simulating with a rate that is the addition of the forward and reverse rates. We achieve this in the context of trans-dimensional modelling by first simulating a possible insertion using $\backwardrate_t^\theta$ and then simulating a possible deletion using $\forwardrate_t$. We describe our overall sampling algorithm in \cref{alg:backwardsamplingWithCorrector}.
 
 \begin{algorithm}
 \begin{algorithmic}[1]
     \State $t \leftarrow T$
-    \State $\mX \sim \mathbb{I}\{ n=1\} \mathcal{N}(\rvx; 0, I_{d})$
+    \State $\mX' \sim \mathbb{I}\{ n'=1\} \mathcal{N}(\rvx'; 0, I_{d})$
     \While{ $t > 0$}
     \State $u \sim \mathcal{U}(0, 1)$
-    \If{$u < \backwardrate_{t}^\theta(\mX) \updelta t$}
-    \State $\xadd, i \sim \autonet_{t}^\theta(\xadd, i | \mX)$
-    \State $\mX \leftarrow \text{ins}(\mX, \xadd, i)$
+    \If{$u < \backwardrate_{t}^\theta(\mX') \updelta t$}
+    \State $\xadd, i \sim \autonet_{t}^\theta(\xadd, i | \mX')$
+    \State $\mX' \leftarrow \text{ins}(\mX', \xadd, i)$
     \EndIf
     \State  $\epsilon \sim \mathcal{N}(0, I_{nd})$
-    \State $\rvx \leftarrow \rvx - \backwarddrift_{t}^\theta(\mX) \updelta t + g_{t} \sqrt{\updelta t} \epsilon$
+    \State $\rvx' \leftarrow \rvx' - \backwarddrift_{t}^\theta(\mX') \updelta t + g_{t} \sqrt{\updelta t} \epsilon$
     \For{$c = [1, \dots, C]$}
         \Comment{Corrector steps}
         \State $\epsilon \sim \mathcal{N}(0, I_{nd})$
-        \State $\rvx \leftarrow \rvx + \zeta s_{t-\updelta t}^\theta(\mX) + \sqrt{2 \zeta} \epsilon$
+        \State $\rvx' \leftarrow \rvx' + \zeta s_{t-\updelta t}^\theta(\mX') + \sqrt{2 \zeta} \epsilon$
         \State $u \sim \mathcal{U}(0, 1)$
-        \If{$u < \backwardrate_{t-\updelta t}^\theta(\mX) \updelta t$}
-        \State $\xadd, i \sim \autonet_{t-\updelta t}^\theta(\xadd, i | \mX)$
-        \State $\mX \leftarrow \text{ins}(\mX, \xadd, i)$
+        \If{$u < \backwardrate_{t-\updelta t}^\theta(\mX') \updelta t$}
+        \State $\xadd, i \sim \autonet_{t-\updelta t}^\theta(\xadd, i | \mX')$
+        \State $\mX' \leftarrow \text{ins}(\mX', \xadd, i)$
         \EndIf
         \State $u \sim \mathcal{U}(0, 1)$
         \If{$u < \forwardrate_{t-\updelta t}(n) \updelta t$}
-            \State $i \sim \delidxdist(i | n)$
-            \State $\mX \leftarrow \text{del}(\mX, i)$
+            \State $i \sim \delidxdist(i | n')$
+            \State $\mX' \leftarrow \text{del}(\mX', i)$
         \EndIf
     \EndFor
-    \State $\mX \leftarrow (n, \rvx)$
+    \State $\mX' \leftarrow (n', \rvx')$
     \State $t \leftarrow t - \updelta t$
     \EndWhile
 \end{algorithmic}
@@ -190,7 +190,7 @@ $ \overrightarrow{\lambda}_{t < 0.3T} = 0$ & $0.266 {\scriptstyle \pm 0.11}$ & $
 We here investigate sample diversity and novelty of our unconditional generative models. We measure uniqueness by computing the chemical graph corresponding to each generated sample and measure what proportion of the 10000 produced samples have a unique chemical graph amongst this set of 10000 as is done by \citet{hoogeboom2022equivariant}. We show our results in \cref{tab:uniqueness_and_novelty} and find our TDDM method to have slightly lower levels of uniqueness when compared to the fixed dimension diffusion model baseline. Measuring novelty on generative models trained on the QM9 dataset is challenging because the QM9 dataset contains an exhaustive enumeration of all molecules that satisfy certain predefined constraints~\citep{vignac2021top,hoogeboom2022equivariant}. Therefore, if a novel molecule is produced it means the generative model has failed to capture some of the physical properties of the dataset and indeed it was found by \citet{hoogeboom2022equivariant} that during training, as the model improved, novelty decreased. Novelty is therefore not typically included in evaluating molecular diffusion models. For completeness, we include the novelty scores in \cref{tab:uniqueness_and_novelty} as a comparison to the results presented in Appendix C of \citet{hoogeboom2022equivariant}. We find that our samples are closer to the statistics of the training dataset whilst still producing ‘novel’ samples at a consistent rate.
 \begin{table}[ht]
      \centering
-   \caption{Uniqueness and novelty metrics on unconditional molecule generation. We produce 10000 samples for each method and measure validity using RDKit. Uniquenss is judged as whether the chemical graph is unique amongst the 10000 produced samples. Amongst the valid and unique molecules, we then find the percentage that have a chemical graph not present in the training dataset.}
+   \caption{Uniqueness and novelty metrics on unconditional molecule generation. We produce 10000 samples for each method and measure validity using RDKit. Uniqueness is judged as whether the chemical graph is unique amongst the 10000 produced samples. Amongst the valid and unique molecules, we then find the percentage that have a chemical graph not present in the training dataset.}
    \begin{tabular}{@{}lcccc@{}}
      \toprule
      Method & \% Valid  & \% Valid and Unique & \shortstack{Percentage of Valid and Unique \\ Molecules that are Novel } \\ \midrule
@@ -215,7 +215,7 @@ The video domain differs from molecules in two important ways. The first is that
 
 We define our forward process to delete frames in a random order. This means that during generation, frames can be generated in any order in the reverse process, enabling more conditioning tasks since we can always ensure that whichever frames we want to condition on are added first. Further, we use a non-isotropic noise schedule by adding noise just to the frame that is about to be deleted. Once it is deleted, we then start noising the next randomly chosen frame. This is so that, in the reverse direction, when a new frame is added, it is simply Gaussian noise. Then the score network will fully denoise that new frame before the next new frame is added. We now specify exactly how our forward process is constructed.
 
-We enable random-order deletion by applying an initial shuffling operation occurring at time $t=0$. Before this operation, we represent the video $\rvx$ as an ordered sequence of frames, $\rvx_0=[\rvx_1,\rvx_2,\ldots,\rvx_{n_0}]$. During shuffling, we sample a random permutation $\pi$ of the integers $1,\ldots,n_0$. Then the frames are kept in the same order, but annotated with an index variable so that we have 
+We enable random-order deletion by applying an initial shuffling operation occurring at time $t=0$. Before this operation, we represent the video $\rvx_0$ as an ordered sequence of frames, $\rvx_0=[\rvx_1,\rvx_2,\ldots,\rvx_{n_0}]$. During shuffling, we sample a random permutation $\pi$ of the integers $1,\ldots,n_0$. Then the frames are kept in the same order, but annotated with an index variable so that we have 
 \begin{equation}
     \rvx_{0^+}=[(\rvx_{0}^{(1)}, \pi(1)), (\rvx_{0}^{(2)}, \pi(2)), \ldots, (\rvx^{(n_0)}_{0}, \pi(n_0))].
 \end{equation}

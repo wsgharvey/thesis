@@ -761,7 +761,7 @@ AVP-CNN acting on observations of each image at locations $\coord{}_1,\ldots,\co
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\textwidth]{figs/cigcvae/table-AUROC-boed}
+  \includegraphics[width=0.6\textwidth]{figs/cigcvae/table-AUROC-boed}
   \caption{AUROC scores when performing one classification task with scan
     locations chosen for a different classification task. The intensity of the
     colour of each cell is proportional to the difference between its value and
@@ -805,7 +805,7 @@ to search over all of them. We therefore optimise this sequence by
 randomly sampling a set of such sequences, and choosing the best from this set.
 
 
-\begin{figure*}[p]
+\begin{figure*}[t]
   \centering
   \includegraphics[width=0.98\textwidth]{figs/cigcvae/boed-visualisation-4960-compressed.pdf}
   \includegraphics[width=0.98\textwidth]{figs/cigcvae/boed-visualisation-4970-compressed.pdf}
@@ -824,7 +824,7 @@ randomly sampling a set of such sequences, and choosing the best from this set.
   \label{fig:cigcvae-extra-xray-boed}
 \end{figure*}
 
-\begin{figure*}[p]
+\begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{figs/cigcvae/boed-visualisation-4980-compressed.pdf}
   \caption{Another visualisations of a BOED process similar to \cref{fig:cigcvae-extra-xray-boed}, where the task is to detect `Infiltration'.}
@@ -974,8 +974,7 @@ likelihood of a partially-observed image. Specifically, this lower-bound is the
 reverse KL objective in \cref{eq:reverse-obj}. After conducting preliminary
 experiments using the VD-VAE with several OOD-detection
 metrics~\citep{xiao2020likelihood,havtorn2021hierarchical}, we found that
-\begin{wrapfigure}[18]{R}{.4\textwidth}
-  \vspace{-.4cm}
+\begin{wrapfigure}[13]{R}{.4\textwidth}
   \centering
   \includegraphics[scale=.8]{figs/cigcvae/ood-supplementary}
   \caption{Breakdown of AUROC for each mask distribution on CIFAR-10. }
