@@ -47,7 +47,7 @@ Here we prove \cref{eq:forward-elbo}, which states that IPA's training
 objective is a lower bound on $\EX_{\pdata (\rvx, \rvy)} \left[ \log
   p_{\theta,\psi}(\tildeI{}|\rvy) \right]$.
 \begin{align}
-  \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ) &= \EX_{\pdata (\rvx, \rvy)} \EX_{q_\phi(\rvz|\rvx)} \left[ \log \frac{p_\theta(\tildeI{}|\rvz)p_\psi(\rvz|\rvy)}{q_\phi(\rvz|\rvx)} \right] \\
+  \gO_\text{CVAE}(\theta, \phi, \psi ) &= \EX_{\pdata (\rvx, \rvy)} \EX_{q_\phi(\rvz|\rvx)} \left[ \log \frac{p_\theta(\tildeI{}|\rvz)p_\psi(\rvz|\rvy)}{q_\phi(\rvz|\rvx)} \right] \\
                                                    &\leq \EX_{\pdata (\rvx, \rvy)} \left[ \log \EX_{q_\phi(\rvz|\rvx)} \left[ \frac{p_\theta(\tildeI{}|\rvz)p_\psi(\rvz|\rvy)}{q_\phi(\rvz|\rvx)} \right]  \right] \\
                                                    &= \EX_{\pdata (\rvx, \rvy)} \left[ \log \EX_{p_\psi(\rvz|\rvy)} \left[ p_\theta(\tildeI{}|\rvz) \right]  \right] \\
                                                    &= \EX_{\pdata (\rvx, \rvy)} \left[ \log p_{\theta,\psi}(\tildeI{}|\rvy) \right],
@@ -64,21 +64,21 @@ where the final step follows from the definition of $p_{\theta,\psi}$ in
   permissible values of $\psi $, and for any $\theta\in\Theta$ and
   $\phi\in\Phi$,
   \begin{equation}
-    \argmax_{\psi  \in \Psi} \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ) = \argmin_{\psi  \in \Psi} \EX_{\pdata (\rvy)} \left[ \kl[\big]{ q_\phi(\rvz|\rvy) }{ p_\psi(\rvz|\rvy) } \right]. \tag{\ref{eq:forward-theorem}}
+    \argmax_{\psi  \in \Psi} \gO_\text{CVAE}(\theta, \phi, \psi ) = \argmin_{\psi  \in \Psi} \EX_{\pdata (\rvy)} \left[ \kl[\big]{ q_\phi(\rvz|\rvy) }{ p_\psi(\rvz|\rvy) } \right]. \tag{\ref{eq:forward-theorem}}
   \end{equation}
 }
 
-\textbf{Proof.} We can decompose $\mathcal{O}_\mathrm{for}$ as follows.
+\textbf{Proof.} We can decompose $\gO_\text{CVAE}$ as follows.
 Starting by multiplying both sides of the fraction by the intractable
 conditional distribution $q_\phi(\rvz|\rvy)$,
 \begin{align}
-  \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ) &= \EX_{q_\phi(\rvz,\rvx,\rvy)} \left[ \log \frac{p_\theta(\tildeI{}|\rvz)p_\psi(\rvz|\rvy)q_\phi(\rvz|\rvy)}{q_\phi(\rvz|\rvx)q_\phi(\rvz|\rvy)} \right]\\
+  \gO_\text{CVAE}(\theta, \phi, \psi ) &= \EX_{q_\phi(\rvz,\rvx,\rvy)} \left[ \log \frac{p_\theta(\tildeI{}|\rvz)p_\psi(\rvz|\rvy)q_\phi(\rvz|\rvy)}{q_\phi(\rvz|\rvx)q_\phi(\rvz|\rvy)} \right]\\
                                                    &= \EX_{q_\phi(\rvz,\rvx,\rvy)} \left[ \log \frac{p_\theta(\tildeI{}|\rvz)q_\phi(\rvz|\rvy)}{q_\phi(\rvz|\rvx)} \right] - \EX_{q_\phi(\rvz,\rvy)} \left[ \log\frac{q_\phi(\rvz|\rvy)}{p_\psi(\rvz|\rvy)} \right] \\
                                                    &= C(\theta, \phi) - \EX_{\pdata (\rvy)} \left[ \kl[\big]{ q_\phi(\rvz|\rvy) }{ p_\psi(\rvz|\rvy) } \right]   \label{eq:constant-and-forward-kl}
 \end{align}
 where $C(\theta, \phi)$ is a grouping of terms which do not depend on the
 partial encoder's parameters $\psi $. Any values of $\psi$ which
-maximise $\mathcal{O}_\mathrm{for}(\theta, \phi, \psi)$ will therefore also
+maximise $\gO_\text{CVAE}(\theta, \phi, \psi)$ will therefore also
 minimise $\EX_{\pdata (\rvy)} \left[ \kl[\big]{ q_\phi(\rvz|\rvy) }{p_\psi(\rvz|\rvy) } \right]$ for the same values of $\theta$ and $\phi$,
 which proves the theorem.
 
@@ -87,18 +87,18 @@ The mass-covering KL divergence in \Cref{theorem:forward-kl} indicates that
 samples $\rvz\sim p_\psi(\cdot|\rvy)$ will be diverse (when $q_\phi(\rvz|\rvy)$ is
 diverse/uncertain). One would expect that samples of $\tildeI{}$ conditioned on these
 diverse samples of $\rvz$ will also be diverse. Here we make a more formal argument
-by showing that minimising $\mathcal{O}_\mathrm{for}$ corresponds to minimising
+by showing that minimising $\gO_\text{CVAE}$ corresponds to minimising
 an upper-bound on an expected mass-covering KL divergence in $\tildeI{}$-space.
 Starting from the result in \cref{supp:cigcvae-forward-elbo-bound-deriv},
 \begin{align}
-  \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ) &\leq \EX_{\pdata (\rvx,\rvy)} \left[ \log p_{\theta,\psi}(\tildeI{}|\rvy) \right] \\
+  \gO_\text{CVAE}(\theta, \phi, \psi ) &\leq \EX_{\pdata (\rvx,\rvy)} \left[ \log p_{\theta,\psi}(\tildeI{}|\rvy) \right] \\
                                                      &= \EX_{\pdata (\rvx,\rvy)} \left[ \log \pdata (\tildeI{}|\rvy) \right] - \EX_{\pdata (\rvy)}\left[ \kl{\pdata (\tildeI{}|\rvy)}{p_{\theta,\psi}(\tildeI{}|\rvy)} \right].
 \end{align}
 Rearranging this gives
 \begin{align}
-  \EX_{\pdata (\rvy)}\left[ \kl{\pdata (\tildeI{}|\rvy)}{p_{\theta,\psi}(\tildeI{}|\rvy)} \right]  \leq \EX_{\pdata (\rvx,\rvy)} \left[ \log \pdata (\tildeI{}|\rvy) \right] - \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ).
+  \EX_{\pdata (\rvy)}\left[ \kl{\pdata (\tildeI{}|\rvy)}{p_{\theta,\psi}(\tildeI{}|\rvy)} \right]  \leq \EX_{\pdata (\rvx,\rvy)} \left[ \log \pdata (\tildeI{}|\rvy) \right] - \gO_\text{CVAE}(\theta, \phi, \psi ).
 \end{align}
-Maximising $\mathcal{O}_\mathrm{for}$ therefore minimises an upper-bound on an
+Maximising $\gO_\text{CVAE}$ therefore minimises an upper-bound on an
 expected mass-covering KL divergence in $\tildeI{}$-space, providing a further suggestion that
 $\tildeI{}\sim p_{\theta,\psi}(\cdot|\rvy)$ will be diverse.
 
@@ -117,7 +117,7 @@ In this section we introduce a lemma and notation that will be useful in later p
 \end{equation}
 \end{theorem}
 
-\textbf{Proof.} Recall the definitions of $p$ and $q$ in \cref{eq:pmodel,eq:r}, which are $p_{\optimal{\theta}}(\rvx,\rvy,\rvz) = p_{\optimal{\theta}}(\rvx|\rvz)p_{\optimal{\theta}}(\rvz)\pdata(\rvy|\rvx)$ and $q_{\optimal{\phi}}(\rvx,\rvy,\rvz) = \pdata(\rvx,\rvy)q_{\optimal{\phi}}(\rvz|\rvx)$. Both contain a factor of $\pdata(\rvy|\rvx)$, so we can prove \cref{theorem:optimal-distributions-equal} by proving the simplified equality $p_{\optimal{\theta}}(\rvx,\rvz) = \pdata(\rvx) q_{\optimal{\phi}}(\rvz|\rvx)$. We can do so represent the unconditional ELBO similar to the conditional ELBO in \cref{eq:elbo-kl-joints}, e.g. by substituting $\rvy = \varnothing$ into \cref{eq:elbo-kl-joints}, giving
+\textbf{Proof.} Recall the definitions of $p$ and $q$ in \cref{eq:pmodel,eq:r}, which are $p_{\optimal{\theta}}(\rvx,\rvy,\rvz) = p_{\optimal{\theta}}(\rvx|\rvz)p_{\optimal{\theta}}(\rvz)\pdata(\rvy|\rvx)$ and $q_{\optimal{\phi}}(\rvx,\rvy,\rvz) = \pdata(\rvx,\rvy)q_{\optimal{\phi}}(\rvz|\rvx)$. Both contain a factor of $\pdata(\rvy|\rvx)$, so we can prove \cref{theorem:optimal-distributions-equal} by proving the simplified equality $p_{\optimal{\theta}}(\rvx,\rvz) = \pdata(\rvx) q_{\optimal{\phi}}(\rvz|\rvx)$. We can do so by representing the unconditional VAE objective similar to the conditional VAE objective in \cref{eq:elbo-kl-joints}, e.g. by substituting $\rvy = \varnothing$ into \cref{eq:elbo-kl-joints}, giving
 \begin{equation}
     \EX_{\pdata(\rvx)} \left[ \gL(\rvx,\optimal{\theta},\optimal{\phi}) \right] =  - \gH \left[ \pdata(\rvx) \right] 
     - \kl{ \pdata(\rvx)q_{\optimal{\phi}}(\rvz|\rvx) 
@@ -151,7 +151,7 @@ $\tildeI{}=g(\rvx,\rvy)$.
   exists a mapping from $(\tildeI{},\rvy)$ to $\rvx$. Then, given a
   sufficiently expressive partial encoder $p_\psi(\rvz|\rvy; \psi)$, }
 \begin{equation} \tag{\ref{eq:joint-training}}
-  \max_{\psi } \mathcal{O}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \psi ) = \max_{\theta, \phi, \psi } \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ).
+  \max_{\psi } \gO_\text{CVAE}(\optimal{\theta}, \optimal{\phi}, \psi ) = \max_{\theta, \phi, \psi } \gO_\text{CVAE}(\theta, \phi, \psi ).
 \end{equation}
 
 \textbf{Proof.} 
@@ -167,18 +167,18 @@ $\tildeI{}=g(\rvx,\rvy)$.
 % Recalling that we define $\tildeI{}$ as either equal to $\rvx$ or as the
 % dimensions of $\rvx$ not observed in $\rvy$, such a deterministic $g$ will
 % always exist.
-We consider the decomposition of $\mathcal{O}_\mathrm{for}$ shown in
+We consider the decomposition of $\gO_\text{CVAE}$ shown in
 \cref{eq:constant-and-forward-kl} and remind the reader that, given a
 sufficiently expressive partial encoder, the maximisation over $\psi$ will
 always make the KL divergence zero. That is,
 \begin{equation}
-  \max_{\psi } \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ) = C(\theta, \phi) = \EX_{q_\phi(\rvz,\rvx,\rvy)} \left[ \log \frac{p_\theta(\tildeI{}|\rvz)q_\phi(\rvz|\rvy)}{q_\phi(\rvz|\rvx)} \right] \label{eq:forward-max-phi}
+  \max_{\psi } \gO_\text{CVAE}(\theta, \phi, \psi ) = C(\theta, \phi) = \EX_{q_\phi(\rvz,\rvx,\rvy)} \left[ \log \frac{p_\theta(\tildeI{}|\rvz)q_\phi(\rvz|\rvy)}{q_\phi(\rvz|\rvx)} \right] \label{eq:forward-max-phi}
 \end{equation}
 for any $\theta$ and $\phi$. Using $\optimal{\theta}$ and $\optimal{\phi}$, and
 therefore using $\unp{}$ in place of $p_\theta$, $r$ and $q$, we can expand the
 left-hand side of \cref{eq:joint-training}.
 \begin{align}
-  \max_{\psi } \mathcal{O}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \psi ) &= \EX_{\unp{}(\rvz,\rvx,\rvy)} \left[ \log \frac{\unp{}(\tildeI{}|\rvz)\unp{}(\rvz|\rvy)}{\unp(\rvz|\rvx)} \right] \\
+  \max_{\psi } \gO_\text{CVAE}(\optimal{\theta}, \optimal{\phi}, \psi ) &= \EX_{\unp{}(\rvz,\rvx,\rvy)} \left[ \log \frac{\unp{}(\tildeI{}|\rvz)\unp{}(\rvz|\rvy)}{\unp(\rvz|\rvx)} \right] \\
                                                                                            &= \EX_{\unp{}(\rvz,\rvx,\rvy)} \left[ \log \frac{\unp{}(\tildeI{}|\rvz,\rvy)\unp{}(\rvz|\rvy)}{\unp(\rvz|\rvx)} \right] - \EX_{\unp{}(\rvz,\tildeI{},\rvy)} \left[ \log\frac{\unp{}(\tildeI{}|\rvz,\rvy)}{\unp{}(\tildeI{}|\rvz)} \right] \\
                                                                                            &= \EX_{\unp{}(\rvz,\rvx,\rvy)} \left[ \log \frac{\unp{}(\tildeI{}|\rvz,\rvy)\unp{}(\rvz|\rvy)}{\unp(\rvz|\rvx)} \right] - \mutinf{}\\
                                                                                            &= \EX_{\unp{}(\rvz,\rvx,\rvy)} \left[ \log \frac{\unp{}(\rvz,\tildeI{}|\rvy)}{\unp(\rvz|\rvx)} \right] - \mutinf{}\\
@@ -196,7 +196,7 @@ marginalisation becomes $\unp{}(\rvz|\tildeI{},\rvy) = \int \unp{}(\rvz|\rvx)
 \unp{}(\rvz|\rvx=f(\tildeI{},\rvy))$. We therefore proceed, rewriting
 $\unp{}(\rvz|\tildeI{},\rvy)$ as $\unp{}(\rvz|\rvx)$:
 \begin{align}
-  \max_{\psi } \mathcal{O}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \psi ) &= \EX_{\unp{}(\rvz,\rvx,\rvy)} \left[ \log \frac{\unp{}(\rvz|\rvx)\unp{}(\tildeI{}|\rvy)}{\unp(\rvz|\rvx)} \right] - \mutinf{} \label{eq:post-mapping}\\
+  \max_{\psi } \gO_\text{CVAE}(\optimal{\theta}, \optimal{\phi}, \psi ) &= \EX_{\unp{}(\rvz,\rvx,\rvy)} \left[ \log \frac{\unp{}(\rvz|\rvx)\unp{}(\tildeI{}|\rvy)}{\unp(\rvz|\rvx)} \right] - \mutinf{} \label{eq:post-mapping}\\
                                                                                            &= \EX_{\unp{}(\rvx,\rvy)} \left[ \log \unp{} (\tildeI{}|\rvy) \right] - \mutinf{}\\
                                                                                            &= \EX_{\pdata (\rvx,\rvy)} \left[ \log \pdata  (\tildeI{}|\rvy) \right] - \mutinf{}. \label{eq:max-partphi-bound}
 \end{align}
@@ -205,43 +205,44 @@ Now that we have this expansion of the left-hand side of
 side as follows. For any $\theta$, any $\phi$, and any $\psi$, we have
 from \cref{supp:cigcvae-forward-elbo-bound-deriv}:
 \begin{align}
-  \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ) &\leq \EX_{\pdata (\rvx,\rvy)} \left[ \log p_{\theta,\psi}(\tildeI{}|\rvy) \right] \\
+  \gO_\text{CVAE}(\theta, \phi, \psi ) &\leq \EX_{\pdata (\rvx,\rvy)} \left[ \log p_{\theta,\psi}(\tildeI{}|\rvy) \right] \\
                                                      &= \EX_{\pdata (\rvx,\rvy)} \left[ \log \pdata (\tildeI{}|\rvy) \right] - \EX_{\pdata (\rvy)}\left[ \kl{\pdata (\tildeI{}|\rvy)}{p_{\theta,\psi}(\tildeI{}|\rvy)} \right] \\
                                                      &\leq \EX_{\pdata (\rvx,\rvy)} \left[ \log \pdata (\tildeI{}|\rvy) \right].
 \end{align}
 This bound must also hold for the maximum over $\theta$, $\phi$, and
 $\psi$, and so is an upper-bound on the right-hand side of \cref{eq:joint-training}:
 \begin{align}
-  \max_{\theta, \phi, \psi } \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ) &\leq \EX_{\pdata (\rvx,\rvy)} \left[ \log \pdata (\tildeI{}|\rvy) \right]. \label{eq:max-all-bound}
+  \max_{\theta, \phi, \psi } \gO_\text{CVAE}(\theta, \phi, \psi ) &\leq \EX_{\pdata (\rvx,\rvy)} \left[ \log \pdata (\tildeI{}|\rvy) \right]. \label{eq:max-all-bound}
 \end{align}
 
 By relating \cref{eq:max-partphi-bound} and \cref{eq:max-all-bound}, we have:
 \begin{align}
-  \max_{\theta, \phi, \psi } \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ) &\leq  \max_{\psi } \mathcal{O}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \psi ) + \mutinf{}. \label{eq:bound-1}
+  \max_{\theta, \phi, \psi } \gO_\text{CVAE}(\theta, \phi, \psi ) &\leq  \max_{\psi } \gO_\text{CVAE}(\optimal{\theta}, \optimal{\phi}, \psi ) + \mutinf{}. \label{eq:bound-1}
 \end{align}
 We then point out that we can also obtain an inequality in the other direction: since
 the right-hand side of \cref{eq:joint-training} is a maximisation of the left-hand side over $\theta$ and
 $\phi$, it must be greater than or equal to the left-hand side:
 \begin{align}
-  \max_{\psi } \mathcal{O}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \psi ) &\leq  \max_{\theta, \phi, \psi } \mathcal{O}_\mathrm{for}(\theta, \phi, \psi )  . \label{eq:bound-2}
+  \max_{\psi } \gO_\text{CVAE}(\optimal{\theta}, \optimal{\phi}, \psi ) &\leq  \max_{\theta, \phi, \psi } \gO_\text{CVAE}(\theta, \phi, \psi )  . \label{eq:bound-2}
 \end{align}
 Combining \cref{eq:bound-1} and \cref{eq:bound-2}, we have:
 \begin{align}
-  0 \leq \max_{\theta, \phi, \psi } \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ) - \max_{\psi } \mathcal{O}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \psi ) \leq \mutinf{}. \label{eq:two-bounds}
+  0 \leq \max_{\theta, \phi, \psi } \gO_\text{CVAE}(\theta, \phi, \psi ) - \max_{\psi } \gO_\text{CVAE}(\optimal{\theta}, \optimal{\phi}, \psi ) \leq \mutinf{}. \label{eq:two-bounds}
 \end{align}
 We now have bounds in both directions on the difference between the right- and
 left-hand sides. To conclude the proof, we repeat the assumption that
 $\mutinf{}=0$. The upper- and lower- bounds of \cref{eq:two-bounds} are
 therefore both zero, so we have the final result that ${\max_{\psi }
-\mathcal{O}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \psi ) =
-\max_{\theta, \phi, \psi } \mathcal{O}_\mathrm{for}(\theta, \phi,
+\gO_\text{CVAE}(\optimal{\theta}, \optimal{\phi}, \psi ) =
+\max_{\theta, \phi, \psi } \gO_\text{CVAE}(\theta, \phi,
 \psi )}$.
 
 \subsection{Discussion of the assumption of zero mutual information}
 The above proof of \cref{theorem:joint-training} relies on the assumption that
-$\mutinf{} = \EX_{\unp{}(\tildeI{}, \rvy, \rvz)} \left[ \log
-  \frac{\unp{}(\tildeI{}|\rvz, \rvy) }{ \unp{}(\tildeI{}|\rvz) } \right] = 0$.
-That is, under the joint distribution $p_{\theta^*,\phi^*}(\rvz,\rvx,\rvy)$, $\tildeI{}$ and
+\begin{equation}
+    \mutinf{} = \EX_{\unp{}(\tildeI{}, \rvy, \rvz)} \left[ \log \frac{\unp{}(\tildeI{}|\rvz, \rvy) }{ \unp{}(\tildeI{}|\rvz) } \right] = 0.    
+\end{equation}
+That is, that under the joint distribution $p_{\theta^*,\phi^*}(\rvz,\rvx,\rvy)$, $\tildeI{}$ and
 $\rvy$ should be conditionally independent given $\rvz$. We now argue that this
 is true for image completion, and ``close to'' satisfied \textcolor{black}{when
   $\mathbf{y}$ consists of high-level image features. This means that
@@ -281,7 +282,7 @@ between $\tildeI{}$ and $\rvy$ conditioned on $\rvz$, is likely to be small.
 \label{supp:cigcvae-ipa-r}
 In this section, we describe an alternative objective previously used by
 \citet{ma2018eddi}. We find experimentally that its performance is typically
-worse than $\mathcal{O}_\mathrm{for}$, but it has the advantage of only
+worse than $\gO_\text{CVAE}$, but it has the advantage of only
 requiring data $\rvy \sim \pdata (\cdot)$ during training, and not $\rvx$.
 This may allow training in settings such as
 outpainting~\citep{sabini2018painting}. The objective can be interpreted as a
@@ -323,7 +324,7 @@ $\EX_{\pdata (\rvy)}\Big[ \kl[\big] { p_\psi(\rvz|\rvy) }{
 
 
 \Cref{theorem:reverse-kl} implies that maximising $\mathcal{O}_{\text{rev}}$
-will minimise a ``reverse'' KL divergence, causing $p_\psi(\rvz|\rvy)$ to
+will minimise a ``reverse'' KL divergence (hence its name $\mathcal{O}_{\text{rev}}$), causing $p_\psi(\rvz|\rvy)$ to
 exhibit mode-seeking behaviour. We denote the method of training with this
 objective IPA-R (inference in a pretrained artifact with the reverse KL).
                                                      %
@@ -377,14 +378,16 @@ The right-hand side is therefore equivalent to the left-hand-side as shown in
 
 \section{Estimating KL divergences in practice} \label{supp:cigcvae-kl-estimates}
 In this section we describe how we compute unbiased and low-variance estimates
-of $\mathcal{O}_\mathrm{for}$ and $\mathcal{O}_\text{rev}$ in practice. For
+of $\gO_\text{CVAE}$ and $\mathcal{O}_\text{rev}$ in practice. For
 both, we use similar techniques to those commonly used in unconditional
 hierarchical VAEs. First note that each can be written as the sum of a
 likelihood and KL divergence term. For the unconditional VAE objective,
-$\mathcal{O}_\mathrm{for}$ and $\mathcal{O}_\text{rev}$ respectively:
+$\gO_\text{CVAE}$ and $\mathcal{O}_\text{rev}$ respectively:
 \begin{align}
-  \EX_{\pdata (\rvx)} \left[ \text{ELBO}(\theta, \phi, \rvx) \right] &= \EX_{\pdata (\rvx)}\left[ \EX_{q_\phi(\rvz|\rvx)} \left[ \log p_\theta(\rvx|\rvz)  \right] - \kl[\big]{q_\phi(\rvz|\rvx)}{p_\theta(\rvz)}  \right], \\
-  \mathcal{O}_\mathrm{for}(\theta, \phi, \psi ) &= \EX_{\pdata (\rvx, \rvy)} \left[ \EX_{q_\phi(\rvz|\rvx)} \left[ \log p_\theta(\tildeI{}|\rvz) \right] - \kl{q_\phi(\rvz|\rvx)}{p_\psi(\rvz|\rvy)} \right], \\
+  % \EX_{\pdata (\rvx)} \left[ \text{ELBO}(\theta, \phi, \rvx) \right]
+  \gO_\text{VAE}(\theta, \phi)
+  &= \EX_{\pdata (\rvx)}\left[ \EX_{q_\phi(\rvz|\rvx)} \left[ \log p_\theta(\rvx|\rvz)  \right] - \kl[\big]{q_\phi(\rvz|\rvx)}{p_\theta(\rvz)}  \right], \\
+  \gO_\text{CVAE}(\theta, \phi, \psi ) &= \EX_{\pdata (\rvx, \rvy)} \left[ \EX_{q_\phi(\rvz|\rvx)} \left[ \log p_\theta(\tildeI{}|\rvz) \right] - \kl{q_\phi(\rvz|\rvx)}{p_\psi(\rvz|\rvy)} \right], \\
   \mathcal{O}_\text{rev}(\theta, \phi, \psi ) &= \EX_{\pdata (\rvy)}\EX_{p_\psi(\rvz|\rvy)} \left[ \log p_\theta(\rvy|\rvz) - \kl{p_\psi(\rvz|\rvy)}{p_\theta(\rvz)} \right].
 \end{align}
 In a non-hierarchical VAE with Gaussian $p_\theta(\rvz)$ and $q_\phi(\rvz|\rvx)$, it is
@@ -407,13 +410,13 @@ This is used by \citet{vahdat2020nvae,child2020very} to estimate the KL
 divergence term for an unconditional hierarchical VAE, by sampling $\rvz\sim
 q_\phi(\cdot|\rvx)$ and then computing the resulting KL divergence for each layer $l$
 conditioned on $\rvz_{<l}$. Similar derivations suggest the following estimates for
-the KL divergences in $\mathcal{O}_\mathrm{for}$ and $\mathcal{O}_\text{rev}$:
+the KL divergences in $\gO_\text{CVAE}$ and $\mathcal{O}_\text{rev}$:
 \begin{align}
   \kl[\big]{q_\phi(\rvz|\rvx)}{p_\psi(\rvz|\rvy)} &= \sum_{l=1}^L \EX_{q_\phi(\rvz_{<l}|\rvx)} \left[ \kl[\big]{q_\phi(\rvz_l|\rvz_{<l}, \rvx)}{p_\psi(\rvz_l|\rvz_{<l}, \rvy)} \right], \\
   \kl[\big]{p_\psi(\rvz|\rvy)}{p_\theta(\rvz)} &= \sum_{l=1}^L \EX_{p_\psi(\rvz_{<l}|\rvy)} \left[ \kl[\big]{p_\psi(\rvz_l|\rvz_{<l}, \rvy)}{p_\theta(\rvz_l|\rvz_{<l})} \right].
 \end{align}
 We compute unbiased estimates of the KL divergence terms by simply sampling $\rvz$
-(from $q_\phi(\cdot|\rvx)$ for $\mathcal{O}_\mathrm{for}$ or
+(from $q_\phi(\cdot|\rvx)$ for $\gO_\text{CVAE}$ or
 $p_\psi(\cdot|\rvy)$ for $\mathcal{O}_\text{rev}$) and analytically
 computing the resulting KL divergence for each layer $l$ conditioned on
 $\rvz_{<l}$.

@@ -35,16 +35,16 @@ As we discussed for diffusion models in \cref{ch:diffusion}, an ideal training o
 \end{align}
 Ideally we would be able to obtain an unbiased estimate of this objective. Due to the logarithm operator outside an intractable expectation this is not feasible but, using Jensen's inequality, we can obtain a training objective that lower bounds it by switching their order: 
 \begin{align}
-    \gL_\text{VAE}(\theta, \phi) := \EX_{\pdata(\rvx)q_\phi(\rvz|\rvx)} \left[ \log p_\theta(\rvx|\rvz) + \log \frac{p_\theta(\rvz)}{q_\phi(\rvz|\rvx)} \right] \leq \EX_{\pdata(\rvx)} \left[ \log p_\theta(\rvx) \right].
+    \gO_\text{VAE}(\theta, \phi) := \EX_{\pdata(\rvx)q_\phi(\rvz|\rvx)} \left[ \log p_\theta(\rvx|\rvz) + \log \frac{p_\theta(\rvz)}{q_\phi(\rvz|\rvx)} \right] \leq \EX_{\pdata(\rvx)} \left[ \log p_\theta(\rvx) \right].
     \label{eq:vae-objective}
 \end{align}
-This lower-bound can be stochastically estimated by sampling data $\rvx$ and then sampling $\rvz$ from $q_\phi(\rvz|\rvx)$ and evaluating the terms inside the expectation with that $\rvz$. Since $q_\phi(\rvz|\rvx)$ ``encodes'' data $\rvx$ into latent variables $\rvz$ we will from now on refer to it as the encoder. The tightness of this lower-bound is strongly dependent on how ``good'' the encoder $q_\phi(\rvz|\rvx)$ is, as we can make clear by rewriting \cref{eq:vae-objective} as
+Note that we are now describing training as maximising an objective rather than minimising a loss as in earlier chapters. We could, alternatively and equivalently, minimise $\gL_\text{VAE}(\theta, \phi) = -\gO_\text{VAE}(\theta, \phi)$ but we make make this choice to fit a common convention in much of the VAE literature~\citep{kingma2013auto}. The lower-bound in \cref{eq:vae-objective} can be stochastically estimated by sampling data $\rvx$ and then sampling $\rvz$ from $q_\phi(\rvz|\rvx)$ and evaluating the terms inside the expectation with that $\rvz$. Since $q_\phi(\rvz|\rvx)$ ``encodes'' data $\rvx$ into latent variables $\rvz$ we will from now on refer to it as the encoder. The tightness of this lower-bound is strongly dependent on how ``good'' the encoder $q_\phi(\rvz|\rvx)$ is, as we can make clear by rewriting \cref{eq:vae-objective} as
 \begin{equation}
-    \gL_\text{VAE}(\theta, \phi) := \EX_{\pdata(\rvx)} \left[ \log p_\theta(\rvx) - \kl{q_\phi(\rvz|\rvx)}{p_\theta(\rvz|\rvx)} \right].
+    \gO_\text{VAE}(\theta, \phi) := \EX_{\pdata(\rvx)} \left[ \log p_\theta(\rvx) - \kl{q_\phi(\rvz|\rvx)}{p_\theta(\rvz|\rvx)} \right].
 \end{equation}
 This formulation reveals that the lower-bound is tight if and only if the proposal $q_\phi(\rvz|\rvx)$ is equal to the generally intractable posterior $p_\theta(\rvz|\rvx)$ for all $\rvx$, causing the KL divergence term to be zero. Fortunately, maximising this objective with respect to $\theta$ and $\phi$ will optimise the proposal parameters $\phi$ to better match the intractable posterior as well as optimising $\theta$ to increase the model likelihood, and so it is possible to train both $\theta$ and $\phi$ with a unified objective. The full optimisation problem is therefore to find
 \begin{align}
-    \argmin_{\theta,\phi} \gL_\text{VAE}(\theta, \phi).
+    \argmax_{\theta,\phi} \gO_\text{VAE}(\theta, \phi).
 \end{align}
 
 \subsection{Hierarchical variational auto-encoders}
@@ -98,18 +98,22 @@ and we can re-derive the training objective in \cref{eq:vae-objective} as a lowe
     &= \EX_{\pdata(\rvx, \rvy)} \left[ \log \int p_\theta(\rvx|\rvz)\frac{p_\theta(\rvz|\rvy)}{q_\phi(\rvz|\rvx)}q_\phi(\rvz|\rvx) \mathrm{d}\rvz \right] \\
     &= \EX_{\pdata(\rvx, \rvy)} \left[ \log \EX_{q_\phi(\rvz|\rvx)} \left[ p_\theta(\rvx|\rvz)\frac{p_\theta(\rvz|\rvy)}{q_\phi(\rvz|\rvx)} \right] \right] \\
     &\geq \EX_{\pdata(\rvx, \rvy)} \left[ \EX_{q_\phi(\rvz|\rvx)} \left[ \log p_\theta(\rvx|\rvz) + \log \frac{p_\theta(\rvz|\rvy)}{q_\phi(\rvz|\rvx)} \right] \right] \\
-    &:= \gL_\text{CVAE}(\theta, \phi).
+    &:= \gO_\text{CVAE}(\theta, \phi).
 \end{align}
+
+
+
+
 Similarly to the unconditional VAE training objective, we can break this down as
 \begin{align} \label{eq:conditional-vae-objective}
-    \gL_\text{CVAE}(\theta, \phi) = \EX_{\pdata(\rvx,\rvy)} \left[ \underbrace{\EX_{q_\phi(\rvz|\rvx)}\left[\log p_\theta(\rvx|\rvz) \right]}_\text{reconstruction loss} - \underbrace{\kl{q_\phi(\rvz|\rvx)}{p_\theta(\rvz|\rvy)}}_\text{KL divergence} \right]
+    \gO_\text{CVAE}(\theta, \phi) = \EX_{\pdata(\rvx,\rvy)} \left[ \underbrace{\EX_{q_\phi(\rvz|\rvx)}\left[\log p_\theta(\rvx|\rvz) \right]}_\text{reconstruction objective} - \underbrace{\kl{q_\phi(\rvz|\rvx)}{p_\theta(\rvz|\rvy)}}_\text{KL divergence} \right]
 \end{align}
 showing that training the conditional VAE involves balancing maximising a ``reconstruction'' term with minimising an expected KL divergence between the encoder's distribution $q_\phi(\rvz|\rvx)$ and the conditional prior $p_\theta(\rvz|\rvy)$.
 
-We now consider one further decomposition of $\gL_\text{CVAE}(\theta, \phi)$ which yields additional insights about the properties of conditional VAEs:
+We now consider one further decomposition of $\gO_\text{CVAE}(\theta, \phi)$ which yields additional insights about the properties of conditional VAEs:
 \begin{align}
-    \gL_\text{CVAE}(\theta, \phi) =& \EX_{\pdata(\rvx,\rvy)} \left[ \log \frac{\log p_\theta(\rvx|\rvz)p_\theta(\rvz|\rvy)}{q_\phi(\rvz|\rvx)} \right] \\
-    =& \EX_{\pdata(\rvx,\rvy)} \left[ \log \pdata(\rvx|\rvy) + \log \frac{\log p_\theta(\rvx|\rvz)p_\theta(\rvz|\rvy)}{q_\phi(\rvz|\rvx)\pdata(\rvx|\rvy)} \right] \\
+    \gO_\text{CVAE}(\theta, \phi) =& \EX_{\pdata(\rvx,\rvy)q_\phi(\rvz|\rvx)} \left[ \log \frac{\log p_\theta(\rvx|\rvz)p_\theta(\rvz|\rvy)}{q_\phi(\rvz|\rvx)} \right] \\
+    =& \EX_{\pdata(\rvx,\rvy)q_\phi(\rvz|\rvx)} \left[ \log \pdata(\rvx|\rvy) + \log \frac{\log p_\theta(\rvx|\rvz)p_\theta(\rvz|\rvy)}{q_\phi(\rvz|\rvx)\pdata(\rvx|\rvy)} \right] \\
     \label{eq:elbo-kl-joints}
     =& \EX_{\pdata(\rvx,\rvy)} \left[ \log \pdata(\rvx|\rvy) \right] \\
     &- \EX_{\pdata(\rvy)} \left[ \kl{q_\phi(\rvz|\rvx)\pdata(\rvx|\rvy)}{p_\theta(\rvx|\rvz)p_\theta(\rvz|\rvy)} \right] \nonumber .
@@ -123,7 +127,8 @@ We end with a note on how the conditional VAE objective (\cref{eq:conditional-va
     &= \EX_{q_\phi(\rvz|\rvx)} \left[ \sum_{l=1}^L \log \frac{q_\phi(\rvz_l|\rvx,\rvz_{<l})}{p_\theta(\rvz_l|\rvy,\rvz_{<l})} \right] \\
     &= \EX_{q_\phi(\rvz|\rvx)} \left[ \sum_{l=1}^L \kl{q_\phi(\rvz_l|\rvx,\rvz_{<l})}{p_\theta(\rvz_l|\rvy,\rvz_{<l})} \right]
 \end{align}
-which is an expectation of the sum of layer-wise KL divergences. Each layer-wise KL divergence is tractable under common parameterisations of $p_\theta(\rvz_l|\rvy,\rvz_{<l})$ and $q_\phi(\rvz_l|\rvx,\rvz_{<l})$ like Gaussian distributions. We can therefore estimate the overall KL divergence by simply drawing one sample of $\rvz$ from the encoder and using it to compute layer-wise KL divergences. Any modes of the true conditional distribution that the model's distribution misses will be heavily penalised by $\gL_\text{CVAE}(\theta,\phi)$. 
+which is an expectation of the sum of layer-wise KL divergences. Each layer-wise KL divergence is tractable under common parameterisations of $p_\theta(\rvz_l|\rvy,\rvz_{<l})$ and $q_\phi(\rvz_l|\rvx,\rvz_{<l})$ like Gaussian distributions. We can therefore estimate the overall KL divergence by simply drawing one sample of $\rvz$ from the encoder and using it to compute layer-wise KL divergences. Any modes of the true conditional distribution that the model's distribution misses will be heavily penalised by $\gO_\text{CVAE}(\theta,\phi)$. 
+
 
 \begin{figure*}[t]
   \centering
@@ -136,7 +141,7 @@ which is an expectation of the sum of layer-wise KL divergences. Each layer-wise
   \begin{subfigure}[b]{.32\textwidth}
     \centering
     \includegraphics[height=3.8cm]{figs/cigcvae/arch_small-forward.pdf}
-    \caption{Estimating $\mathcal{O}_\mathrm{for}$.}
+    \caption{Estimating $\gO_\text{CVAE}$.}
     \label{fig:cigcvae-forward-arch}
   \end{subfigure}
   \begin{subfigure}[b]{.32\textwidth}
@@ -149,7 +154,7 @@ which is an expectation of the sum of layer-wise KL divergences. Each layer-wise
   \caption{A hierarchical VAE architecture with $L=2$ layers of latent
     variables. Part (a) illustrates the computation of the ELBO for an
     unconditional VAE; part (b) illustrates the computation of our training
-    objective $\mathcal{O}_\mathrm{for}$; and part (c) illustrates the drawing
+    objective $\gO_\text{CVAE}$; and part (c) illustrates the drawing
     of conditional samples. The encoder is shown in orange; the prior and the
     decoder (which maintains a deterministic hidden state $h_{l}$) are both
     shown in black; and the conditional prior is shown in blue. The computation
@@ -158,6 +163,7 @@ which is an expectation of the sum of layer-wise KL divergences. Each layer-wise
   \label{fig:cigcvae-conditional-architectures}
   \vspace{-2mm}
 \end{figure*}
+
 
 \section{Inference in a pretrained auto-encoder}
 \label{sec:ipa}
@@ -250,7 +256,7 @@ VAEs~\citep{sohn2015learning,ivanov2018variational} and neural
 processes~\citep{garnelo2018neural}, is
 \begin{align}
   \label{eq:forward-elbo}
-  \mathcal{O}_\mathrm{for}(\theta, \phi, \psi) &= \EX_{\pdata(\rvx, \rvy)} \EX_{q_\phi(\rvz|\rvx)} \left[ \log \frac{p_\theta(\tildeI|\rvz)p_\psi(\rvz|\rvy)}{q_\phi(\rvz|\rvx)} \right] \\
+  \gO_\text{CVAE}(\theta, \phi, \psi) &= \EX_{\pdata(\rvx, \rvy)} \EX_{q_\phi(\rvz|\rvx)} \left[ \log \frac{p_\theta(\tildeI|\rvz)p_\psi(\rvz|\rvy)}{q_\phi(\rvz|\rvx)} \right] \\
   &\leq \EX_{\pdata(\rvx, \rvy)} \left[ \log p_{\theta,\psi}(\tildeI{}|\rvy) \right]
 \end{align}
 where $\tilde{\rvx}$ is the part of $\rvx$ we wish to predict. In general we can
@@ -274,7 +280,7 @@ We are particularly interested in the properties of the learned conditional prio
 Recall the joint distribution $q_\phi(\rvz, \rvx, \rvy) = \pdata(\rvx,
 \rvy)q_\phi(\rvz|\rvx)$. Then $q_\phi(\rvz|\rvy)$ is the intractable
 posterior given by marginalising out $\rvx$ and conditioning on $\rvy$. We
-find that fitting $\psi$ to maximise $\mathcal{O}_\mathrm{for}(\theta,
+find that fitting $\psi$ to maximise $\gO_\text{CVAE}(\theta,
 \phi, \psi)$ is equivalent to minimising the mass-covering KL divergence
 from $q_\phi(\rvz|\rvy)$ to $p_\psi(\rvz|\rvy)$. We formalise
 this statement in the following theorem, which is proven in
@@ -283,7 +289,7 @@ this statement in the following theorem, which is proven in
   permissible values of $\psi$, and for any $\theta\in\Theta$ and
   $\phi\in\Phi$,
   \begin{equation} \label{eq:forward-theorem}
-    \argmax_{\psi \in \Psi} \mathcal{O}_\mathrm{for}(\theta, \phi, \psi) = \argmin_{\psi \in \Psi} \EX_{\pdata(\rvy)} \left[ \kl[\big]{ q_\phi(\rvz|\rvy) }{ p_\psi(\rvz|\rvy) } \right].
+    \argmax_{\psi \in \Psi} \gO_\text{CVAE}(\theta, \phi, \psi) = \argmin_{\psi \in \Psi} \EX_{\pdata(\rvy)} \left[ \kl[\big]{ q_\phi(\rvz|\rvy) }{ p_\psi(\rvz|\rvy) } \right].
   \end{equation}
 \end{theorem}
 Due to the mass-covering properties of this ``forward'' KL
@@ -293,7 +299,7 @@ modes of $q_\phi(\rvz|\rvy)$. Intuitively, the resulting diverse samples of
 latent variables $\rvz\sim p_\psi(\cdot|\rvy)$ should lead to
 diverse samples of $\tildeI{} \sim p_\theta(\cdot|\rvz)$ which cover the
 ``true'' posterior $\pdata(\tildeI{}|\rvy)$. We formalise this in
-\cref{proof:forward-kl} by showing that maximising $\mathcal{O}_\mathrm{for}$
+\cref{proof:forward-kl} by showing that maximising $\gO_\text{CVAE}$
 also minimises an upper-bound on a KL divergence in $\tildeI{}$-space.
 
 \subsection{Faster training with a pretrained VAE}
@@ -312,7 +318,7 @@ To justify using weights trained as part of an unconditional VAE we present
     \right]}$ is zero (see discussion below). Then, given a sufficiently expressive
   conditional prior,
   \begin{equation} \label{eq:joint-training}
-    \max_{\psi} \mathcal{O}_\mathrm{for}(\optimal{\theta}, \optimal{\phi}, \psi) = \max_{\theta, \phi, \psi} \mathcal{O}_\mathrm{for}(\theta, \phi, \psi).
+    \max_{\psi} \gO_\text{CVAE}(\optimal{\theta}, \optimal{\phi}, \psi) = \max_{\theta, \phi, \psi} \gO_\text{CVAE}(\theta, \phi, \psi).
   \end{equation}
 \end{theorem}
 This is proven in \cref{proof:joint-training} and implies that we can use values
@@ -335,7 +341,7 @@ in a Pretrained Auto-Encoder).
 the unconditional VAE parameters are learned on the same dataset as the
 conditional VAE is trained on; otherwise there will be a mismatch between the
 form of $\pdata$ used in \cref{eq:vae-objective} to fit $\theta^*$ and $\phi^*$, and
-the form of $\pdata$ implicit in the $\mathcal{O}_\mathrm{for}$ objective.
+the form of $\pdata$ implicit in the $\gO_\text{CVAE}$ objective.
 However we find empirically that we can use unconditional VAE parameters trained
 on ImageNet~\citep{deng2009imagenet} with IPA on several other photo datasets.
 

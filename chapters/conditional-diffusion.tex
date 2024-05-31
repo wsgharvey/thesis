@@ -24,12 +24,12 @@ In this section we restate the main results from \cref{ch:diffusion} in the cond
 \paragraph{Training a conditional diffusion model}
 To use the methodology from \cref{ch:diffusion} in this setting, we can imagine simply training a different unconditional diffusion model for every possible value of $\rvy$. To do so, we could express the parameters as $\theta[\rvy]$, letting $\theta$ be a data structure that maps from any conditioning information $\rvy$ to the relevant set of diffusion model parameters. Then we could rewrite the diffusion model loss in \cref{eq:general-dm-loss} for a given $\rvy$ as
 \begin{align} \label{eq:cond-diffusion-loss-single-y}
-    \mathcal{L}_\text{cond}(\theta, \rvy) &= \EX_{u(t)q(\rvx_t|\rvx)\pdata(\rvx|\rvy)} \left[ \frac{\lambda^\rvs(t)}{u(t)} 
+    \gL_\text{CDM}(\theta, \rvy) &= \EX_{u(t)q(\rvx_t|\rvx)\pdata(\rvx|\rvy)} \left[ \frac{\lambda^\rvs(t)}{u(t)} 
     || \rvs_{\theta[\rvy]}(\rvx_t, t) - \frac{\alpha(t)\rvx-\rvx_t}{\sigma(t)^2} ||_2^2 \right]
 \end{align}
 where we use $\theta[\rvy]$ in place of $\theta$ and sample $\rvx$ from $\pdata(\rvx|\rvy)$ instead of $\rvy$. To train the parameters for all $\rvy$ we may take an expectation of this loss over $\rvy$:
 \begin{align} \label{eq:cond-exp-diffusion-loss-all-sigma}
-    \gL_\text{cond}(\theta) &= \EX_{\pdata(\rvy)} \left[ \gL_\text{cond}(\theta, \rvy) \right] \\
+    \gL_\text{CDM}(\theta) &= \EX_{\pdata(\rvy)} \left[ \gL_\text{CDM}(\theta, \rvy) \right] \\
     &= \EX_{u(t)q(\rvx_t|\rvx)\pdata(\rvx, \rvy)} \left[ \frac{\lambda^\rvs(t)}{u(t)} 
     || \rvs_{\theta[\rvy]}(\rvx_t, t) - \frac{\alpha(t)\rvx-\rvx_t}{\sigma(t)^2} ||_2^2 \right].
 \end{align}
@@ -37,7 +37,7 @@ This objective is feasible to use if $\rvy$ is discrete and has sufficiently few
 
 A solution is to share parameters between the score functions used for different $\rvy$. A standard way to do so is to use the same parameters $\theta$ for each, but pass $\rvy$ as an additional input into the function~\citep{sohn2015learning}. The learned score function $\rvs_\theta(\cdot, \rvy, t)$ may then depend on $\rvy$ in an arbitrarily complex way (thanks to the universal approximation theorem~\citep{hornik1989multilayer}) while still being able to share information between different values of $\rvy$ using the single shared set of neural network parameters $\theta$. We will from now on write the learned score function for a conditional diffusion model as $\rvs_\theta(\rvx_t, \rvy, t)$. For brevity, we will also expand the definition of the joint distribution $q$ to include $\rvy$ as $q(\rvx,\rvy,\rvx_{t_1},\ldots,\rvx_{t_n}) := q(\rvx_{t_1},\ldots,\rvx_{t_n}|\rvx,\rvy)\pdata(\rvx,\rvy)$ so the training objective becomes
 \begin{align} \label{eq:cond-diffusion-loss}
-    \gL_\text{cond}(\theta) &= \EX_{u(t)q(\rvx_t, \rvx, \rvy)} \left[ \frac{\lambda^\rvs(t)}{u(t)} 
+    \gL_\text{CDM}(\theta) &= \EX_{u(t)q(\rvx_t, \rvx, \rvy)} \left[ \frac{\lambda^\rvs(t)}{u(t)} 
     || \rvs_{\theta}(\rvx_t, \rvy, t) - \frac{\alpha(t)\rvx-\rvx_t}{\sigma(t)^2} ||_2^2 \right].
 \end{align}
 We will similarly write the learned predictions of $\rvx$ and $\epsilon$ as $\hat{\rvx}_{\theta}(\rvx_t, \rvy, t)$ and $\hat{\mathbf{\epsilon}}_{\theta}(\rvx_t, \rvy, t)$ respectively.
@@ -46,14 +46,18 @@ Based on \cref{eq:cond-diffusion-loss-single-y} it is clear that, given some $\r
 \paragraph{Sampling from a conditional diffusion model}
 Other than the new input of $\rvy$, the sampling procedure remains the same. To be explicit, we will nevertheless restate the reverse SDE from \cref{eq:diffusion-edm-sde-approx} in the conditional case:
 \begin{align}
-    \mathrm{d}\rvx = \underbrace{- \frac{1}{2} g(t)^2 \rvs_\theta(\rvx_t, \rvy, t) \mathrm{d}t}_\text{Diffusion ODE from \cref{eq:diffusion-ode}} - \underbrace{\beta(t) \sigma(t)^2 \rvs_\theta(\rvx_t, \rvy, t) \mathrm{d}t + \sqrt{2\beta(t)}\sigma(t)\mathrm{d}\bar{\rvw}}_\text{Langevin diffusion}.
+    \mathrm{d}\rvx_t = \underbrace{- \frac{1}{2} g(t)^2 \rvs_\theta(\rvx_t, \rvy, t) \mathrm{d}t}_{\shortstack{\footnotesize Diffusion ODE \\ \footnotesize similar to \cref{eq:diffusion-ode}}} - \underbrace{\beta(t) \sigma(t)^2 \rvs_\theta(\rvx_t, \rvy, t) \mathrm{d}t + \sqrt{2\beta(t)}\sigma(t)\mathrm{d}\bar{\rvw}}_\text{\footnotesize Langevin diffusion}.
 \end{align}
 The only difference from \cref{ch:diffusion} is that there is an additional input of $\rvy$ to $\rvs_\theta$. Recall that this SDE becomes the reverse diffusion ODE from \cref{sec:diffusion-ode} when $\beta(t) = 0$ or the standard reverse diffusion SDE from \cref{sec:diffusion-reverse-sde} when $\beta(t) = \frac{g(t)^2}{2 \sigma(t)^2}$.
 
-\paragraph{Computing likelihoods for conditional diffusion model}
+\paragraph{Computing likelihoods for conditional diffusion models}
 It is possible to compute data likelihoods $p_\theta(\rvx|\rvy)$, or to weight the training objective to lower-bound this likelihood, similarly to the techniques described in \cref{ch:diffusion}. We do not present these results as this is not a focus of this dissertation.
 
 \section{Conditioning on more information improves sample quality} \label{sec:conditioning-on-more-improves-performance}
+
+So far we have mentioned the types of new applications that conditional diffusion models enable as well as introducing the conditional diffusion modelling framework. In this section we make the case that building conditional diffusion models is useful even if the task of interest involves modelling only a single unconditional distribution. We do so by showing that, at least in the image domain, conditional diffusion models often achieve better sample quality than unconditional diffusion models, and then that this insight can be used to make improved \textit{unconditional} generative models that incorporate \textit{conditional} diffusion models.
+
+The better realism of samples from conditional DMs versus unconditional DMs has previously been noted by \citet{ho2022classifier,bao2022conditional,hu2022self}. Conditional DMs have also been observed to work better with few sampling steps~\citep{meng2022distillation}. Furthermore, we will show that sample realism grows with ``how much'' information the DM is conditioned on. To better make this point, we will distinguish between ``strongly-conditional'' generation, where we condition on a high-dimensional feature like a long text prompt, and ``lightly-conditional'' generation, where we condition on a lower dimensional feature like a class label or short text prompt.  As hinted at in \cref{fig:stable-diffusion-example} an image is likely to be more realistic if conditioned on being ``an aerial photograph of a road between green fields'' (strongly-conditional generation) than if it is if simply conditioned on being ``an aerial photograph'' (lightly-conditional generation). Unconditional generation of images will typically lead to even less realism.
 
 \begin{figure}[t]
     \centering
@@ -66,10 +70,6 @@ It is possible to compute data likelihoods $p_\theta(\rvx|\rvy)$, or to weight t
     \label{fig:stable-diffusion-example}
 \end{figure}
 \footnotetext{We used the prompt ``Aerial photography of a patchwork of small green fields separated by brown dirt tracks between them. A large tarmac road passes through the scene from left to right.''}
-
-So far we have mentioned the types of new applications that conditional diffusion models enable as well as introducing the conditional diffusion modelling framework. In this section we make the case that building conditional diffusion models is useful even if the task of interest involves modelling only a single unconditional distribution. We do so by showing that, at least in the image domain, conditional diffusion models often achieve better sample quality than unconditional diffusion models, and then that this insight can be used to make improved \textit{unconditional} generative models that incorporate \textit{conditional} diffusion models.
-
-The better realism of samples from conditional DMs versus unconditional DMs has previously been noted by \citet{ho2022classifier,bao2022conditional,hu2022self}. Conditional DMs have also been observed to work better with few sampling steps~\citep{meng2022distillation}. Furthermore, we will show that sample realism grows with ``how much'' information the DM is conditioned on. To better make this point, we will distinguish between ``strongly-conditional'' generation, where we condition on a high-dimensional feature like a long text prompt, and ``lightly-conditional'' generation, where we condition on a lower dimensional feature like a class label or short text prompt.  As hinted at in \cref{fig:stable-diffusion-example} an image is likely to be more realistic if conditioned on being ``an aerial photograph of a road between green fields'' (strongly-conditional generation) than if it is if simply conditioned on being ``an aerial photograph'' (lightly-conditional generation). Unconditional generation of images will typically lead to even less realism.
 
 \subsection{Analysing conditional vs unconditional DMs} \label{sec:2sdm-cond-vs-uncond-dgms}
 
@@ -147,7 +147,7 @@ Including the additional conditioning input $\rva$, the conditional image model'
 \end{equation}
 where $\rvy \oplus \rva$ is the concatenation of $\rvy$ and $\rva$ to form a single vector which the image model is conditioned on. We match our diffusion process hyperparameters, including $u$ and $\lambda$, to those of \citet{karras2022elucidating}, and also use their proposed Heun sampler.  For AFHQ and FFHQ, we use the U-Net architecture originally proposed by \citet{song2020score}. For ImageNet, we use the slightly larger U-Net architecture proposed by \citet{dhariwal2021diffusion}. We match the data augmentation scheme to be the same as that of \citet{karras2022elucidating} on each dataset. There are established conditional variants of both architectures~\citep{dhariwal2021diffusion,karras2022elucidating} that add a learned linear projection to the embedding of the noise standard deviation $\sigma$.  We use the same technique to incorporate the concatenated conditioning inputs $\rvy\oplus\rva$.
 
-\subsection{2SDM improves over standard diffusion models} \label{sec:2sdm-experiments}
+\subsection{Two-stage diffusion improves over standard diffusion} \label{sec:2sdm-experiments}
 
 
 \begin{table}[t]
@@ -219,7 +219,7 @@ Second, the $28.9\%$ improvement in performance for the latent diffusion model o
 Sampling from 2SDM does impose a small additional cost relative to EDM, since we must begin by sampling from the auxiliary model. In all experiments, when we use 40 diffusion steps, sampling from our auxiliary model takes 8.8s with batch size 256. This corresponds to 35ms per batch item. Our conditional image model and our EDM baseline use identical architectures (other than the projection of $\rvy$) and we could not detect a difference between their sampling times which were 862ms per batch item on our ImageNet architecture and 789ms per batch item on our AFHQ and FFHQ architecture. This means that the increase in time due to using 2SDM instead of EDM is less than $4\%$. Furthermore, we can negate this increase by using two less sampling steps for the conditional image model. We show in \cref{supp:conditional-diffusion} that this lets us make 2SDM faster than EDM with almost no effect on sample quality.
 
 
-\subsection{Perspectives on 2SDM}
+\subsection{Perspectives on two-stage diffusion}
 \textbf{UnCLIP} \label{sec:unclip}
 UnCLIP~\citep{ramesh2022hierarchical} uses the following text-to-image procedure: given a text prompt, it is embedded by a CLIP text embedder. A diffusion model then samples a plausible CLIP image embedding with high cosine similarity to this text image embedding. Finally, a conditional image diffusion model samples an image conditioned on CLIP image embedding and text prompt. This is described as ``inverting'' the CLIP embedder framework to map from image to text, hence the name unCLIP. Given our discssion of the benefits of conditioning the diffusion model on as much information as possible, it makes sense that unCLIP provides a benefit as long as the combination of text and CLIP embedding contains ``more'' information than the text prompt alone, which will always be the case. They also imply that the disparity is even larger if we compare the CLIP-conditional generative model with an unconditional generative model  (i.e. one conditioned on zero bits of information). The unCLIP approach can therefore be expected to provide larger benefits for unconditional (or lightly-conditional) generation than for the text-conditional setting in which it was developed. This is supported by our findings with 2SDM which show bigger benefits over EDM for unconditional generation than for class-conditional generation.
 
@@ -236,7 +236,7 @@ who show improved performance in various approximate inference settings by model
 \textbf{Integrating additional data}~
 Our method can be understood as a means to leverage the ``world knowledge'' inside a CLIP embedder for improved performance on the image generation task. Another way in which additional knowledge, or data, could be leveraged is by training a multi-headed diffusion model which simultaneously approximates the score function and makes predictions of side information like class labels. \citet{deja2023learning} propose a method for doing so but do not demonstrate improved performance on the unconditional generation task.
 
-\subsection{Final discussion of 2SDM}
+\subsection{Final discussion of two-stage diffusion}
 In this section we have demonstrated that conditional DMs can outperform unconditional DMs in terms of sample realism in the image domain, and that we can leverage this insight to build improved unconditional and lightly-conditional DGMs. This provides motivation for our work on conditional generation in addition to the new systems that are enabled by the capability to do conditional generation. 
 
 We note, though, that a massive unexplored design space remains after the results we have presented on 2SDM. For pedagogical purposes we intentionally kept 2SDM simple, using known diffusion architectures and objectives. It is likely that optimising these design choices for the lightly-conditional 2SDM use-case would improve performance. In addition, there are almost certainly more useful quantities that we could condition on than CLIP embeddings. 

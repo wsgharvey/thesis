@@ -6,11 +6,11 @@ We estimate our objective $\mathcal{L}_\text{JD}(\theta)$ by taking minibatches 
 \begin{equation}
     \mathcal{U}(t; 0, T) q_{0,t}(\mX, \mX_t, M_t) \delidxdist(i | n_t) \updelta_{\text{del}(\mX_t, i)}(\mV).
 \end{equation}
-We first sample $t \sim \mathcal{U}(0, T)$ and then take samples from our dataset $\mX \sim \pdata(\cdot)$. In order to sample $q_{t|0}(\mX_t, M_t | \mX)$ we need to add noise, delete dimensions, and sample a mask variable. When the Gaussian noising process is isotropic, we can add a suitable amount of noise to all dimensions of $\mX$ and then delete dimensions of that noised full dimensional value. More specifically, we first sample $\tilde{\mX}_t = (n, \tilde{\rvx}_t)$ with $\tilde{\rvx}_t \sim \mathcal{N}(\tilde{\rvx}_t; \alpha(t) \rvx, \sigma(t)^2 I_{n d})$. Then we sample the number of dimensions to delete. This is simple to do when our rate function is independent of $n_t$ except for the case when $n_t=1$ at which it is zero. We simply sample a Poisson random variable with mean parameter $\int_0^t \forwardrate_s \rmd s$ and then clamp its value such that the maximum number of possible components that are deleted is $n - 1$. This gives the appropriate distribution over $n_t$, 
+We first sample $t \sim \mathcal{U}(0, T)$ and then take samples from our dataset $\mX \sim \pdata(\cdot)$. In order to sample $q_{t|0}(\mX_t, M_t | \mX)$ we need to add noise, delete dimensions, and sample a mask variable. When the Gaussian noising process is isotropic, we can add a suitable amount of noise to all dimensions of $\mX$ and then delete dimensions of that noised full dimensional value. More specifically, we first sample $\tilde{\mX}_t = (n, \tilde{\rvx}_t)$ with $\tilde{\rvx}_t \sim \mathcal{N}(\tilde{\rvx}_t; \alpha(t) \rvx, \sigma(t)^2 I_{n d})$. Then we sample the number of dimensions to delete. This is simple to do when our rate function is independent of $n_t$ except for the case when $n_t=1$ at which it is zero. We simply sample a Poisson random variable with mean parameter $\int_0^t \forwardrate^{>1}(s) \rmd s$ (where $\forwardrate^{>1}(s) = \forwardrate(n_s, s)$ for all $n_s > 1$) and then clamp its value such that the maximum number of possible components that are deleted is $n - 1$. This gives the appropriate distribution over $n_t$, 
 \begin{equation}
     q_{t|0}(n_t | n) = \begin{cases}
-         \frac{(\int_0^t \forwardrate_s \rmd s)^{n - n_t}}{(n - n_t)!} \text{exp}(- \int_0^t \forwardrate_s \rmd s)&\textstyle  1 < n_t \leq n \\
-        1 -  \sum_{m=2}^{n} \frac{(\int_0^t \forwardrate_s \rmd s)^{n - m}}{(n - m)!} \text{exp}(- \int_0^t \forwardrate_s \rmd s)  &\textstyle  n_t = 1.
+         \frac{(\int_0^t \forwardrate^{>1}(s) \rmd s)^{n - n_t}}{(n - n_t)!} \text{exp}(- \int_0^t \forwardrate^{>1}(s) \rmd s)&\textstyle  1 < n_t \leq n \\
+        1 -  \sum_{m=2}^{n} \frac{(\int_0^t \forwardrate^{>1}(s) \rmd s)^{n - m}}{(n - m)!} \text{exp}(- \int_0^t \forwardrate^{>1}(s) \rmd s)  &\textstyle  n_t = 1.
     \end{cases}
 \end{equation}
 To sample which dimensions are deleted, we can sample $\delidxdist(i_1 | n) \delidxdist(i_2 | n-1) \dots \delidxdist(i_{n - n_t} | n_t+1)$ from which we can create the mask $M_t$ and apply it to $\tilde{\mX}_t$ to obtain $\mX_t = M_t(\tilde{\mX}_t)$. When $\delidxdist(i | n_t) = 1/n_t$ this is especially simple to do by simply randomly permuting the components of $\tilde{\mX}_t$, and then removing the final $n - n_t$ components. Similarly, if $\delidxdist(i | n_t)$ is defined to always delete the final component, this will deterministically result in a mask that always removes the final $n - n_t$ components.
@@ -27,8 +27,8 @@ Further, by using the parameterisation given in Proposition \ref{prop:backwardra
 \end{equation}
 Our augmented objective then becomes
 \begin{align} \label{eq:augmentedObjective}
-    \tilde{\mathcal{L}}_\text{JD}(\theta) = &T\mathbb{E} [ -\frac{1}{2}\norm{\hat{\mathbf{\epsilon}}_\theta(\mX_t, t) - \epsilon}^2 - \backwardrate_t^\theta(\mX_t) + \forwardrate_t(n_t) \log \backwardrate_t^\theta(\mV) \\ 
-    &+ \forwardrate_t(n_t) \log \autonet_t^\theta(\xadd_t, i | \mV) + \gamma \cdot \log p_{0|t}^\theta (n | \mX_t) ] \nonumber
+    \tilde{\mathcal{L}}_\text{JD}(\theta) = &T\mathbb{E} [ -\frac{1}{2}\norm{\hat{\mathbf{\epsilon}}_\theta(\mX_t, t) - \epsilon}^2 - \backwardrate_\theta(\mX_t, t) + \forwardrate(n_t, t) \log \backwardrate_\theta(\mV, t) \\ 
+    &+ \forwardrate(n_t, t) \log \autonet_t^\theta(\xadd_t, i | \mV) + \gamma \cdot \log p_{0|t}^\theta (n | \mX_t) ] \nonumber
 \end{align}
 where the expectation is taken with respect to 
 \begin{equation}
@@ -63,7 +63,7 @@ When deleting dimensions, we first shuffle the ordering of the nodes and then de
 Following \citet{hoogeboom2022equivariant} we train our model to operate within the centre of mass (CoM) zero subspace of possible molecule positions. The means, throughout the forward and reverse process, the average position of an atom is $0$. In our trans-dimensional framework, this is achieved by first deleting any atoms required under the forward component deletion process. We then move the molecule such that its CoM is $0$. We then add CoM free noise such that the noisy molecule also has CoM$=0$. Our score model $\rvs_\theta$ is parameterised through a noise prediction model $\hat{\mathbf{\epsilon}}_\theta$ which is trained to predict the CoM free noise that was added. Therefore, our score network learns suitable directions to maintain the process on the CoM$=0$ subspace. For the position prediction from $\autonet_t^\theta(\yadd | \mX_t)$ we train it to predict the new atom position from the current molecules reference frame. When the new atom is added, we then update all atom positions such that CoM$=0$ is maintained.
 
 \subsubsection{Sampling}
-During sampling we found that adding corrector steps~\citep{song2020score} improved sample quality. Intuitively, corrector steps form a process that has $q_t(\cdot)$ as its stationary distribution rather than the process progressing toward $\pdata(\cdot)$. We use the same method to determine the corrector step size $\zeta$ as \citet{song2020score}. For the conditional generation tasks, we also found it useful to include corrector steps for the component generation process. As shown by \citet{campbell2022continuous}, corrector steps in discrete spaces can be achieved by simulating with a rate that is the addition of the forward and reverse rates. We achieve this in the context of trans-dimensional modelling by first simulating a possible insertion using $\backwardrate_t^\theta$ and then simulating a possible deletion using $\forwardrate_t$. We describe our overall sampling algorithm in \cref{alg:backwardsamplingWithCorrector}.
+During sampling we found that adding corrector steps~\citep{song2020score} improved sample quality. Intuitively, corrector steps form a process that has $q_t(\cdot)$ as its stationary distribution rather than the process progressing toward $\pdata(\cdot)$. We use the same method to determine the corrector step size $\zeta$ as \citet{song2020score}. For the conditional generation tasks, we also found it useful to include corrector steps for the component generation process. As shown by \citet{campbell2022continuous}, corrector steps in discrete spaces can be achieved by simulating with a rate that is the addition of the forward and reverse rates. We achieve this in the context of trans-dimensional modelling by first simulating a possible insertion using $\backwardrate_\theta$ and then simulating a possible deletion using $\forwardrate$. We describe our overall sampling algorithm in \cref{alg:backwardsamplingWithCorrector}.
 
 \begin{algorithm}
 \begin{algorithmic}[1]
@@ -71,23 +71,23 @@ During sampling we found that adding corrector steps~\citep{song2020score} impro
     \State $\mX' \sim \mathbb{I}\{ n'=1\} \mathcal{N}(\rvx'; 0, I_{d})$
     \While{ $t > 0$}
     \State $u \sim \mathcal{U}(0, 1)$
-    \If{$u < \backwardrate_{t}^\theta(\mX') \updelta t$}
+    \If{$u < \backwardrate_\theta(\mX', t) \updelta t$}
     \State $\xadd, i \sim \autonet_{t}^\theta(\xadd, i | \mX')$
     \State $\mX' \leftarrow \text{ins}(\mX', \xadd, i)$
     \EndIf
     \State  $\epsilon \sim \mathcal{N}(0, I_{nd})$
-    \State $\rvx' \leftarrow \rvx' - \backwarddrift_{t}^\theta(\mX') \updelta t + g_{t} \sqrt{\updelta t} \epsilon$
+    \State $\rvx' \leftarrow \rvx' - \backwarddrift_\theta(\mX', t) \updelta t + g_{t} \sqrt{\updelta t} \epsilon$
     \For{$c = [1, \dots, C]$}
         \Comment{Corrector steps}
         \State $\epsilon \sim \mathcal{N}(0, I_{nd})$
         \State $\rvx' \leftarrow \rvx' + \zeta s_{t-\updelta t}^\theta(\mX') + \sqrt{2 \zeta} \epsilon$
         \State $u \sim \mathcal{U}(0, 1)$
-        \If{$u < \backwardrate_{t-\updelta t}^\theta(\mX') \updelta t$}
+        \If{$u < \backwardrate_\theta(\mX', t-\updelta t) \updelta t$}
         \State $\xadd, i \sim \autonet_{t-\updelta t}^\theta(\xadd, i | \mX')$
         \State $\mX' \leftarrow \text{ins}(\mX', \xadd, i)$
         \EndIf
         \State $u \sim \mathcal{U}(0, 1)$
-        \If{$u < \forwardrate_{t-\updelta t}(n) \updelta t$}
+        \If{$u < \forwardrate(n, t-\updelta t) \updelta t$}
             \State $i \sim \delidxdist(i | n')$
             \State $\mX' \leftarrow \text{del}(\mX', i)$
         \EndIf
@@ -102,7 +102,7 @@ During sampling we found that adding corrector steps~\citep{song2020score} impro
 
 \subsubsection{Evaluation}
 \paragraph{Unconditional}
-For our unconditional sampling evaluation, we start adding corrector steps when $t<0.1T$ in the backward process and use $5$ corrector steps without the corrector steps on the number of components. We set $\updelta = 0.05$ for $ t > 0.5T$ and $\updelta = 0.001$ for $t<0.5T$ such that the total number of network evaluations is $1000$. We show the distribution of sizes of molecules generated by our model in \cref{fig:tddm-uncond_dims} and show more unconditional samples in \cref{fig:tddm-apdxUncondMolSamples}. We find our model consistently generates realistic molecules and achieves a size distribution similar to the training dataset even though this is not explicitly trained and arises from sampling our reverse rate $\backwardrate_t^\theta$. Since we are numerically integrating a continuous time process and approximating the true time reversal rate $\backwardrate_t^*$, some approximation error is expected. For this experiment, sampling all of our models and ablations takes approximately $2$ GPU days on Nvidia $1080$Ti GPUs.
+For our unconditional sampling evaluation, we start adding corrector steps when $t<0.1T$ in the backward process and use $5$ corrector steps without the corrector steps on the number of components. We set $\updelta = 0.05$ for $ t > 0.5T$ and $\updelta = 0.001$ for $t<0.5T$ such that the total number of network evaluations is $1000$. We show the distribution of sizes of molecules generated by our model in \cref{fig:tddm-uncond_dims} and show more unconditional samples in \cref{fig:tddm-apdxUncondMolSamples}. We find our model consistently generates realistic molecules and achieves a size distribution similar to the training dataset even though this is not explicitly trained and arises from sampling our reverse rate $\backwardrate_\theta$. Since we are numerically integrating a continuous time process and approximating the true time reversal rate $\backwardrate^*$, some approximation error is expected. For this experiment, sampling all of our models and ablations takes approximately $2$ GPU days on Nvidia $1080$Ti GPUs.
 
 \paragraph{Conditional}
 For evaluating applying conditional diffusion guidance to our model, we choose $10$ conditioning tasks that each result in a different distribution of target dimensions. The task is to produce molecules that include at least a certain number of target atom types. We then guide the first set of atoms generated by the model to have these desired atom types. The tasks chosen are given in \cref{tab:molecule_conditions}. Molecules in the training dataset that meet the conditions in each task have a different distribution of sizes. The tasks were chosen so that we have an approximately linearly increasing mean number of atoms for molecules that meet the condition. We also require that there are at least 100 examples of molecules that meet the condition within the training dataset.\\
@@ -171,16 +171,16 @@ For our interpolations experiments, we follow the set up of \citet{hoogeboom2022
 \end{figure}
 
 \subsubsection{Ablations}
-For our main model, we set $\forwardrate_{t < 0.1T} = 0$ to ensure that all dimensions are added with enough generation time remaining for the diffusion process to finalise all state values. To verify this setting, we compare its performance with $\forwardrate_{t<0.03T} = 0$ and $\forwardrate_{t<0.3T} = 0$. We show our results in \cref{tab:lowTablation}. We find that the $\forwardrate_{t<0.03T}=0$ setting to generate reasonable sample quality but incur some extra dimension error due to the generative process sometimes observing a lack of dimensions near $t=0$ and adding too many dimensions. We observed the same effect in the paper for when setting $\forwardrate_t$ to be constant for all $t$ in \cref{tab:cond_mol}. Further, the setting $\forwardrate_{t<0.3T}=0$ also results in increased dimension error due to there being less opportunity for the guidance model to supervise the number of dimensions. We find that $\forwardrate_{t<0.1T}=0$ to be a reasonable trade-off between these effects.
+For our main model, we set $\forwardrate(n_t, t) = 0$ for all $t < 0.1T$ to ensure that all dimensions are added with enough generation time remaining for the diffusion process to finalise all state values. We call this setting $\forwardrate_{t<0.1T} = 0$. To assess its performance, we compare it with $\forwardrate_{t<0.03T} = 0$, where the forward rate is zero for all $t<0.03T$, and $\forwardrate_{t<0.3T} = 0$, where the forward rate is zero for all $t<0.3T$. We show our results in \cref{tab:lowTablation}. We find the $\forwardrate_{t<0.03T}=0$ setting to generate reasonable sample quality but incur some extra dimension error due to the generative process sometimes observing a lack of dimensions near $t=0$ and adding too many dimensions. We observed the same effect in \cref{ch:tddm} when setting $\forwardrate(n_t, t)$ to be constant for all $t$ in \cref{tab:cond_mol}. Further, the setting $\forwardrate_{t<0.3T}=0$ also results in increased dimension error due to there being less opportunity for the guidance model to supervise the number of dimensions. We find the $\forwardrate_{t<0.1T}=0$ setting to be a reasonable trade-off between these effects.
 \begin{table}[ht]
 \centering
 \caption{Ablation of when to set the forward rate to $0$ on the conditional molecule generation task. We report dimension error as the average Hellinger distance between the generated and ground truth conditional dimension distributions as well as average sample quality metrics. Metrics are reported after 620k training iterations.}
 \begin{tabular}{@{}lcccc@{}}
 \toprule
 Method & Dim.  Error & \% Atom stable & \% Molecule Stable & \% Valid \\ \midrule
-$ \overrightarrow{\lambda}_{t < 0.03T} = 0$ & $0.227 {\scriptstyle \pm 0.16}$ & $91.5 {\scriptstyle \pm 3.7} $  & $56.5 {\scriptstyle \pm 9.8}$ & $72.0 {\scriptstyle \pm 11}$  \\
-$ \overrightarrow{\lambda}_{t < 0.1T} = 0$ & $0.162 {\scriptstyle \pm 0.071}$ & $92.4 {\scriptstyle \pm 2.8}$ & $53.9 {\scriptstyle \pm 12}$ & $72.7 {\scriptstyle \pm 9.6}$ \\
-$ \overrightarrow{\lambda}_{t < 0.3T} = 0$ & $0.266 {\scriptstyle \pm 0.11}$ & $92.0 {\scriptstyle \pm 3.2}$ & $53.5 {\scriptstyle \pm 13}$ & $66.6 {\scriptstyle \pm 12}$ \\
+    $ \forwardrate_{t < 0.03T} = 0$ & $0.227 {\scriptstyle \pm 0.16}$ & $91.5 {\scriptstyle \pm 3.7} $  & $56.5 {\scriptstyle \pm 9.8}$ & $72.0 {\scriptstyle \pm 11}$  \\
+$ \forwardrate_{t < 0.1T} = 0$ & $0.162 {\scriptstyle \pm 0.071}$ & $92.4 {\scriptstyle \pm 2.8}$ & $53.9 {\scriptstyle \pm 12}$ & $72.7 {\scriptstyle \pm 9.6}$ \\
+$ \forwardrate_{t < 0.3T} = 0$ & $0.266 {\scriptstyle \pm 0.11}$ & $92.0 {\scriptstyle \pm 3.2}$ & $53.5 {\scriptstyle \pm 13}$ & $66.6 {\scriptstyle \pm 12}$ \\
 \bottomrule
 \end{tabular}
 \label{tab:lowTablation}
@@ -196,8 +196,8 @@ We here investigate sample diversity and novelty of our unconditional generative
      Method & \% Valid  & \% Valid and Unique & \shortstack{Percentage of Valid and Unique \\ Molecules that are Novel } \\ \midrule
      FDDM [8] & $91.9$ & $90.7$ & $65.7$ \\ \midrule
      TDDM (ours) & $92.3$ & $89.9$ & $53.6$ \\
-     TDDM, const $\smash{\overrightarrow{\lambda}_t}$ & $86.7$ & $84.4$ & $56.9$ \\
-     TDDM, $\overrightarrow{\lambda}_{t<0.9T} = 0$ & $89.4$ & $86.1$ & $51.3$ \\
+     TDDM, const $\smash{\forwardrate}$ & $86.7$ & $84.4$ & $56.9$ \\
+     TDDM, $\forwardrate_{t<0.9T} = 0$ & $89.4$ & $86.1$ & $51.3$ \\
      TDDM w/o Prop. 3 & $87.1$ & $85.9$ & $63.3$ \\ \bottomrule
    \end{tabular}
    \label{tab:uniqueness_and_novelty}
@@ -222,12 +222,12 @@ We enable random-order deletion by applying an initial shuffling operation occur
 
 We will run the forward process from $t=0$ to $t = 100N$ where $N$ is the maximum number of frames in any video. We will set the forward rate such we delete down from $n_t$ to $n_t - 1$ at time $(N-n_t+1)100$. This is achieved heuristically by setting
 \begin{equation}
-    \forwardrate_t(n_t) = \begin{cases}
+    \forwardrate(n_t, t) = \begin{cases}
         0 & \text{for } t < (N-n_t+1)100, \\
         \infty & \text{for }  t \geq (N-n_t + 1) 100.
     \end{cases} 
 \end{equation}
-We can see that at time $t = (N - n_t + 1)100$ we will quickly delete down from $n_t$ to $n_t-1$ at which point $\forwardrate_t(n_t)$ will become $0$ thus stopping deletion until the process arrives at the next multiple of $100$ in time. When we hit a deletion event, we delete the frame from $\mX_t$ that has the current highest index variable $\pi(n)$. In other words
+We can see that at time $t = (N - n_t + 1)100$ we will quickly delete down from $n_t$ to $n_t-1$ at which point $\forwardrate(n_t, t)$ will become $0$ thus stopping deletion until the process arrives at the next multiple of $100$ in time. When we hit a deletion event, we delete the frame from $\mX_t$ that has the current highest index variable $\pi(n)$. In other words
 \begin{equation}
     \delidxdist(i | \mX_t) = \begin{cases}
         1 & \text{for } n_t = \rvx_{t}^{(i)}[2], \\
@@ -256,7 +256,7 @@ Between jumps, we use a noising process to add noise to frames. The noising proc
         t - (N - \rvx_t^{(i)}[2])100 & \text{for } (N - \rvx_t^{(i)}[2])100 \leq t \leq (N - \rvx_t^{(i)}[2]+1) 100
     \end{cases}
 \end{equation}
-where we again use $\rvx_t^{(i)}[2]$ for the shuffle index of component $i$. This is the VE-SDE from \citet{song2020score} applied to each frame in turn. We note that we only add noise to the state values on not the shuffle index itself. The SDE parameters that result in the VE-SDE are $\forwarddrift_t = 0$ and $\forwarddiffcoeff_t = \sqrt{2t - 2(N - \rvx_t^{(i)}[2])100}$.
+where we again use $\rvx_t^{(i)}[2]$ for the shuffle index of component $i$. This is the VE-SDE from \citet{song2020score} applied to each frame in turn. We note that we only add noise to the state values on not the shuffle index itself. The SDE parameters that result in the VE-SDE are $\rvb(\rvx_t, t) = 0$ and $g(t) = \sqrt{2t - 2(N - \rvx_t^{(i)}[2])100}$.
 
 
 
@@ -264,11 +264,11 @@ where we again use $\rvx_t^{(i)}[2]$ for the shuffle index of component $i$. Thi
 
 When $t$ is not at a multiple of 100, the forward process is purely adding Gaussian noise, and so the reverse process is also purely operating on the continuous dimensions. We use the Heun sampler proposed by \citet{karras2022elucidating} to update the continuous dimensions in this case, and also a variation of their discretisation of $t$ - specifically to update from e.g. $t=600$ to $t=500$, we use their discretisation of $t$ as if the maximum value was 100 and then offset all values by $500$. 
 
-To invert the dimension deletion process, we can use \cref{prop:backwardrateparam} to derive our reverse dimension generation process. We re-write our parameterised $\backwardrate_t^\theta$ using \cref{prop:backwardrateparam} as 
+To invert the dimension deletion process, we can use \cref{prop:backwardrateparam} to derive our reverse dimension generation process. We re-write our parameterised $\backwardrate_\theta$ using \cref{prop:backwardrateparam} as 
 \begin{equation}
-    \backwardrate_t^\theta(\mX_t) = \forwardrate_t(n_t + 1) \mathbb{E}_{p_{0|t}^\theta(n | \mX_t)} \left[ \frac{p_{t|0}(n_t + 1 | n)}{p_{t|0}(n_t | n)}\right]
+    \backwardrate_\theta(\mX_t, t) = \forwardrate(n_t + 1, t) \mathbb{E}_{p_{0|t}^\theta(n | \mX_t)} \left[ \frac{p_{t|0}(n_t + 1 | n)}{p_{t|0}(n_t | n)}\right]
 \end{equation}
-At each time multiple of 100 in the reverse process, we will have an opportunity to add a component. At this time point, we estimate the expectation with a single sample $n \sim p_{0|t}^\theta(n | \mX_t)$. If $n > n_t$ then $\backwardrate_t^\theta(\mX_t) = \infty$. The new component will then be added at which point $\backwardrate_t^\theta(\mX_t)$ becomes $0$ for the remainder of this block of time due to $n_t$ becoming $n_t+1$. If $n = n_t$ then $\backwardrate_t^\theta(\mX_t) = 0$ and no new component is added. $\backwardrate_t^\theta(\mX_t)$ will continue to be $0$ for the remainder of the reverse process once an opportunity to add a component is not used.
+At each time multiple of 100 in the reverse process, we will have an opportunity to add a component. At this time point, we estimate the expectation with a single sample $n \sim p_{0|t}^\theta(n | \mX_t)$. If $n > n_t$ then $\backwardrate_\theta(\mX_t, t) = \infty$. The new component will then be added at which point $\backwardrate_\theta(\mX_t, t)$ becomes $0$ for the remainder of this block of time due to $n_t$ becoming $n_t+1$. If $n = n_t$ then $\backwardrate_\theta(\mX_t, t) = 0$ and no new component is added. $\backwardrate_\theta(\mX_t, t)$ will continue to be $0$ for the remainder of the reverse process once an opportunity to add a component is not used.
 
 When a new frame is added, we use $\autonet_t^\theta(\yadd, i | \mX_t)$ to decide where the frame is added and its initial value. Since when we delete a frame it is fully noised, $\autonet_t^\theta(\yadd, i | \mX_t)$ can simply predict Gaussian noise for the new frame $\yadd$. However, $\autonet_t^\theta(\yadd, i | \mX_t)$ will still learn to predict a suitable location $i$ to place the new frame such that reverse process is the reversal of the forward.
 
