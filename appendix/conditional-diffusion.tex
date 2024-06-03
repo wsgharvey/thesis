@@ -4,9 +4,9 @@
 
 \begin{table}[h]
     \centering
-    \caption{Comparison of FID and sampling time for EDM baseline, 2SDM, and a variation of 2SDM which uses two fewer sampling steps such that its sampling time is less than that of EDM. To account for batching, we measure the time to sample a batch of size 256 on a V100 GPU, and then divide it by 256. We see that (a) 2SDM outperforms EDM at little additional cost, and (b) we can reduce the number of sampling steps used by 2SDM such that it is both faster than and has better image quality than our baseline.}
+    \caption{Comparison of sampling time and sample quality for our two-stage sampling method (2SDM), a standard diffusion model baseline (EDM), and a variant of 2SDM which uses two fewer sampling steps such that its sampling time is less than that of EDM. To account for batching, we measure the time to sample a batch of size 256 on a V100 GPU, and then divide it by 256. We see that (a) 2SDM outperforms EDM at little additional cost, and (b) we can reduce the number of sampling steps used by 2SDM such that it is both faster than and has better image quality than our baseline.}
     \begin{tabular}{l|ccc}
-                         & EDM & 2SDM & 2SDM-``less steps'' \\
+                         & EDM & 2SDM & \shortstack{2SDM- \\ ``less steps''} \\
                          \hline
     Sampling time        & $789$ ms & $824$ ms  & $784$ ms         \\
     FID on AFHQ (trained from scratch)         & $2.04$   & $1.56$ & $1.58$                   \\

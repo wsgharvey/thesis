@@ -9,11 +9,11 @@ So far we have described diffusion models as models that can be fit to describe 
     \includegraphics[width=0.32\textwidth]{figs/thesis/dalle3/2.png}
     \hfill
     \includegraphics[width=0.32\textwidth]{figs/thesis/dalle3/4.png}
-    \caption{Images sampled by DALL-E 3~\citep{betker2023improving} given text prompts, from left to right, ``An illustration of an avocado sitting in a therapist's chair, saying 'I just feel so empty inside' with a pit-sized hole in its center. The therapist, a spoon, scribbles notes.''; ``A 2D animation of a folk music band composed of anthropomorphic autumn leaves, each playing traditional bluegrass instruments, amidst a rustic forest setting dappled with the soft light of a harvest moon.''; and ``Photo of a lychee-inspired spherical chair, with a bumpy white exterior and plush interior, set against a tropical wallpaper.''. Reprinted with permission of \citeauthor{betker2023improving}.}
+    \caption{Images sampled by diffusion model DALL-E 3~\citep{betker2023improving} given text prompts, from left to right, ``An illustration of an avocado sitting in a therapist's chair, saying 'I just feel so empty inside' with a pit-sized hole in its center. The therapist, a spoon, scribbles notes.''; ``A 2D animation of a folk music band composed of anthropomorphic autumn leaves, each playing traditional bluegrass instruments, amidst a rustic forest setting dappled with the soft light of a harvest moon.''; and ``Photo of a lychee-inspired spherical chair, with a bumpy white exterior and plush interior, set against a tropical wallpaper.''. Reprinted with permission of \citeauthor{betker2023improving}.}
     \label{fig:dalle-3-samples}
     \centering
     \includegraphics{figs/thesis/emu_edit_examples.pdf}
-    \caption{Image-editing examples reproduced from \citet{sheynin2023emu}. Given an input image (left of each pair) and text prompt, Emu Edit samples an edited image (right of each pair). Reprinted with permission of \citeauthor{sheynin2023emu}.}
+    \caption{Image edits by a conditional diffusion model, Emu Edit~\citep{sheynin2023emu}. Given an input image (left of each pair) and text prompt, Emu Edit samples an edited image (right of each pair). Reprinted with permission of \citeauthor{sheynin2023emu}.}
     \label{fig:emu-edit-samples}
 \end{figure}
 
@@ -66,7 +66,7 @@ The better realism of samples from conditional DMs versus unconditional DMs has 
     \includegraphics[width=0.3\textwidth]{figs/2sdm/uncond-aerial-photo.jpg}
     \hfill
     \includegraphics[width=0.3\textwidth]{figs/2sdm/cond-aerial-photo.jpg}
-    \caption{Outputs from Stable Diffusion~\citep{rombach2022high} with the same random seed and three text prompts. \textbf{Left:} Output with an empty text prompt. \textbf{Middle:} Output when prompted to produce ``aerial photography''. \textbf{Right:} Output using a more detailed prompt\protect\footnotemark removes the ``smudged'' road artefact visible in the middle.}
+    \caption{Images sampled by Stable Diffusion~\citep{rombach2022high} with the same random seed and three text prompts. \textbf{Left:} Output with an empty text prompt. \textbf{Centre:} Output when prompted to produce ``aerial photography''. \textbf{Right:} Output given a more detailed prompt\protect\footnotemark. Using the more detailed prompt removes the ``smudged'' road artefact visible in the centre image.}
     \label{fig:stable-diffusion-example}
 \end{figure}
 \footnotetext{We used the prompt ``Aerial photography of a patchwork of small green fields separated by brown dirt tracks between them. A large tarmac road passes through the scene from left to right.''}
@@ -85,7 +85,7 @@ Then, as in the unconditional case, we compute the FID between the set of images
 \begin{figure}[t]
     \centering
     \includegraphics[width=\textwidth]{figs/2sdm/cond-results-vs-nclusters.pdf}
-    \caption{FID versus dimensionality of $\rvy$ on AFHQ~\citep{choi2020stargan} and FFHQ~\citep{karras2018style}. With small training budgets (brown line), it is harmful when $\rvy$ is too informative. With larger training budgets (purple line), it is helpful to make $\rvy$ much more high dimensional.}
+    \caption{Sample quality (measured by FID) versus the dimensionality of conditioning information $\rvy$ for CLIP-conditional image diffusion models on AFHQ~\citep{choi2020stargan} and FFHQ~\citep{karras2018style}. With small training budgets (brown line), it is harmful when $\rvy$ is too informative. With larger training budgets (purple line), it is helpful to make $\rvy$ much more high dimensional.}
     \label{fig:fid-vs-ncomp}
 \end{figure}
 
@@ -112,7 +112,7 @@ The gap in performance between conditional and unconditional DMs is problematic.
 \begin{figure}[t]
     \centering
     \includegraphics[width=\textwidth]{figs/2sdm/vcdm-diagram.pdf}
-    \caption{Visualisation of 2SDM's generation process. First the auxiliary DM samples a CLIP embedding, corresponding to a cross in the space of CLIP embeddings (red) in our illustration. Next, our conditional image model maps from the sampled CLIP embedding to a sampled image, visualized on the image manifold (blue). The distribution over plausible images is complex and multi-modal but becomes simpler when conditioned on a CLIP embedding. On the right we show three rows of sampled images. Within each row, all images are generated given the same CLIP embedding.}
+    \caption{Visualisation of the procedure to sample from our two-stage diffusion model. First the auxiliary DM samples a CLIP embedding, corresponding to a cross in the space of CLIP embeddings (red) in our illustration. Next, our conditional image model maps from the sampled CLIP embedding to a sampled image, visualized on the image manifold (blue). The distribution over plausible images is complex and multi-modal but becomes simpler when conditioned on a CLIP embedding. On the right we show three rows of sampled images. Within each row, all images are generated given the same CLIP embedding.}
     \label{fig:samples}
 \end{figure}
 We propose the solution depicted in \cref{fig:samples}. A first ``auxiliary DM'' samples vectors within an embedding space, with any vector describing a particular set of semantic characteristics of an image. The second stage, a ``conditional image DM'', takes such a vector as input and samples an image with these semantic characteristics. The vector embedding is informative, as evidenced by the fact that all images within each row on the right of \cref{fig:samples}, which are all conditioned on the same embedding, look very similar. The conditional image DM therefore inherits all the previously-described advantages of strongly-conditional DMs even though our overall generative model is unconditional (or, with the generalisation we will introduce shortly, lightly-conditional). We call the resulting model a Two-Stage Diffusion Model (2SDM).
@@ -134,7 +134,7 @@ Our auxiliary model is a conditional DM targeting $\pdata(\rvy|\rva)$, where $\r
 \label{eq:auxiliary-model-objective}
     \mathbb{E}_{u(\sigma)q(\rvy_\sigma|\rvy)\pdata(\rvy,\rva)} \left[ \frac{\lambda^\rvx(\sigma)}{u(\sigma)} \lvert\lvert \rvy - \hat{\rvy}_\theta(\rvy_\sigma, \rva, \sigma) \rvert\rvert_2^2 \right]
 \end{equation}
-where $q(\rvy_\sigma|\rvy) = \gN(\rvy_\sigma; \rvy, \sigma^2\mI)$. Note that we use a variance-exploding process so we can drop $\alpha(t) = 1$ from the loss. We follow the architectural choice of \citet{ramesh2022hierarchical} and use a DM with a transformer architecture. It takes as input a series of 512-dimensional input tokens: an embedding of $\sigma$; an embedding of $\rva$ if this is not null; an embedding of $\rvy_\sigma$; and a learned query. These are passed through six transformer layers and then the output corresponding to the learned query token is used as the output. Like \citet{ramesh2022hierarchical}, we parameterise the DM to directly output a mean-squared error estimate of $\rvy$.
+where $q(\rvy_\sigma|\rvy) = \gN(\rvy_\sigma; \rvy, \sigma^2\mI)$. We use a variance-exploding diffusion process following \citet{karras2022elucidating}, and also match their diffusion process hyperparameters, including $\lambda^\rvx$ and $u(\sigma)$ (which is a continuous distribution), and use their proposed Heun sampler. We follow the architectural choice of \citet{ramesh2022hierarchical} and use a DM with a transformer architecture. It takes as input a series of 512-dimensional input tokens: an embedding of $\sigma$; an embedding of $\rva$ if this is not null; an embedding of $\rvy_\sigma$; and a learned query. These are passed through six transformer layers and then the output corresponding to the learned query token is used as the output. Like \citet{ramesh2022hierarchical}, we parameterise the DM to directly output a mean-squared error estimate of $\rvy$.
 %
 On AFHQ and FFHQ we find that data augmentation is helpful to prevent the auxiliary model overfitting. We perform augmentations (including rotation, flipping and color jitter) in image space and feed the augmented image through $e_i(\cdot)$ to obtain an augmented CLIP embedding. Following \citet{karras2022elucidating}, we pass a label describing the augmentation into the transformer as an additional input token so that we can condition on there being no augmentation at test-time.
 
@@ -143,9 +143,9 @@ On AFHQ and FFHQ we find that data augmentation is helpful to prevent the auxili
 Including the additional conditioning input $\rva$, the conditional image model's training objective is
 \begin{equation}
 \label{eq:conditional-image-model-objective}
-    \mathbb{E}_{u(\sigma)q(\rvx_\sigma|\rvx)\pdata(\rvx,\rvy,\rva)} \left[ \frac{\lambda(\sigma)}{u(\sigma)} \lvert\lvert \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy \oplus \rva, \sigma) \rvert\rvert_2^2 \right].
+    \mathbb{E}_{u(\sigma)q(\rvx_\sigma|\rvx)\pdata(\rvx,\rvy,\rva)} \left[ \frac{\lambda^\rvx(\sigma)}{u(\sigma)} \lvert\lvert \rvx - \hat{\rvx}_\theta(\rvx_\sigma, \rvy \oplus \rva, \sigma) \rvert\rvert_2^2 \right].
 \end{equation}
-where $\rvy \oplus \rva$ is the concatenation of $\rvy$ and $\rva$ to form a single vector which the image model is conditioned on. We match our diffusion process hyperparameters, including $u$ and $\lambda$, to those of \citet{karras2022elucidating}, and also use their proposed Heun sampler.  For AFHQ and FFHQ, we use the U-Net architecture originally proposed by \citet{song2020score}. For ImageNet, we use the slightly larger U-Net architecture proposed by \citet{dhariwal2021diffusion}. We match the data augmentation scheme to be the same as that of \citet{karras2022elucidating} on each dataset. There are established conditional variants of both architectures~\citep{dhariwal2021diffusion,karras2022elucidating} that add a learned linear projection to the embedding of the noise standard deviation $\sigma$.  We use the same technique to incorporate the concatenated conditioning inputs $\rvy\oplus\rva$.
+where $\rvy \oplus \rva$ is the concatenation of $\rvy$ and $\rva$ to form a single vector which the image model is conditioned on. As with the auxiliary model, we use a variance-exploding diffusion process with the hyperparameters and Heun solver of \citet{karras2022elucidating}. For AFHQ and FFHQ, we use the U-Net architecture originally proposed by \citet{song2020score}. For ImageNet, we use the slightly larger U-Net architecture proposed by \citet{dhariwal2021diffusion}. We match the data augmentation scheme to be the same as that of \citet{karras2022elucidating} on each dataset. There are established conditional variants of both architectures~\citep{dhariwal2021diffusion,karras2022elucidating} that add a learned linear projection to the embedding of the noise standard deviation $\sigma$.  We use the same technique to incorporate the concatenated conditioning inputs $\rvy\oplus\rva$.
 
 \subsection{Two-stage diffusion improves over standard diffusion} \label{sec:2sdm-experiments}
 
@@ -153,7 +153,7 @@ where $\rvy \oplus \rva$ is the concatenation of $\rvy$ and $\rva$ to form a sin
 \begin{table}[t]
 \centering
 \small
-\caption{Comparison of 2SDM and EDM on a suite of metrics. Best performance for each metric and dataset is shown in bold. Higher is better for metrics marked $\uparrow$; lower is better for $\downarrow$. Results reported for EDM on FFHQ and AFHQ are computed with the pretrained checkpoints released by \citet{karras2022elucidating}. Results reported for 2SDM on FFHQ are with finetuning from this pretrained checkpoint. All others are trained from scratch.}
+\caption{Comparison of a standard diffusion model (EDM) with our two-stage approach (2SDM) on a suite of image-generation metrics. Best performance for each metric and dataset is shown in bold. Higher is better for metrics marked $\uparrow$; lower is better for $\downarrow$. Results reported for EDM on FFHQ and AFHQ are computed with the pretrained checkpoints released by \citet{karras2022elucidating}. Results reported for 2SDM on FFHQ are with finetuning from this pretrained checkpoint. All others are trained from scratch.}
 \begin{tabular}{lcccccccccc}
 \toprule
  \multirow{2}{*}{Dataset} & \multirow{2}{*}{Method} & \multirow{2}{*}{\shortstack{Inception\\Score $\uparrow$}} & \multirow{2}{*}{Precision $\uparrow$} & \multirow{2}{*}{Recall $\uparrow$} & \multirow{2}{*}{FID $\downarrow$} & \multirow{2}{*}{sFID $\downarrow$} \\
@@ -185,7 +185,7 @@ We perform experiments in five settings: unconditional AFHQ modelling at $64\tim
 \begin{figure*}[t]
     \centering
     \includegraphics[width=\textwidth]{figs/2sdm/cond-results-1.pdf}
-    \caption{FID throughout training on AFHQ, FFHQ, and class-conditional ImageNet-64. We show results for each method trained from scratch and, on AFHQ and FFHQ, for finetuning a pretrained EDM model (which was trained for the equivalent of 32 GPU days). 2SDM quickly outperforms EDM when trained from scratch and quickly improves on the pretrained model when used for finetuning.}
+    \caption{FID throughout training for our method and baselines on AFHQ, FFHQ, and class-conditional ImageNet-64. We show results for each method trained from scratch and, on AFHQ and FFHQ, for finetuning a pretrained EDM model (which was trained for the equivalent of 32 GPU days). 2SDM quickly outperforms EDM when trained from scratch and quickly improves on the pretrained model when used for finetuning.}
     \label{fig:fid_vs_training}
 \end{figure*}
 
@@ -201,7 +201,7 @@ Finally, \cref{fig:fid_vs_training} also compares against ``Class-cond'', which 
 
 \begin{figure}[t]
     \includegraphics[width=\textwidth]{figs/2sdm/2SDM-main-fig.pdf}
-    \caption{Class-conditional ImageNet-256 samples from our method, 2SDM, and a diffusion model baseline, EDM~\citep{karras2022elucidating}, both trained for 12 GPU days. Samples within the same column are generated with the same random seed and class label.}
+    \caption{Comparison of class-conditional ImageNet-256 samples from our two-stage diffusion model, 2SDM, and from a diffusion model baseline, EDM~\citep{karras2022elucidating}. Both are trained for 12 GPU days. Samples within the same column are generated with the same random seed and class label.}
     \label{fig:latent-imagenet-samples}
 \end{figure}
 

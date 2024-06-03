@@ -48,24 +48,24 @@ The diffusion model which we propose in this chapter can sample any subset of vi
     \begin{subfigure}[t]{0.24\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figs/fdm/unconditional-inference-modes/sample_vis_autoreg_T=30_sampling_3_out_of_7_red_blue_flipped.png}
-        \caption{Autoregressive.} \label{fig:autoreg-vis}
+        \caption{\footnotesize Autoregressive.} \label{fig:autoreg-vis}
     \end{subfigure}
     \begin{subfigure}[t]{0.24\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figs/fdm/unconditional-inference-modes/sample_vis_baby-cond-ho-et-al-for-vis_T=30_sampling_3_out_of_7_red_blue_flipped.png}
-        \caption{Two temporal res.} \label{fig:google-vis}
+        \caption{\footnotesize Two temporal res.} \label{fig:google-vis}
     \end{subfigure}
     \begin{subfigure}[t]{0.24\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figs/fdm/unconditional-inference-modes/sample_vis_mixed-autoreg-independent_T=30_sampling_3_out_of_7_red_blue_flipped.png}
-        \caption{Long-range (ours).} \label{fig:mixed-vis}
+        \caption{\footnotesize Long-range (ours).} \label{fig:mixed-vis}
     \end{subfigure}
     \begin{subfigure}[t]{0.24\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figs/fdm/unconditional-inference-modes/sample_vis_hierarchy-2_T=30_sampling_3_out_of_7_red_blue_flipped.png}
-        \caption{Hierarchy-2 (ours).} \label{fig:hierarchy-vis}
+        \caption{\footnotesize Hierarchy-2 (ours).} \label{fig:hierarchy-vis}
     \end{subfigure}%
-    \caption{Sampling schemes to complete a video of length $N=30$ conditioned on the first 10 frames, with access to at most $K=7$ frames at a time. Each stage $s$ of the sampling procedure is represented by one row in the figure, going from top to bottom. Within each subfigure, one column represents one frame of the video, from frame one on the left to frame 30 on the right. At each stage, the values of frames marked in blue are sampled conditioned on the (observed or previously sampled) values of frames marked in red; frames marked in grey are ignored; and frames marked in white are yet to be sampled. For every sampling scheme, all video frames have been sampled after the final row.
+    \caption{Sampling schemes that could be used to complete a video of length $N=30$ conditioned on the first 10 frames, with access to at most $K=7$ frames at a time. Each stage $s$ of the sampling procedure is represented by one row in the figure, going from top to bottom. Within each subfigure, one column represents one frame of the video, from frame one on the left to frame 30 on the right. At each stage, the values of frames marked in blue are sampled conditioned on the (observed or previously sampled) values of frames marked in red; frames marked in grey are ignored; and frames marked in white are yet to be sampled. For every sampling scheme, all video frames have been sampled after the final row.
     }
 \end{figure*}
 
@@ -88,7 +88,7 @@ Such a generative model allows us to explore and use sampling schemes like those
 \begin{figure*}[t]
     \centering
     \includegraphics[width=0.88\textwidth]{figs/fdm/video-architecture-v8.pdf}
-    \caption{\textbf{Left:} Our DM iteratively transforms Gaussian noise $\rvx_T$ to video frames $\rvx_0$ (shown with blue borders), conditioning on observed frames $\rvy$ (red borders) at every step. \textbf{Right:} The U-net architecture used within each DM step. It computes $\epsilon_\theta(\rvx_t, \rvy, t)$, with which the Gaussian transition $p_\theta(\rvx_{t-1}|\rvx_t)$ is parameterised.
+    \caption{A visualisation of our flexible video diffusion model and its neural architecture. \textbf{Left:} Our DM iteratively transforms Gaussian noise $\rvx_T$ to video frames $\rvx_0$ (shown with blue borders), conditioning on observed frames $\rvy$ (red borders) at every step. \textbf{Right:} The U-net architecture used within each DM step. It computes $\epsilon_\theta(\rvx_t, \rvy, t)$, which is used to transition the state from $\rvx_t$ to $\rvx_{t-1}$ as described in \cref{ch:diffusion}.
     }
     \label{fig:architecture}
 \end{figure*}
@@ -105,9 +105,11 @@ We now present our modification of the flexible diffusion training objective tha
 \end{align}
 with $u(\rvx, \rvx_\sigma, \rvy, \gX, \gY) = \int u(\gX, \gY)\pdata(\rvv)\delta(\rvx,\rvy|\rvv,\gX,\gY)q(\rvx_\sigma|\rvx) \mathrm{d}\rvv$. We will call $u(\gX, \gY)$ the training task distribution and give a precise specification in the next paragraph ; $\pdata(\rvv)$ is our distribution of long training videos ; $\delta(\rvx,\rvy|\rvv,\gX,\gY)$ is a Dirac distribution which returns $\rvx = \rvv[\gX]$ and $\rvy = \rvv[\gY]$ ; and $q(\rvx_\sigma | \rvx)$ is the standard diffusion ``noising'' distribution as defined in \cref{ch:diffusion}. Recall that, in the standard flexible diffusion setting, the dimensionality of $\rvy$ could vary but that of $\rvx$ was fixed. In the new setting, the dimensionalities of both $\rvx$ and $\rvy$ can vary.
 
+\paragraph{Diffusion process details}
+We use variance-preserving diffusion process as described in \cref{sec:more-general-diffusion-processes}, use a discrete-time formulation as described in \cref{sec:diffusion-discrete-time} with 1000 discrete timesteps, and sample with a DDPM-style sampler. See \cref{app:fdm} for full detail.
+
 \paragraph{Training task distribution}
 Different choices of latent and observed indices $\mathcal{X}$ and $\mathcal{Y}$ can be regarded as defining different conditional generation tasks. In this sense, we aim to learn a model which can work well on any task (i.e. any choice of $\mathcal{X}$ and $\mathcal{Y}$) and so we randomly sample these vectors of indices during training. We do so with the distribution $u(\latindices,\obsindices)$ described in \cref{fig:training-distribution}. It provides a broad distribution covering many plausible test-time use cases while still providing a better learning signal than a uniform distribution (see ablation in \cref{sec:fdm-experiments} and more details in \cref{ap:fdm-training-task-distribution-ablation}). To cope with constrained computational resources, the distribution is designed such that $|\mathcal{X}|+|\mathcal{Y}|$ is upper-bounded by some pre-specified $K$. Sampling from $q(\rvx, \rvy)$ to compute the our objective (\cref{eq:fdm-loss}) is then accomplished by randomly selecting both a full training video $\rvv$ from the dataset and indices $\mathcal{X},\mathcal{Y}\sim u(\cdot,\cdot)$. We then extract the specified frames $\rvx = \rvv[\latindices]$ and $\rvy = \rvv[\obsindices]$ (where we use $\rvv[\latindices]$ to denote the concatenation of all frames in $\rvv$ with indices in $\latindices$ and and $\rvv[\obsindices]$ similarly).
-
 
 \begin{figure}
 \begin{minipage}[t]{0.33\textwidth}
@@ -140,19 +142,20 @@ Different choices of latent and observed indices $\mathcal{X}$ and $\mathcal{Y}$
     \end{algorithmic}
 \end{algorithm}
 \end{minipage}
-\caption{\textbf{Left:} Samples from $u(\mathcal{X},\mathcal{Y})$ with video length $N=30$ and limit $K=10$ on the number of sampled indices. Each row shows one sample and columns map to frames, with frame 1 on the left and frame $N$ on the right. Blue and red denote latent and observed frames respectively. All other frames are ignored and shown as white. \textbf{Right:} Pseudocode for drawing these samples. The while loop iterates over a series of regularly-spaced groups of latent variables. Each group is parameterised by: the number of indices in it, $n_\text{group}$; the spacing between indices in it, $s_\text{group}$; the position of the first frame in it, $x_\text{group}$, and an indicator variable for whether this group is observed, $o_\text{group}$ (which is ignored on line~\ref{line:obs-or-lat} if $\mathcal{X}$ is empty to ensure that the returned value of $\mathcal{X}$ is never empty). These quantities are sampled in a continuous space and then discretised to make a set of integer coordinates on line~\ref{line:make-G}. The process repeats until a group is sampled which, if added to $\latindices$ or $\obsindices$, will cause the number of frames to exceed $K$. That group is then discarded and $\mathcal{X}$ and $\mathcal{Y}$ are returned as vectors. The FDM's training objective forces it to work well for any $(\mathcal{X},\mathcal{Y})$ pair from this broad distribution.
+\caption{Samples from our distribution over training tasks, $u(\mathcal{X},\mathcal{Y})$, along with psuedocode for drawing them. \textbf{Left:} Samples with video length $N=30$ and limit $K=10$ on the number of sampled indices. Each row shows one sample and columns map to frames, with frame 1 on the left and frame $N$ on the right. Blue and red denote latent and observed frames respectively. All other frames are ignored and shown as white. \textbf{Right:} Pseudocode for drawing these samples. The while loop iterates over a series of regularly-spaced groups of latent variables. Each group is parameterised by: the number of indices in it, $n_\text{group}$; the spacing between indices in it, $s_\text{group}$; the position of the first frame in it, $x_\text{group}$, and an indicator variable for whether this group is observed, $o_\text{group}$ (which is ignored on line~\ref{line:obs-or-lat} if $\mathcal{X}$ is empty to ensure that the returned value of $\mathcal{X}$ is never empty). These quantities are sampled in a continuous space and then discretised to make a set of integer coordinates on line~\ref{line:make-G}. The process repeats until a group is sampled which, if added to $\latindices$ or $\obsindices$, will cause the number of frames to exceed $K$. That group is then discarded and $\mathcal{X}$ and $\mathcal{Y}$ are returned as vectors. The FDM's training objective forces it to work well for any $(\mathcal{X},\mathcal{Y})$ pair from this broad distribution.
 }
 \label{fig:training-distribution}
 \end{figure}
 
 \paragraph{Architecture}
 \label{sec:fdm-architecture}
-Image diffusion models~\citep{ho2020denoising,nichol2021improved} typically use a U-net architecture~\cite{ronneberger2015u}. Its distinguishing feature is a series of spatial downsampling layers followed by a series of spatial upsampling layers, and these are interspersed with convolutional res-net blocks~\cite{he2015deep} and spatial attention layers. Since we require an architecture which operates on 4-D video tensors rather than 3-D image tensors we add an extra \textit{frame} dimension to its input, output and hidden state, resulting in the architecture shown on the right of \cref{fig:architecture}. We create the input to this architecture as a concatenation $\rvx_t \oplus \rvy$, adding an extra input channel which is all ones for observed frames and all zeros for latent frames. For RGB video, the input shape is therefore $(K, \textit{image height}, \textit{image width}, 4)$. Since the output should have the same shape as $\rvx_t$ we only return outputs corresponding to the latent frames, giving output shape  $(|\latindices|, \textit{image height}, \textit{image width}, 3)$. We run all layers from the original model (including convolution, resizing, group normalisation, and spatial attention) independently for each of the $K$ frames.
+Image diffusion models~\citep{ho2020denoising,nichol2021improved} typically use a U-net architecture~\cite{ronneberger2015u}. Its distinguishing feature is a series of spatial downsampling layers followed by a series of spatial upsampling layers, and these are interspersed with convolutional ResNet blocks~\cite{he2015deep} and spatial attention layers. Since we require an architecture which operates on 4-D video tensors rather than 3-D image tensors we add an extra \textit{frame} dimension to its input, output and hidden state, resulting in the architecture shown on the right of \cref{fig:architecture}. We create the input to this architecture as a concatenation $\rvx_t \oplus \rvy$, adding an extra input channel which is all ones for observed frames and all zeros for latent frames. For RGB video, the input shape is therefore $(K, \textit{image height}, \textit{image width}, 4)$. Since the output should have the same shape as $\rvx_t$ we only return outputs corresponding to the latent frames, giving output shape  $(|\latindices|, \textit{image height}, \textit{image width}, 3)$. We run all layers from the original model (including convolution, resizing, group normalisation, and spatial attention) independently for each of the $K$ frames.
 To allow communication between the frames, we add a temporal attention layer after each spatial attention layer, described in more detail in the appendix. 
 %
 The spatial attention layer allows each spatial location to attend to all other spatial locations \textit{within} the same frame, while the temporal attention layer allows each spatial location to attend to the same spatial location across all \textit{other} frames.
 %
 This combination of a temporal attention layer with a spatial attention layer is sometimes referred to as \textit{factorised attention}~\citep{tashiro2021csdi,ho2022video}. We found that, when using this architecture in conjunction with our meta-learning approach, performance could be improved by using a novel form of relative position encoding~\cite{shaw2018self,wu2021rethinking}. We describe this in greater detail in \cref{app:fdm-rpe}.
+
 
 \paragraph{Training batch padding}
 Although the size $|\latindices\oplus\obsindices|$ of index vectors sampled from our training distribution is bounded above by $K$, it can vary. To fit examples with various sizes of index vectors into the same batch, one option would be to pad them all to length $K$ with zeros and use masks so that the zeros cannot affect the loss. This, however, would waste computation on processing tensors of zeros.
@@ -178,7 +181,7 @@ This is estimated using a set of 100 training videos and by iterating over 10 ev
 \begin{figure}
     \centering
     \includegraphics[width=1\textwidth]{figs/fdm/carla_map_7panel}
-    \caption{\textbf{Left:} Map of the town featured in the CARLA Town01 dataset. We visualise two video completions by FDM by showing coordinates output by our regressor (discussed in \cref{sec:fdm-carla}) for each frame. Those corresponding to the initial 36 observed frames are shown in red and those for the 964 sampled frames are shown in blue. \textbf{Right:} For each completion, we show one of the initially observed frames followed by four of the sampled frames (at positions chosen to show the progression with respect to visible landmarks and marked by black dots on the map). The town's landmarks are usually sampled with high-fidelity, which is key to allowing the regressor  to produce a coherent trajectory on the left. However there are sometimes failures: a blue square near the top-right of the map shows where the video model ``jumped'' to a wrong location for a single frame.}
+    \caption{Visualisation of video completions on the CARLA Town01 dataset. \textbf{Left:} Map of the town featured in the CARLA Town01 dataset. We visualise two video completions by FDM by showing coordinates output by our regressor (as discussed in \cref{sec:fdm-carla}) for each frame. Those corresponding to the initial 36 observed frames are shown in red and those for the 964 sampled frames are shown in blue. \textbf{Right:} For each completion, we show one of the initially observed frames followed by four of the sampled frames (at positions chosen to show the progression with respect to visible landmarks and marked by black dots on the map). The town's landmarks are usually sampled with high-fidelity, which is key to allowing the regressor  to produce a coherent trajectory on the left. However there are sometimes failures: a blue square near the top-right of the map shows where the video model ``jumped'' to a wrong location for a single frame.}
     \label{fig:carla}
 \end{figure}
 
@@ -194,7 +197,7 @@ We perform our main comparisons on the video completion task. For this task, in 
 
 \begin{table*}
   \scriptsize
-  \caption{Evaluation on video completion with various modes of our method along with several baselines from the literature. Error bars denote the standard error computed with 5 random seeds. Higher is better for the accuracy metric~\cite{saxena2021clockwork} and lower is better for all other metrics shown.}
+  \caption{Evaluation of video completions by our method (FDM) with various sampling schemes along with several baselines from the literature. Error bars denote the standard error computed with 5 random seeds. Higher is better for the accuracy metric~\cite{saxena2021clockwork} and lower is better for all other metrics shown.}
   \label{tab:fdm-results-completion}
   \centering
   \begin{tabular}{llllllll}
@@ -206,8 +209,6 @@ We perform our main comparisons on the video completion task. For this task, in 
     \multirow{1}{*}{CWVAE~\citep{saxena2021clockwork}}
     & CWVAE  & $837 \pm 8$      & $82.6 \pm 0.5$  & $1573 \pm 5$                 & $1161$          & $0.666$   & $44.4$        \\
     \midrule
-    % \multirow{1}{*}{Autoreg.}& Autoreg.                 & $82.0$          & $6.28$        & $234$                 & $8.89$    & -          & -        \\
-    % \midrule
     \multirow{1}{*}{TATS~\citep{ge2022long}}
     & TATS   & $163 \pm 2.6$  &  $77.0 \pm 0.8$  & $807 \pm 14$          & $329$          & $1.648$          & $42.4$ \\
     \midrule
@@ -228,7 +229,7 @@ We perform our main comparisons on the video completion task. For this task, in 
 \begin{figure}
     \centering
     \includegraphics[width=0.6\textwidth]{figs/fdm/hist_new.pdf}
-    \caption{Speed distributions measured from ground-truth dataset videos along with those measured from vidoes sampled using two different sampling schemes. The ground-truth speeds are concentrated around $3m\/s$ with some additional probability mass on zero. Videos sampled with Long-range have more mass at zero than is realistic. Sampling with Ad. Hierarchy-2 fixes this problem, although neither sampling scheme is as concentrated around $3m\/s$ as the ground truth.}
+    \caption{Comparison of speed distributions measured from dataset videos with those measured from videos sampled by our model using two different sampling schemes. The ground-truth speeds are concentrated around $3m/s$ with some additional probability mass on zero. Videos sampled with Long-range have more mass at zero than is realistic. Sampling with Ad. Hierarchy-2 fixes this problem, although neither sampling scheme is as concentrated around $3m/s$ as the ground truth.}
     \label{fig:hist}
 \end{figure}
 The relative performance of different sampling schemes varies significantly between datasets as shown in \cref{tab:fdm-results-completion}. We report Fréchet Video Distances (FVDs)~\cite{unterthiner2018towards}, a measure of how similar sampled completions are to the test set, on all datasets. In addition on GQN-Mazes we we report the accuracy metric~\cite{saxena2021clockwork}, which classifies videos based on which rooms are visited and measures how often a completion is given the same class as the corresponding test video. For CARLA Town01 we report the previously described percentage outliers (PO) and Wasserstein distance (WD) metrics. 
@@ -245,7 +246,7 @@ Both the diffusion-based methods, FDM and VDM, achieve significantly higher FVD 
 
 \begin{table} %{r}{80mm}
   \small
-  \caption{FVD scores for our sampling schemes with observed indices optimised offline as described in \cref{sec:fdm-method}.  We mark with an asterisk ($^*$) the eight numbers which improve on the corresponding non-optimised sampling schemes and highlight in bold those that are better than any in \cref{tab:fdm-results-completion}.}
+  \caption{Evaluation of video completions by our method with sampling schemes optimised offline as described in \cref{sec:fdm-method}.  We mark with an asterisk ($^*$) the eight numbers which improve on the corresponding non-optimised sampling schemes and highlight in bold those that are better than any in \cref{tab:fdm-results-completion}.}
   \vspace{2mm}
   \label{tab:fdm-optimized}
   \centering

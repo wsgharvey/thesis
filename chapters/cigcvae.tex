@@ -413,7 +413,7 @@ detection for inputs $\rvy$, which we demonstrate in \cref{supp:cigcvae-ood}. We
 
 \begin{table*}
   \tiny
-  \caption{Image completion results. Best performance is shown in \textbf{bold},
+  \caption{Comparison of our flexible VAE and baselines on the image completion task with a variety of metrics. Best performance is shown in \textbf{bold},
     and second best is \underline{underlined}. In the last row, $t$ denotes the
     ``temperature'' parameter \citep{child2020very}.}
   \label{tab:cigcvae-results-completion}
@@ -515,8 +515,7 @@ second to CoModGAN when less is observed and on FFHQ-256.
   \centering
   \includegraphics[width=\textwidth]{figs/cigcvae/metrics}
   %\vspace{-.6cm}
-  \caption{Test metrics on CIFAR-10 and FFHQ-256, plotted as a function of
-    the mask distribution. Error bars on LPIPS-GT show the standard error of our
+  \caption{Image-completion evaluation metrics on CIFAR-10 and FFHQ-256, plotted as a function of the proportion of pixels masked out. Error bars on LPIPS-GT show the standard error of our
     estimate for a single trained network.}
   \label{fig:cigcvae-metrics}
   \vspace{-.5cm}
@@ -538,11 +537,7 @@ diverse and photorealistic, as shown in \cref{supp:cigcvae-image-samples}.
 \begin{figure*}[t]
   \centering
   \includegraphics[scale=1]{figs/cigcvae/training-both}
-  \caption{ELBO (\cref{eq:forward-elbo} computed with $\tildeI{} := \rvx$) and
-    FID during training using IPA with pretraining on the same dataset, IPA with
-    pretraining on ImageNet, and when trained from scratch. Error bars show
-    standard deviations computed with 3 runs. IPA makes training faster and
-    lower-variance.}
+  \caption{Comparison of training from scratch; using IPA starting from an ImageNet-pretrained model; and using IPA starting from a model pretrained on the same dataset. For each, we plot ELBO (\cref{eq:forward-elbo} computed with $\tildeI{} := \rvx$) and FID during training. Error bars show standard deviations computed with 3 runs. Using IPA makes training faster and lower-variance.}
   \label{fig:cigcvae-training}
 \end{figure*}
 
@@ -635,12 +630,10 @@ location, $\coord{}_t$, to minimise it.
     \centering
     \includegraphics[scale=.77]{figs/cigcvae/shrunk-boed-vis}
   \end{minipage}
-  \caption{\textbf{Left:} Classification AUROC scores after $1,\ldots,5$ scans
+  \caption{Evaluation of our IPA-based system for selecting scan locations. \textbf{Left:} Classification AUROC scores after $1,\ldots,5$ scans
     chosen with each method. Scores for the ``EIG-'' methods more quickly approach the
     upper bound achieved by processing the full image. \textbf{Right:}
-    Visualisation of BOED used to select three scan locations for diagnosing
-    `Effusion'. The left column shows the observations made prior to each time
-    step. We then show samples from IPA (or the dataset when $t=1$). The
+    Visualisation of IPA used within BOED used to select three scan locations for diagnosing `Effusion'. The left column shows the observations made prior to each time step. We then show samples from IPA (or the dataset when $t=1$). The
     rightmost column shows the EIG overlaid on the pixel-space average of
     sampled images, with the optimal $\coord{}_t$ marked by a red cross.}
   \label{fig:cigcvae-boed}

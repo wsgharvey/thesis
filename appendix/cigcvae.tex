@@ -6,10 +6,10 @@ for each symbol used in our discussion of hierarchical VAEs. More thorough expla
 introduced in the text
 
 \begin{table*}
-  \caption{Definitions for symbols used.}
+  \caption{Definitions for symbols used in \cref{ch:cigcvae}.}
   \label{tab:cigcvae-notation}
   \centering
-  \begin{tabular}{rp{11cm}}
+  \begin{tabular}{rp{10cm}}
     \toprule
     Symbol    & Definition   \\
     \midrule
@@ -91,8 +91,9 @@ by showing that minimising $\gO_\text{CVAE}$ corresponds to minimising
 an upper-bound on an expected mass-covering KL divergence in $\tildeI{}$-space.
 Starting from the result in \cref{supp:cigcvae-forward-elbo-bound-deriv},
 \begin{align}
-  \gO_\text{CVAE}(\theta, \phi, \psi ) &\leq \EX_{\pdata (\rvx,\rvy)} \left[ \log p_{\theta,\psi}(\tildeI{}|\rvy) \right] \\
-                                                     &= \EX_{\pdata (\rvx,\rvy)} \left[ \log \pdata (\tildeI{}|\rvy) \right] - \EX_{\pdata (\rvy)}\left[ \kl{\pdata (\tildeI{}|\rvy)}{p_{\theta,\psi}(\tildeI{}|\rvy)} \right].
+  &\gO_\text{CVAE}(\theta, \phi, \psi ) \\
+  \leq &\EX_{\pdata (\rvx,\rvy)} \left[ \log p_{\theta,\psi}(\tildeI{}|\rvy) \right] \\
+  = &\EX_{\pdata (\rvx,\rvy)} \left[ \log \pdata (\tildeI{}|\rvy) \right] - \EX_{\pdata (\rvy)}\left[ \kl{\pdata (\tildeI{}|\rvy)}{p_{\theta,\psi}(\tildeI{}|\rvy)} \right].
 \end{align}
 Rearranging this gives
 \begin{align}
@@ -425,7 +426,7 @@ $\rvz_{<l}$.
 \section{Experimental details} \label{supp:cigcvae-exp-details}
 
 \begin{table}[t]
-  \caption{Summary of hyperparameters used for training IPA and our baselines. Reported batch sizes are summed over all GPUs.}
+  \caption{Summary of hyperparameters used for training our flexible VAE and relevant baselines. Reported batch sizes are summed over all GPUs.}
   \label{tab:cigcvae-exp-details}
   \tiny
   \centering
@@ -665,15 +666,15 @@ it for the values of $\sigma$ reported by \citet{li2020multimodal}, as well as
 two higher values and two lower values.
 \begin{figure}
   \includegraphics[width=\textwidth]{figs/cigcvae/extra-metrics}
-  \caption{Expanded \cref{fig:cigcvae-metrics} including results on ImageNet-64 and the
+  \caption{Additional comparisons between IPA and baselines on image completion, expanding on \cref{fig:cigcvae-metrics} with results on ImageNet-64 and the
     LPIPS diversity score.}
   \label{fig:cigcvae-extra-metrics}
 \end{figure}
 
 \begin{figure}
   \includegraphics[width=0.95\textwidth]{figs/cigcvae/fwv_sigma}
-  \caption{The faithfulness weighted variance for inpainting on CIFAR-10,
-    FFHQ-256, and ImageNet-64, for various values of $\sigma$. IPA obtains the
+  \caption{The faithfulness weighted variance metric for inpainting on CIFAR-10,
+    FFHQ-256, and ImageNet-64, plotted for various values of its hyperparameter $\sigma$. IPA obtains the
     best performance on almost all datasets and values of $\sigma$, only being
     outperformed by IPA-R on CIFAR-10 with high values of $\sigma$. This
     indicates that IPA both assigns high probability density to the ground truth
@@ -739,9 +740,8 @@ from a distribution $g(\cdot)$ to its entropy $\mathcal{H}[g(\cdot)]$ is
 strictly concave, Jensen's inequality is applicable. Invoking Jensen's
 inequality shows that the prior entropy term must be greater than or equal to
 the expected posterior entropy, and so the estimate of the EIG will be
-non-negative. In \cref{fig:cigcvae-boed-auroc-supp}, we compare the performance of this
-estimator (denoted EIG) and that in \cref{eq:old-eig} (EPE). We find that the
-estimator denoted EIG leads to significantly better classification performance.
+non-negative. 
+%In \cref{fig:cigcvae-boed-auroc-supp}, we compare the performance of this estimator (denoted EIG) and that in \cref{eq:old-eig} (EPE). We find that the estimator denoted EIG leads to significantly better classification performance.
 
 Another view of our EIG estimator is as a variant of the inception
 score~\citep{salimans2016improved} for the sampled images
@@ -753,21 +753,16 @@ AVP-CNN acting on observations of each image at locations $\coord{}_1,\ldots,\co
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{figs/cigcvae/boed-auroc-curve-supp}
-  \caption{We extend on \cref{fig:cigcvae-boed} by additionally reporting negative
-    log-likelihoods (top row) for the classification tasks. We also include
-    results from the `EPE' estimator used by \citet{harvey2019near}. We see that
-    our BOED estimator provides significant improvements; resulting performance
-    is always superior to the other baselines. This is only sometimes the case
-    for the `EPE' estimator. }
+  \caption{Evaluation and comparison of BOED systems for selecting scan locations, expanding on \cref{fig:cigcvae-boed} by additionally reporting negative
+    log-likelihoods (top row) for the classification tasks. }
   \label{fig:cigcvae-boed-auroc-supp}
 \end{figure*}
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.6\textwidth]{figs/cigcvae/table-AUROC-boed}
-  \caption{AUROC scores when performing one classification task with scan
-    locations chosen for a different classification task. The intensity of the
-    colour of each cell is proportional to the difference between its value and
+  \caption{Evaluation of performance on each classification task when using scan locations chosen for a different classification task. We measure performance with the AUROC score. The intensity of the
+    colour of each cell is proportional to the difference between its AUROC score and
     the greatest value in its row.}
   \label{fig:cigcvae-boed-correlations}
 \end{figure}
@@ -812,7 +807,7 @@ randomly sampling a set of such sequences, and choosing the best from this set.
   \centering
   \includegraphics[width=0.98\textwidth]{figs/cigcvae/boed-visualisation-4960-compressed.pdf}
   \includegraphics[width=0.98\textwidth]{figs/cigcvae/boed-visualisation-4970-compressed.pdf}
-  \caption{Visualisations of BOED processes. On the top, the task is to detect
+  \caption{Visualisations of the selection of scan locations with BOED. On the top, the task is to detect
     `Edema'. In the middle, we aim to detect `Effusion' in a different patient.
     Four scan locations are
     selected for each. The left column shows the observations made before
@@ -830,7 +825,7 @@ randomly sampling a set of such sequences, and choosing the best from this set.
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{figs/cigcvae/boed-visualisation-4980-compressed.pdf}
-  \caption{Another visualisations of a BOED process similar to \cref{fig:cigcvae-extra-xray-boed}, where the task is to detect `Infiltration'.}
+  \caption{Another visualisation of the selection of scan locations with BOED similar to \cref{fig:cigcvae-extra-xray-boed}, where the task is to detect `Infiltration'.}
 \label{fig:cigcvae-extra-xray-boed-extra}
 \end{figure*}
 
@@ -839,12 +834,13 @@ randomly sampling a set of such sequences, and choosing the best from this set.
 sequences chosen by BOED and our baselines. In particular, we report negative
 log-likelihoods for the class labels as well as the AUROC scores. We see that
 the negative log-likelihood sometimes increases as more scans are taken,
-indicating that the classifier used is not perfectly trained. Interestingly,
-this only happens when glimpses are chosen with the EPE estimator of
-\citet{harvey2019near}. This may be because the EPE estimator has a tendency to
-select locations which cause the classifier to be overconfident (and thus
-produce artificially low posterior entropies). With the EIG estimator, and the
-baselines, this issue is not observed.
+indicating that the classifier used is not perfectly trained. 
+% Interestingly,
+% this only happens when glimpses are chosen with the EPE estimator of
+% \citet{harvey2019near}. This may be because the EPE estimator has a tendency to
+% select locations which cause the classifier to be overconfident (and thus
+% produce artificially low posterior entropies). With the EIG estimator, and the
+% baselines, this issue is not observed.
 
 To illustrate that the scan locations chosen by BOED are task-dependent,
 \cref{fig:cigcvae-boed-correlations} shows the results from using scan locations chosen
@@ -928,7 +924,7 @@ input to an image completion system) is OOD.
     \toprule
     ID & \multicolumn{5}{c}{CIFAR-10}  \\
     \cmidrule(r){2-6}
-    OOD & Noise & Const. & Flip & Rotate & SVHN \\
+    OOD & Noise & Const. & Flip & Rot. & SVHN \\
     \midrule
     IPA      & \textbf{.995} & \textbf{.949} & \underline{.552} & \underline{.594} & \textbf{.753}    \\
     IPA-R    & .987         & \underline{.921}                  & \textbf{.635}    & \textbf{.619}    & \underline{.686} \\
@@ -942,7 +938,7 @@ input to an image completion system) is OOD.
     \toprule
     ID & \multicolumn{5}{c}{FFHQ-256}  \\
     \cmidrule(r){2-6}
-    OOD         & Noise & Const. & Flip & Rotate & ~Crop~ \\
+    OOD         & Noise & Const. & Flip & Rot. & ~Crop~ \\
     \midrule
     IPA         & \textbf{1.00} & \textbf{1.00} & \textbf{.809}    & \textbf{.808}    & \textbf{.912}    \\
     IPA-R       & \textbf{1.00} & \textbf{1.00} & \underline{.770} & \underline{.775} & \underline{.902} \\
@@ -951,7 +947,7 @@ input to an image completion system) is OOD.
   \end{tabular}
 
 \end{minipage}%
-\caption{OOD-detection on incomplete images. On the left, we show AUROC scores
+\caption{Out-of-distribution detection on partially-observed images. On the left, we show AUROC scores
   on FFHQ-256 computed separately for masks from varying distributions. On the
   right we report, for both CIFAR-10 and FFHQ-256, the average of these scores
   over all mask distributions.}
@@ -977,12 +973,12 @@ likelihood of a partially-observed image. Specifically, this lower-bound is the
 reverse KL objective in \cref{eq:reverse-obj}. After conducting preliminary
 experiments using the VD-VAE with several OOD-detection
 metrics~\citep{xiao2020likelihood,havtorn2021hierarchical}, we found that
-\begin{wrapfigure}[13]{R}{.4\textwidth}
+\begin{figure}[t]
   \centering
-  \includegraphics[scale=.8]{figs/cigcvae/ood-supplementary}
-  \caption{Breakdown of AUROC for each mask distribution on CIFAR-10. }
+  \includegraphics[scale=1]{figs/cigcvae/ood-supplementary}
+  \caption{Evaluation of out-of-distribution detection for partially-observed images. We show the AUROC as a function of the proportion of image which is observed. The model is trained on CIFAR-10 and we plot performance for a variety of types of out-of-distribution image.. }
   \label{fig:cigcvae-ood-supplementary}
-\end{wrapfigure}
+\end{figure}
 improved performance could be obtained (for OOD-detection of both partially- and
 fully-observed images) using the ``temperature gradient'' metric described
 further in \cref{supp:cigcvae-temp-grad} below.
@@ -1071,9 +1067,7 @@ call this the ``temperature-gradient'' metric.
 OOD-transformations; a 5000 images subset of the SVHN test set; and the 7000
 image test set for FFHQ-256. We use 5000 samples of $32\times32$ `Noise' and
 `Constant' images when comparing against CIFAR-10, and 200 samples at
-$256\times256$ resolution when comparing against FFHQ-256.
-
-We also present results for the `Translated' transformation in
+$256\times256$ resolution when comparing against FFHQ-256. We also present results for the `Translated' transformation in
 \cref{fig:cigcvae-ood-results} for FFHQ-256. This transformation takes a crop with 90\%
 of the image size from one of the four corners and then rescales it to the
 original size. The result is thus slightly translated so that e.g.~the eyes of
@@ -1100,7 +1094,7 @@ showing a wide range of completions for all the partial images.
     \includegraphics[trim=0px 0px 2560px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/co_mod_gan_0_4_2.jpg}
     \includegraphics[trim=0px 0px 2560px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/co_mod_gan_1_4_2.jpg}
     \includegraphics[trim=0px 0px 2560px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/co_mod_gan_56_4_12.jpg}
-    \caption{$\rvx, \rvy$}
+    \caption{\scriptsize $\rvx, \rvy$}
   \end{subfigure}
   \begin{subfigure}[t]{0.73\textwidth}
     \centering
@@ -1108,7 +1102,7 @@ showing a wide range of completions for all the partial images.
     \includegraphics[trim=512px 0px 0px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/co_mod_gan_0_4_2.jpg}
     \includegraphics[trim=512px 0px 0px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/co_mod_gan_1_4_2.jpg}
     \includegraphics[trim=512px 0px 0px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/co_mod_gan_56_4_12.jpg}
-    \caption{Sampled completions}
+    \caption{\scriptsize Sampled completions}
   \end{subfigure}
   \begin{subfigure}[t]{0.1\textwidth}
     \centering
@@ -1116,10 +1110,10 @@ showing a wide range of completions for all the partial images.
     \includegraphics[height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/avg_co_mod_gan_0_4_2.jpg}
     \includegraphics[height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/avg_co_mod_gan_1_4_2.jpg}
     \includegraphics[height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/avg_co_mod_gan_56_4_12.jpg}
-    \caption{Mean}
+    \caption{\scriptsize Mean}
   \end{subfigure}
   %%%%%%%%%%%%%%%%%%%%%%
-  \caption{Examples of completions lacking semantic diversity in CoModGAN. Panel
+  \caption{Examples of image completion tasks on which CoModGAN fails to model the semantic diversity in the distribution of possible completions. Panel
     (a) shows the true image and the masked version on which the completions are
     conditioned. Panel (b) shows 10 completions sampled randomly from the
     CoModGAN model. Panel (c) shows the mean image computed from 100 sampled
@@ -1135,7 +1129,7 @@ showing a wide range of completions for all the partial images.
     \includegraphics[trim=0px 0px 2560px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/aipo_0_4_2.jpg}
     \includegraphics[trim=0px 0px 2560px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/aipo_1_4_2.jpg}
     \includegraphics[trim=0px 0px 2560px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/aipo_56_4_12.jpg}
-    \caption{$\rvx, \rvy$}
+    \caption{\scriptsize $\rvx, \rvy$}
   \end{subfigure}
   \begin{subfigure}[t]{0.73\textwidth}
     \centering
@@ -1143,7 +1137,7 @@ showing a wide range of completions for all the partial images.
     \includegraphics[trim=512px 0px 0px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/aipo_0_4_2.jpg}
     \includegraphics[trim=512px 0px 0px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/aipo_1_4_2.jpg}
     \includegraphics[trim=512px 0px 0px 0px, clip, height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/aipo_56_4_12.jpg}
-    \caption{Sampled completions}
+    \caption{\scriptsize Sampled completions}
   \end{subfigure}
   \begin{subfigure}[t]{0.1\textwidth}
     \centering
@@ -1151,11 +1145,11 @@ showing a wide range of completions for all the partial images.
     \includegraphics[height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/avg_aipo_0_4_2.jpg}
     \includegraphics[height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/avg_aipo_1_4_2.jpg}
     \includegraphics[height=\cmgfailureimgheight]{figs/cigcvae/co_mod_gan_failure/avg_aipo_56_4_12.jpg}
-    \caption{Mean}
+    \caption{\scriptsize Mean}
   \end{subfigure}
   %%%%%%%%%%%%%%%%%%%%%%
-  \caption{Examples completions from our IPA model, to compare with
-    \cref{fig:cigcvae-comodgan-failure}. These samples from IPA provide a much better
+  \caption{Examples completions from our IPA model on the tasks in which CoModGAN lacked semantic diversity (see
+    \cref{fig:cigcvae-comodgan-failure}). These samples from IPA provide a much better
     representation of the inherent uncertainty in the image given the
     observations. We did not find any $(\rvx, \rvy)$ pairs on which the IPA
     model failed in the same way as CoModGAN in \cref{fig:cigcvae-comodgan-failure}. }
@@ -1199,42 +1193,42 @@ improve this aspect of the results.
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_0_gt_masked}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_1_gt_masked}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_3_gt_masked}
-      \caption{$\rvx, \rvy$}
+      \caption{\scriptsize $\rvx, \rvy$}
     \end{subfigure}
     \begin{subfigure}[t]{0.17\textwidth}
       \centering
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_0_t=0.85_samples}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_1_t=0.85_samples}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_3_t=0.85_samples}
-      \caption{IPA, $t=0.85$}
+      \caption{\scriptsize IPA, $t=0.85$}
     \end{subfigure}
     \begin{subfigure}[t]{0.17\textwidth}
       \centering
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_0_samples}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_1_samples}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_3_samples}
-      \caption{IPA}
+      \caption{\scriptsize IPA}
     \end{subfigure}
     \begin{subfigure}[t]{0.17\textwidth}
       \centering
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_0_imagenet_samples}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_1_imagenet_samples}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_3_imagenet_samples}
-      \caption{\scriptsize IPA from ImageNet}
+      \caption{\scriptsize \shortstack{ IPA from \\ ImageNet}}
     \end{subfigure}
     \begin{subfigure}[t]{0.17\textwidth}
       \centering
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_0_scratch_samples}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_1_scratch_samples}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_3_scratch_samples}
-      \caption{\scriptsize IPA from scratch}
+      \caption{\scriptsize \shortstack{ IPA from \\ scratch}}
     \end{subfigure}
     \begin{subfigure}[t]{0.17\textwidth}
       \centering
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo-r_0_samples}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo-r_1_samples}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo-r_3_samples}
-      \caption{IPA-R}
+      \caption{\scriptsize IPA-R}
     \end{subfigure}
     %%%%%%%%%%%%%%%%%%%%%%
     \begin{subfigure}[t]{0.11\textwidth}
@@ -1242,51 +1236,51 @@ improve this aspect of the results.
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_0_gt_masked}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_1_gt_masked}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_aipo_3_gt_masked}
-      \caption*{$\rvx, \rvy$}
+      \caption*{\scriptsize $\rvx, \rvy$}
     \end{subfigure}
     \begin{subfigure}[t]{0.17\textwidth}
       \centering
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_co_mod_gan_0_samples}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_co_mod_gan_1_samples}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_co_mod_gan_3_samples}
-      \caption{CoModGAN}
+      \caption{\scriptsize CoModGAN}
     \end{subfigure}
     \begin{subfigure}[t]{0.17\textwidth}
       \centering
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_pic_0_samples}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_pic_1_samples}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_pic_3_samples}
-      \caption{PIC}
+      \caption{\scriptsize PIC}
     \end{subfigure}
     \begin{subfigure}[t]{0.17\textwidth}
       \centering
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_anp_0_samples}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_anp_1_samples}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_anp_3_samples}
-      \caption{ANP}
+      \caption{\scriptsize ANP}
     \end{subfigure}
     \begin{subfigure}[t]{0.17\textwidth}
       \centering
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_vq_vae_0_samples}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_vq_vae_1_samples}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_vq_vae_3_samples}
-      \caption{VQ-VAE}
+      \caption{\scriptsize VQ-VAE}
     \end{subfigure}
-    \begin{subfigure}[t]{0.08\textwidth}
+    \begin{subfigure}[t]{0.06\textwidth}
       \centering
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_ce_0_samples}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_ce_1_samples}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_ce_3_samples}
-      \caption{CE}
+      \caption*{\scriptsize CE}
     \end{subfigure}
-    \begin{subfigure}[t]{0.08\textwidth}
+    \begin{subfigure}[t]{0.06\textwidth}
       \centering
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_rfr_0_samples}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_rfr_1_samples}
       \includegraphics[height=\cifarimgheight]{figs/cigcvae/image-samples/cifar10/freeform_rfr_3_samples}
-      \caption{RFR}
+      \caption*{\scriptsize RFR}
     \end{subfigure}
-    \caption{Sampled completions on CIFAR-10. Panel (a) shows test images along
+    \caption{Sampled image completions on CIFAR-10. Panel (a) shows test images along
       with masked versions on which samples in each row are conditioned. The
       remaining panels in the top row show samples from IPA (with an artifact
       pretrained on the same dataset) with and without a reduced temperature,
@@ -1312,7 +1306,7 @@ improve this aspect of the results.
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo_2_gt_masked.png}
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo_3_gt_masked.png}
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo_4_gt_masked.png}
-      \caption{$\rvx, \rvy$}
+      \caption{\scriptsize $\rvx, \rvy$}
     \end{subfigure}
     \begin{subfigure}[t]{0.2\textwidth}
       \centering
@@ -1321,7 +1315,7 @@ improve this aspect of the results.
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo_2_t=0.85_samples.png}
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo_3_t=0.85_samples.png}
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo_4_t=0.85_samples.png}
-      \caption{IPA, $t=0.85$}
+      \caption{\scriptsize IPA, $t=0.85$}
     \end{subfigure}
     \begin{subfigure}[t]{0.2\textwidth}
       \centering
@@ -1330,7 +1324,7 @@ improve this aspect of the results.
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo_2_samples.png}
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo_3_samples.png}
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo_4_samples.png}
-      \caption{IPA}
+      \caption{\scriptsize IPA}
     \end{subfigure}
     \begin{subfigure}[t]{0.2\textwidth}
       \centering
@@ -1339,7 +1333,7 @@ improve this aspect of the results.
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo_2_scratch_samples.png}
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo_3_scratch_samples.png}
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo_4_scratch_samples.png}
-      \caption{IPA from scratch}
+      \caption{\scriptsize IPA from scratch}
     \end{subfigure}
     \begin{subfigure}[t]{0.2\textwidth}
       \centering
@@ -1348,7 +1342,7 @@ improve this aspect of the results.
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo-r_2_samples.png}
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo-r_3_samples.png}
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo-r_4_samples.png}
-      \caption{IPA-R}
+      \caption{\scriptsize IPA-R}
     \end{subfigure}
     \begin{subfigure}[t]{0.15\textwidth}
       \centering
@@ -1357,7 +1351,7 @@ improve this aspect of the results.
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo_2_gt_masked.png}
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo_3_gt_masked.png}
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_aipo_4_gt_masked.png}
-      \caption*{$\rvx, \rvy$}
+      \caption*{\scriptsize $\rvx, \rvy$}
     \end{subfigure}
     \begin{subfigure}[t]{0.2\textwidth}
       \centering
@@ -1366,7 +1360,7 @@ improve this aspect of the results.
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_co_mod_gan_2_samples.png}
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_co_mod_gan_3_samples.png}
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_co_mod_gan_4_samples.png}
-      \caption{CoModGAN}
+      \caption{\scriptsize CoModGAN}
     \end{subfigure}
     \begin{subfigure}[t]{0.2\textwidth}
       \centering
@@ -1375,7 +1369,7 @@ improve this aspect of the results.
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_pic_2_samples.png}
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_pic_3_samples.png}
       \includegraphics[height=\imagenetimgheight]{figs/cigcvae/image-samples/imagenet64/freeform_pic_4_samples.png}
-      \caption{PIC}
+      \caption{\scriptsize PIC}
     \end{subfigure}
     \begin{subfigure}[t]{0.4\textwidth}
       \setlength{\fboxrule}{0pt}
@@ -1385,7 +1379,7 @@ improve this aspect of the results.
         \end{minipage}
       }
     \end{subfigure}
-    \caption{Sampled completions on ImageNet-64. Panel (a) shows a test image
+    \caption{Sampled image completions on ImageNet-64. Panel (a) shows a test image
       and the masked version on which samples in each row are conditioned. The
       remaining panels in the top row show samples from IPA with and without a
       reduced temperature, from an IPA-style conditional VAE trained from
@@ -1405,28 +1399,28 @@ improve this aspect of the results.
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_0_gt_masked.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_13_gt_masked.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_32_gt_masked.jpg}
-      \caption{$\rvx, \rvy$}
+      \caption{\scriptsize $\rvx, \rvy$}
     \end{subfigure}
     \begin{subfigure}[t]{0.25\textwidth}
       \centering
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_0_t=0.85_samples.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_13_t=0.85_samples.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_32_t=0.85_samples.jpg}
-      \caption{IPA, $t=0.85$}
+      \caption{\scriptsize IPA, $t=0.85$}
     \end{subfigure}
     \begin{subfigure}[t]{0.25\textwidth}
       \centering
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_0_samples.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_13_samples.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_32_samples.jpg}
-      \caption{IPA}
+      \caption{\scriptsize IPA}
     \end{subfigure}
     \begin{subfigure}[t]{0.25\textwidth}
       \centering
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo-r_0_samples.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo-r_13_samples.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo-r_32_samples.jpg}
-      \caption{IPA-R}
+      \caption{\scriptsize IPA-R}
     \end{subfigure}
     %%%%%%%%%%%%%%%%%%%%%%
     \begin{subfigure}[t]{0.22\textwidth}
@@ -1434,28 +1428,28 @@ improve this aspect of the results.
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_0_gt_masked.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_13_gt_masked.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_32_gt_masked.jpg}
-      \caption*{$\rvx, \rvy$}
+      \caption*{\scriptsize $\rvx, \rvy$}
     \end{subfigure}
     \begin{subfigure}[t]{0.25\textwidth}
       \centering
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_co_mod_gan_0_samples.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_co_mod_gan_13_samples.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_co_mod_gan_32_samples.jpg}
-      \caption{CoModGAN}
+      \caption{\scriptsize CoModGAN}
     \end{subfigure}
     \begin{subfigure}[t]{0.25\textwidth}
       \centering
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_pic_0_samples.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_pic_13_samples.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_pic_32_samples.jpg}
-      \caption{PIC}
+      \caption{\scriptsize PIC}
     \end{subfigure}
     \begin{subfigure}[t]{0.25\textwidth}
       \centering
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_anp_0_samples.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_anp_13_samples.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_anp_32_samples.jpg}
-      \caption{ANP}
+      \caption{\scriptsize ANP}
     \end{subfigure}
     %%%%%%%%%%%%%%%%%%%%%%
     \begin{subfigure}[t]{0.22\textwidth}
@@ -1463,28 +1457,28 @@ improve this aspect of the results.
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_0_gt_masked.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_13_gt_masked.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_aipo_32_gt_masked.jpg}
-      \caption*{$\rvx, \rvy$}
+      \caption*{\scriptsize $\rvx, \rvy$}
     \end{subfigure}
     \begin{subfigure}[t]{0.25\textwidth}
       \centering
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_vq_vae_0_samples.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_vq_vae_13_samples.jpg}
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_vq_vae_32_samples.jpg}
-      \caption{VQ-VAE}
+      \caption{\scriptsize VQ-VAE}
     \end{subfigure}
     \begin{subfigure}[t]{0.25\textwidth}
       \centering
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_ce_0_samples.jpg}\\
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_ce_13_samples.jpg}\\
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_ce_32_samples.jpg}
-      \caption{CE}
+      \caption{\scriptsize CE}
     \end{subfigure}
     \begin{subfigure}[t]{0.25\textwidth}
       \centering
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_rfr_0_samples.jpg}\\
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_rfr_13_samples.jpg}\\
       \includegraphics[height=\ffhqimgheight]{figs/cigcvae/image-samples/ffhq256/freeform_rfr_32_samples.jpg}
-      \caption{RFR}
+      \caption{\scriptsize RFR}
     \end{subfigure}
     \begin{subfigure}[t]{0.16\textwidth}
       \setlength{\fboxrule}{0pt}
@@ -1495,7 +1489,7 @@ improve this aspect of the results.
       }
     \end{subfigure}
     \vspace{-.5cm}
-    \caption{Sampled completions on FFHQ-256. Panel (a) shows test images along with
+    \caption{Sampled image completions on FFHQ-256. Panel (a) shows test images along with
       masked versions on which samples in each row are conditioned. The
       remaining panels in the top row show samples from IPA with and without a
       reduced temperature and from IPA-R. The other rows show samples from our
@@ -1520,7 +1514,7 @@ improve this aspect of the results.
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/bags/image_aipo_2_imagenet_gt_masked.png}
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/bags/image_aipo_3_imagenet_gt_masked.png}
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/bags/image_aipo_4_imagenet_gt_masked.png}
-      \caption{$\rvx, \rvy$}
+      \caption{\scriptsize $\rvx, \rvy$}
     \end{subfigure}
     \begin{subfigure}[t]{0.27\textwidth}
       \centering
@@ -1529,7 +1523,7 @@ improve this aspect of the results.
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/bags/image_aipo_2_t=0.85_imagenet_samples.png}
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/bags/image_aipo_3_t=0.85_imagenet_samples.png}
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/bags/image_aipo_4_t=0.85_imagenet_samples.png}
-      \caption{\scriptsize IPA from ImageNet, $t$=$0.85$}
+      \caption{\scriptsize \shortstack{ IPA from ImageNet \\ $t$=$0.85$}}
     \end{subfigure}
     \begin{subfigure}[t]{0.27\textwidth}
       \centering
@@ -1538,7 +1532,7 @@ improve this aspect of the results.
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/bags/image_aipo_2_imagenet_samples.png}
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/bags/image_aipo_3_imagenet_samples.png}
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/bags/image_aipo_4_imagenet_samples.png}
-      \caption{IPA from ImageNet}
+      \caption{\scriptsize IPA from ImageNet}
     \end{subfigure}
     \begin{subfigure}[t]{0.27\textwidth}
       \centering
@@ -1547,9 +1541,9 @@ improve this aspect of the results.
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/bags/image_aipo_2_scratch_samples.png}
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/bags/image_aipo_3_scratch_samples.png}
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/bags/image_aipo_4_scratch_samples.png}
-      \caption{IPA from scratch}
+      \caption{\scriptsize IPA from scratch}
     \end{subfigure}
-    \caption{Comparison of conditional generations on Edges2Bags.}
+    \caption{Samples generated conditioned on the output of an edge detector on the Edges2Bags dataset. We compare conditional VAEs trained from scratch with those trained starting from pretrained weights.}
     \vspace{-.5cm}
     \label{fig:cigcvae-bags-samples}
   \end{figure*}
@@ -1563,7 +1557,7 @@ improve this aspect of the results.
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/shoes/image_aipo_2_imagenet_gt_masked.png}
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/shoes/image_aipo_3_imagenet_gt_masked.png}
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/shoes/image_aipo_4_imagenet_gt_masked.png}
-      \caption{$\rvx, \rvy$}
+      \caption{\scriptsize $\rvx, \rvy$}
     \end{subfigure}
     \begin{subfigure}[t]{0.25\textwidth}
       \centering
@@ -1572,7 +1566,7 @@ improve this aspect of the results.
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/shoes/image_aipo_2_t=0.85_imagenet_samples.png}
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/shoes/image_aipo_3_t=0.85_imagenet_samples.png}
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/shoes/image_aipo_4_t=0.85_imagenet_samples.png}
-      \caption{\scriptsize IPA from ImageNet, $t$=$0.85$}
+      \caption{\scriptsize \shortstack{ IPA from ImageNet \\ $t$=$0.85$}}
     \end{subfigure}
     \begin{subfigure}[t]{0.25\textwidth}
       \centering
@@ -1581,7 +1575,7 @@ improve this aspect of the results.
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/shoes/image_aipo_2_imagenet_samples.png}
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/shoes/image_aipo_3_imagenet_samples.png}
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/shoes/image_aipo_4_imagenet_samples.png}
-      \caption{IPA from ImageNet}
+      \caption{\scriptsize IPA from ImageNet}
     \end{subfigure}
     \begin{subfigure}[t]{0.25\textwidth}
       \centering
@@ -1590,9 +1584,9 @@ improve this aspect of the results.
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/shoes/image_aipo_2_scratch_samples.png}
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/shoes/image_aipo_3_scratch_samples.png}
       \includegraphics[height=\edgesstuffimgheight]{figs/cigcvae/image-samples/shoes/image_aipo_4_scratch_samples.png}
-      \caption{IPA from scratch}
+      \caption{\scriptsize IPA from scratch}
     \end{subfigure}
-    \caption{Comparison of conditional generations on Edges2Shoes.}
+    \caption{Samples generated conditioned on the output of an edge detector on the Edges2Shoes dataset. We compare conditional VAEs trained from scratch with those trained starting from pretrained weights.}
     \vspace{-.5cm}
     \label{fig:cigcvae-shoes-samples}
   \end{figure*}
@@ -1634,7 +1628,7 @@ improve this aspect of the results.
     \caption{CoModGAN}
   \end{subfigure}
   %%%%%%%%%%%%%%%%%%%%%%
-  \caption{Sampled completions given three different masks for each of two
+  \caption{Sampled image completions given three different masks for each of two
     ground truth x-ray images. For the first ground truth image (top three
     rows), there is little obvious difference between the completions produced
     by IPA and by CoModGAN. However, for each of the masks applied to the second
