@@ -17,9 +17,9 @@ To sample which dimensions are deleted, we can sample $\delidxdist(i_1 | n) \del
 
 We use the $\epsilon$-prediction parameterisation described in \cref{sec:diffusion-training}, parameterising $\rvs_\theta$ in terms of a noise prediction network that predicts $\epsilon$ where $\rvx_t = \alpha(t) M_t(\rvx) + \sigma(t) \cdot \epsilon$ with $\epsilon \sim \mathcal{N}(0, I_{n_t d})$. We set the weighting function such that $\lambda^\epsilon(t)/u(t) = 1$ as in the uniform weighting approach used by \citet{song2020score}. Our objective to learn $\rvs_\theta$ then becomes
 \begin{equation}
-    - \mathbb{E}_{\mathcal{U}(t; 0, T) \pdata(\mX) q_{t|0}(M_t, n_t | \mX) \mathcal{N}(\epsilon; 0, I_{n_t d})} \left[ \norm{\hat{\mathbf{\epsilon}}_\theta(\mX_t, t) - \epsilon}^2 \right]
+    - \mathbb{E}_{\mathcal{U}(t; 0, T) \pdata(\mX) q_{t|0}(M_t, n_t | \mX) \mathcal{N}(\epsilon; 0, I_{n_t d})} \left[ \norm{\prede_\theta(\mX_t, t) - \epsilon}^2 \right]
 \end{equation}
-with $\rvx_t = \alpha(t) M_t(\rvx) + \sigma(t) \epsilon$, $\rvs_\theta(\mX_t, t) = \frac{-1}{\sigma(t)} \hat{\mathbf{\epsilon}}_\theta(\mX_t, t)$.
+with $\rvx_t = \alpha(t) M_t(\rvx) + \sigma(t) \epsilon$, $\rvs_\theta(\mX_t, t) = \frac{-1}{\sigma(t)} \prede_\theta(\mX_t, t)$.
 
 Further, by using the parameterisation given in Proposition \ref{prop:backwardrateparam}, we can directly supervise the value of $p_{0|t}^\theta(n | \mX_t)$ by adding an extra term to our objective. We can treat the learning of $p_{0|t}^\theta(n | \mX_t)$ as a standard prediction task where we aim to predict $n$ given access to $\mX_t$. A standard objective for learning $p_{0|t}^\theta(n | \mX_t)$ is then the cross entropy
 \begin{equation}
@@ -27,7 +27,7 @@ Further, by using the parameterisation given in Proposition \ref{prop:backwardra
 \end{equation}
 Our augmented objective then becomes
 \begin{align} \label{eq:augmentedObjective}
-    \tilde{\mathcal{L}}_\text{JD}(\theta) = &T\mathbb{E} [ -\frac{1}{2}\norm{\hat{\mathbf{\epsilon}}_\theta(\mX_t, t) - \epsilon}^2 - \backwardrate_\theta(\mX_t, t) + \forwardrate(n_t, t) \log \backwardrate_\theta(\mV, t) \\ 
+    \tilde{\mathcal{L}}_\text{JD}(\theta) = &T\mathbb{E} [ -\frac{1}{2}\norm{\prede_\theta(\mX_t, t) - \epsilon}^2 - \backwardrate_\theta(\mX_t, t) + \forwardrate(n_t, t) \log \backwardrate_\theta(\mV, t) \\ 
     &+ \forwardrate(n_t, t) \log \autonet_t^\theta(\xadd_t, i | \mV) + \gamma \cdot \log p_{0|t}^\theta (n | \mX_t) ] \nonumber
 \end{align}
 where the expectation is taken with respect to 
@@ -62,7 +62,7 @@ We train our model for 1.3 million iterations at a batch size of $64$. We use th
 
 When deleting dimensions, we first shuffle the ordering of the nodes and then delete the final $n - n_t$ nodes. The cross entropy loss weighting in \cref{eq:augmentedObjective} is set to $1$.
 
-Following \citet{hoogeboom2022equivariant} we train our model to operate within the centre of mass (CoM) zero subspace of possible molecule positions. The means, throughout the forward and reverse process, the average position of an atom is $0$. In our trans-dimensional framework, this is achieved by first deleting any atoms required under the forward component deletion process. We then move the molecule such that its CoM is $0$. We then add CoM free noise such that the noisy molecule also has CoM$=0$. Our score model $\rvs_\theta$ is parameterised through a noise prediction model $\hat{\mathbf{\epsilon}}_\theta$ which is trained to predict the CoM free noise that was added. Therefore, our score network learns suitable directions to maintain the process on the CoM$=0$ subspace. For the position prediction from $\autonet_t^\theta(\yadd | \mX_t)$ we train it to predict the new atom position from the current molecules reference frame. When the new atom is added, we then update all atom positions such that CoM$=0$ is maintained.
+Following \citet{hoogeboom2022equivariant} we train our model to operate within the centre of mass (CoM) zero subspace of possible molecule positions. The means, throughout the forward and reverse process, the average position of an atom is $0$. In our trans-dimensional framework, this is achieved by first deleting any atoms required under the forward component deletion process. We then move the molecule such that its CoM is $0$. We then add CoM free noise such that the noisy molecule also has CoM$=0$. Our score model $\rvs_\theta$ is parameterised through a noise prediction model $\prede_\theta$ which is trained to predict the CoM free noise that was added. Therefore, our score network learns suitable directions to maintain the process on the CoM$=0$ subspace. For the position prediction from $\autonet_t^\theta(\yadd | \mX_t)$ we train it to predict the new atom position from the current molecules reference frame. When the new atom is added, we then update all atom positions such that CoM$=0$ is maintained.
 
 \subsubsection{Sampling}
 During sampling we found that adding corrector steps~\citep{song2020score} improved sample quality. Intuitively, corrector steps form a process that has $q_t(\cdot)$ as its stationary distribution rather than the process progressing toward $\pdata(\cdot)$. We use the same method to determine the corrector step size $\zeta$ as \citet{song2020score}. For the conditional generation tasks, we also found it useful to include corrector steps for the component generation process. As shown by \citet{campbell2022continuous}, corrector steps in discrete spaces can be achieved by simulating with a rate that is the addition of the forward and reverse rates. We achieve this in the context of trans-dimensional modelling by first simulating a possible insertion using $\backwardrate_\theta$ and then simulating a possible deletion using $\forwardrate$. We describe our overall sampling algorithm in \cref{alg:backwardsamplingWithCorrector}.

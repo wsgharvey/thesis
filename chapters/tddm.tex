@@ -175,13 +175,13 @@ In principle, making a conditional model involves modifying all of the score fun
 \end{align}
 The intractable likelihood gradient can be estimated using the score function of a Gaussian approximation as in \cref{sec:reconstruction-guidance} leading to the estimate
 \begin{equation} \label{eq:tddm-guidance-term}
-    \nabla_{\rvx_t} \log q_{0|t}(\rvy | \mX_t) \approx - \frac{\alpha(t)^2}{2\sigma(t)^2} \nabla_{\rvx_t} \norm{\rvy - \hat{\rvx}_\theta(\mX_t, t)[\gY] }^2_2.
+    \nabla_{\rvx_t} \log q_{0|t}(\rvy | \mX_t) \approx - \frac{\alpha(t)^2}{2\sigma(t)^2} \nabla_{\rvx_t} \norm{\rvy - \predx_\theta(\mX_t, t)[\gY] }^2_2.
 \end{equation}
-where $\hat{\rvx}_\theta(\mX_t, t)[\gY]$ are the predictions of $\rvx$ corresponding to our observed components. This can be computed by differentiating through the score network $\rvs_\theta$.  Note, though, that there is a slight abuse of notation in \cref{eq:tddm-guidance-term} as, for large $t$, $\rvx_t$ can have fewer components than $\rvy$ in which case we modify the squared L2 distance term in \cref{eq:tddm-guidance-term} to be between only the components of $\rvy$ and predictions of $\rvx$ that exist in $\rvx_t$.
+where $\predx_\theta(\mX_t, t)[\gY]$ are the predictions of $\rvx$ corresponding to our observed components. This can be computed by differentiating through the score network $\rvs_\theta$.  Note, though, that there is a slight abuse of notation in \cref{eq:tddm-guidance-term} as, for large $t$, $\rvx_t$ can have fewer components than $\rvy$ in which case we modify the squared L2 distance term in \cref{eq:tddm-guidance-term} to be between only the components of $\rvy$ and predictions of $\rvx$ that exist in $\rvx_t$.
 
 Including the guidance weight $w$ introduced in \cref{sec:reconstruction-guidance}, which we set to $w = 1$ in our experiments, our final score function estimate is
 \begin{equation} \label{eq:tddm-guidance-score}
-    \nabla_{\rvx_t} q_{t|0} (\mX_t | \rvy ) = \nabla_{\rvx_t} q_{t|0} (\mX_t) - \frac{w \cdot \alpha(t)^2}{2\sigma(t)^2} \nabla_{\rvx_t} \norm{\rvy - \hat{\rvx}_\theta(\mX_t, t)[\gY] }^2_2.
+    \nabla_{\rvx_t} q_{t|0} (\mX_t | \rvy ) = \nabla_{\rvx_t} q_{t|0} (\mX_t) - \frac{w \cdot \alpha(t)^2}{2\sigma(t)^2} \nabla_{\rvx_t} \norm{\rvy - \predx_\theta(\mX_t, t)[\gY] }^2_2.
 \end{equation}
 
 As mentioned, we approximate $\backwardrate^*(\mX_t | \mY, t)$ and $\autonet_t^*(\yadd, i | \mX_t, \mY)$, with their unconditional forms $\backwardrate_\theta(\mX_t, t)$ and $\autonet_t^\theta(\yadd, i | \mX_t)$. We find this approximation still leads to valid generations because the guidance of the score network $s_t^\theta$, results in $\mX_t$ containing the conditioning information which in turn leads to $\backwardrate_\theta(\mX_t)$ guiding the number of components in $\mX_t$ to be consistent with the conditioning information too as verified in our experiments. Further, any errors in the approximation for $\autonet_t^\theta(\yadd, i | \mX_t)$ are fixed by further applications of the guided score function, highlighting the benefits of our combined autoregressive and diffusion based approach.
