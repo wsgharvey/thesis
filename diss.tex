@@ -354,6 +354,18 @@
 % \renewcommand{\@pnumwidth}{3em}
 % \makeatother
 
+
+% Define a new format for appendix chapters
+\usepackage{titlesec}
+\newcommand{\appendixchapterformat}{
+  \titleformat{\chapter}[display]
+    {\normalfont\huge\bfseries}
+    {\chaptertitlename\ \thechapter}
+    {20pt}
+    {\Huge}
+  \titlespacing*{\chapter}{0pt}{*1}{*1}
+}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -388,7 +400,7 @@
 
 \faculty{The Faculty of Graduate and Postdoctoral Studies}
 \department{Computer Science}
-\submissionmonth{May}
+\submissionmonth{June}
 \submissionyear{2024}
 
 % details of your examining committee
@@ -476,7 +488,7 @@
 \textspacing		% begin one-half or double spacing
 
 %   12. Acknowledgements (optional)
-\include{ack}
+% \include{ack}
 
 %   13. Dedication (optional)
 
@@ -511,11 +523,17 @@
 \bibliography{biblio}
 \end{singlespace}
 
-\appendix
 %    6. Appendices (including copies of all required UBC Research
 %       Ethics Board's Certificates of Approval)
 %\include{reb-coa}	% pdfpages is useful here
-\include{appendix}
+
+\appendix 
+\appendixchapterformat
+\input{appendix/diffusion}
+\input{appendix/conditional-diffusion}
+\input{appendix/fdm}
+\input{appendix/tddm}
+\input{appendix/cigcvae}
 
 \backmatter
 %    7. Index

@@ -101,7 +101,7 @@ We now present our modification of the flexible diffusion training objective tha
     \mathcal{L}_\text{FDMM}(\theta) &= 
     % \int_{\sigma_\text{min}}^{\sigma_\text{max}}  
     \EX_{u(\sigma) u(\rvx, \rvx_\sigma, \rvy, \gX, \gY)} \frac{\lambda^\rvx(\sigma)}{u(\sigma)} \left[ 
-    || \predx_\theta(\rvx_\sigma, \rvy, \sigma, \gX, \gY) - \rvx ||_2^2 \right]
+    \left\| \predx_\theta(\rvx_\sigma, \rvy, \sigma, \gX, \gY) - \rvx \right\|_2^2 \right]
 \end{align}
 with $u(\rvx, \rvx_\sigma, \rvy, \gX, \gY) = \int u(\gX, \gY)\pdata(\rvv)\delta(\rvx,\rvy|\rvv,\gX,\gY)q(\rvx_\sigma|\rvx) \mathrm{d}\rvv$. We will call $u(\gX, \gY)$ the training task distribution and give a precise specification in the next paragraph ; $\pdata(\rvv)$ is our distribution of long training videos ; $\delta(\rvx,\rvy|\rvv,\gX,\gY)$ is a Dirac distribution which returns $\rvx = \rvv[\gX]$ and $\rvy = \rvv[\gY]$ ; and $q(\rvx_\sigma | \rvx)$ is the standard diffusion ``noising'' distribution as defined in \cref{ch:diffusion}. Recall that, in the standard flexible diffusion setting, the dimensionality of $\rvy$ could vary but that of $\rvx$ was fixed. In the new setting, the dimensionalities of both $\rvx$ and $\rvy$ can vary.
 
@@ -173,7 +173,7 @@ An appealing alternative to the heuristic sampling schemes described in the prev
     % \int_{\sigma_\text{min}}^{\sigma_\text{max}} 
     \EX_{u(\sigma)u(\rvx, \rvx_\sigma, \rvy|\gX_s, \gY_s)} \left[
     \frac{\lambda^\rvx(\sigma)}{u(\sigma)}
-    || \predx_\theta(\rvx_\sigma, \rvy, \sigma, \gX_s, \gY_s) - \rvx ||_2^2 \right].
+    \left\| \predx_\theta(\rvx_\sigma, \rvy, \sigma, \gX_s, \gY_s) - \rvx \right\|_2^2 \right].
 \end{align}
 This is estimated using a set of 100 training videos and by iterating over 10 evenly-spaced values of $t$ (which reduced variance relative to random sampling of $t$). See the appendix for further details. We create two optimised sampling schemes: one with the same latent indices as Autoreg, and one with the same latent indices as Hierarchy-2. We call the corresponding optimised schemes \textbf{Opt. autoreg} and \textbf{Opt. hierarchy-2}.
 

@@ -11,7 +11,8 @@
 
 \chapter{Lay Summary}
 
-Deep generative models, neural networks trained to sample data such as novel images or videos, have recently shot to prominence. Text-to-image systems which generate an image that matches a provided caption have found applications as, e.g., tools for illustrators. Text-to-video systems can do the same for video. We argue that such generative models can be made ``flexible'', in the sense that a single model can be designed and trained that is applicable to far more tasks than just text-conditioning. We demonstrate flexible generative models on domains including image and video. In the video domain, our flexible generative model is capable of tasks as diverse as generating videos conditioned on the first few frames (simulating how the environment will evolve), conditioned on final frames (planning how a given state can be arrived at), or conditioned on e.g. every 10th frame (video super-resolution).
+Deep generative models, neural networks trained to generate images or videos, have improved significantly in recent years. Illustrators have started using text-to-image models, which generate an image that matches a provided caption. Anyone needing to create videos can similarly use a text-to-video model. A very useful modification of such a video model is to condition it on a user-specified set of frames, and make it generate compatible values for all other frames. ``Arbitrarily-conditional'' models like this, though, usually don't work if the videos are too long or if we don't know how many frames they should contain. We present innovations that enable these models to work in exactly these cases. We demonstrate one model that solves tasks as diverse as generating a one minute-long video given the first few seconds; given the last few seconds; or given a small number of screenshots from throughout the video.
+
 
 
 % We deeply regret that this work is so brilliant as to be incomprehensible to a mere layperson.

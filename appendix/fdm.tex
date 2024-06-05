@@ -142,7 +142,7 @@ We report additional evaluation metrics in \cref{tab:fdm-extra-metrics}.
 The ``Loss'' refers to the average diffusion loss for each sampling scheme on the test set given latent and observed indices $(\gX, \gY)$ sampled according to the sampling scheme. That is, we modify the flexible diffusion loss from \cref{eq:flexible-diffusion-loss} to
 \begin{align} \label{eq:fdm-eval-loss}
     \mathcal{L}_\text{eval}(\theta) &= \int_{\sigma_\text{min}}^{\sigma_\text{max}} \lambda^\rvx(\sigma) \EX_{q(\rvx, \rvx_\sigma, \rvy|\gX, \gY)u(\gX, \gY)} \left[ 
-    || \rvx_\theta(\rvx_\sigma, \rvy, \sigma, \gX, \gY) - \rvx ||_2^2 \right] \mathrm{d}\sigma
+    \left\| \rvx_\theta(\rvx_\sigma, \rvy, \sigma, \gX, \gY) - \rvx \right\|_2^2 \right] \mathrm{d}\sigma
 \end{align}
 where $u(\gX, \gY)$ samples the index of a stage of the sampling scheme from a uniform distribution and then return the indices $\gX$ and $\gY$ used at that stage of the sampling scheme. An appropriate choice of $\lambda(\sigma)$ would lead \cref{eq:fdm-eval-loss} to lower-bound the likelihood of generating our test set given our model and sampling scheme but, as in our training loss, we instead use the ``uniform-weighting'' proposed by \citet{ho2020denoising}. This de-emphasises pixel-level detail. 
 
@@ -287,7 +287,7 @@ This procedure begins by initialising this set of indices, $\obsindices$. In gen
 On each iteration of the procedure, we estimate the evaluation loss (with uniform weighting) for every possible next choice of index to condition on. That is, we compute
 \begin{align}
     \mathcal{L}_\text{eval}(\theta) &= \int_{\sigma_\text{min}}^{\sigma_\text{max}} \lambda^\rvx(\sigma) \EX_{q(\rvx, \rvx_\sigma, \rvy|\gX, \gY')} \left[ 
-    || \rvx_\theta(\rvx_\sigma, \rvy, \sigma, \gX, \gY') - \rvx ||_2^2 \right] \mathrm{d}\sigma
+    \left\| \rvx_\theta(\rvx_\sigma, \rvy, \sigma, \gX, \gY') - \rvx \right\|_2^2 \right] \mathrm{d}\sigma
 \end{align}
 for the $\gX$ pre-specified at that sampling scheme stage and for $\gY' = \gY \oplus [i]$ for every possible next index ${i\in\{1,\ldots,N\}\setminus\latindices\setminus\obsindices}$.
 % when conditioning on frames at indices ${\obsindices \oplus [i]}$ for every ${i\in\{1,\ldots,N\}\setminus\latindices\setminus\obsindices}$. 
