@@ -1,6 +1,7 @@
 \chapter{Supporting materials for diffusion model background}
 
-\section{Score-matching objective derivation} \label{sec:proof-that-diffusion-does-score-matching}
+% \section{Score-matching objective derivation} 
+\label{sec:proof-that-diffusion-does-score-matching}
 
 In \cref{sec:score-function-training-objective} we asserted that $\EX_{q(\rvx_\sigma)} \left[ - 2 \left\langle \nabla_{\rvx_\sigma} \log q(\rvx_\sigma), \rvs_\theta(\rvx_\sigma, \sigma) \right\rangle \right]$ is equal to $\EX_{q(\rvx, \rvx_\sigma)} \left[ -2 \left\langle \nabla_{\rvx_\sigma} \log q(\rvx_\sigma|\rvx), \rvs_\theta(\rvx_\sigma, \sigma) \right\rangle  \right]$.
 We can prove this assertion as follows:

@@ -1,46 +1,8 @@
 \chapter{Supporting materials for flexibly-conditional variational auto-encoders}
 
-\section{Notation}
-We provide \cref{tab:cigcvae-notation} for reference as a concise list of definitions
-for each symbol used in our discussion of hierarchical VAEs. More thorough explanations are provided where symbols are
-introduced in the text
-
-\begin{table*}
-  \caption{Definitions for symbols used in \cref{ch:cigcvae}.}
-  \label{tab:cigcvae-notation}
-  \centering
-  \begin{tabular}{rp{10cm}}
-    \toprule
-    Symbol    & Definition   \\
-    \midrule
-    $\rvz$                                   & VAE's latent variables. \\
-    $\rvx$                                & Data we learn a generative model of. \\
-    $\rvy$                            & Data on which our generative model is conditioned. \\
-    $\tildeI{}$                           & The part of $\rvx$ which the conditional VAE models, defined as all pixels not in $\rvy$ for image completion, or simply $\tildeI := \rvx$ for other conditional generation tasks. \\
-    $\theta$                              & Parameters for VAE's prior and decoder. \\
-    $\phi$                                & Parameters for VAE's encoder. \\
-    $\pdata (\rvx, \rvy)$            & Distribution from which we assume training/test instances are i.i.d.~samples. \\
-    $p_\theta(\rvz)$                        & Learned prior of VAE. \\
-    $p_\theta(\rvx|\rvz)$                   & Distribution output by VAE's decoder given $\rvz$. \\
-    $q_\phi(\rvz|\rvx)$                           & Distribution output by VAE's encoder given $\rvx$. \\
-    $p_\theta(\rvz, \rvx, \rvy)$        & Joint distribution defined as $p_\theta(\rvz)p_\theta(\rvx|\rvz)\pdata (\rvy|\rvx)$. \\
-    $q_\phi(\rvz,\rvx, \rvy)$                 & Joint distribution defined as $\pdata (\rvx, \rvy)q_\phi(\rvz|\rvx)$. \\
-    $\psi$                            & Partial encoder parameters. \\
-    $p_\psi(\rvz|\rvy)$                 & Distribution output by partial encoder. \\
-    $p_{\theta,\psi}(\rvx|\rvy)$             & Distribution over from which images are sampled given a conditioning input. Defined as $\int p_\theta(\rvx|\rvz)p_\psi(\rvz|\rvy) \mathrm{d}\rvz$. \\
-    $\unp{}(\rvz, \rvx, \rvy)$           & Distribution with parameters $\optimal{\theta}$ and $\optimal{\phi}$ that are optimal as defined in \cref{proof:joint-training}. Defined equivalently as $p_{\optimal{\theta}}(\rvz, \rvx, \rvy)$ or $q_{\optimal{\phi}}(\rvz,\rvx,\rvy)$.  \\
-    \midrule
-    \multicolumn{2}{l}{Symbols for Bayesian optimal experimental design:} \\
-    $\coord{}_t$                                 & The location scanned at time $t$. \\
-    $v$                                   & Variable we wish to infer. \\
-    $\rvy_{\coord{}_1,\ldots,\coord{}_t}$             & Image in which all pixel values are missing except for those observed by scans at locations $\coord{}_1,\ldots,\coord{}_t$. \\
-    $f_{\coord{}_1,\ldots,\coord{}_t}$                    & Function mapping from an image $\rvx$ to $\rvy_{\coord{}_1,\ldots,\coord{}_t}$. \\
-    $g(v|\rvy)$                       & Classification distribution for $v$ given partially observed image $\rvy$. \\
-    \bottomrule
-  \end{tabular}
-  \vspace{-1em}
-\end{table*}
-
+% \section{Notation}
+% We provide \cref{tab:cigcvae-notation} for reference as a concise list of definitions
+% for each symbol used in our discussion of hierarchical VAEs. 
 
 \section{Expanded derivation of IPA's objective} \label{supp:cigcvae-forward-elbo-bound-deriv}
 Here we prove \cref{eq:forward-elbo}, which states that IPA's training
@@ -295,7 +257,7 @@ Computing this objective requires a computation graph similar to that shown in
 \cref{fig:cigcvae-reverse-arch}. Note one caveat with this objective is that using it
 involves computing and differentiating $p_\theta(\rvz,\rvy)$, which requires a
 tractable likelihood $\pdata (\rvy|\rvx)$ (based on the definition of
-$p_\theta$ in \cref{tab:cigcvae-notation}). This is possible in image completion, but
+$p_\theta$ in \cref{tab:notation-appendix-cigcvae}). This is possible in image completion, but
 not in the general case of conditional generation.
 
 The following theorem says that learning $\psi $ to maximise this objective

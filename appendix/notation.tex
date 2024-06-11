@@ -1,6 +1,6 @@
 \chapter{Notation}
 
-\Cref{tab:diffusion-notation-appendix,tab:notation-appendix-conditional-diffusion} provide a concise reference for notation introduced in our background material, \cref{ch:diffusion,ch:conditional-diffusion,ch:flexible-diffusion}. Note that we exclude some symbols that are referenced in only a single section.
+\Cref{tab:diffusion-notation-appendix,tab:notation-appendix-conditional-diffusion,tab:notation-appendix-fdm,tab:notation-appendix-tddm,tab:notation-appendix-cigcvae} provide a concise reference for the notation used throughout this dissertation. Note that we exclude some symbols that are referenced in only a single section. More thorough explanations are provided where symbols are introduced in the text.
 
 \begin{table*}
   \caption{Symbols defined in \cref{ch:diffusion}. 
@@ -106,6 +106,96 @@
     $N$                                    & Number of frames in a video. \\
     $S$                                    & Number of stages in a sampling scheme. \\
     $[ (\gX_s, \gY_s)_{s=1}^S ]$           & A sampling scheme consisting of a sequence of indices of frames to generate and condition on. \\
+    $\gL_\text{FDM}(\theta)$                      & The flexible diffusion model loss, which trains the model to cope with varying $\gX$ and varying $\gY$. \\
     \bottomrule
   \end{tabular}
+\end{table*}
+
+
+\begin{table*}
+  \caption{Symbols defined in \cref{ch:tddm}.}
+  \label{tab:notation-appendix-tddm}
+  \centering
+  \footnotesize
+  \begin{tabular}{rp{9cm}}
+    \toprule
+    Symbol    & Definition   \\
+    \midrule
+    $d$                                     & Dimensionality of one component (e.g. number of dimensions per video frame). \\
+    $N$                                     & Maximum number of components in any data point. \\
+    $\rvx$                                  & Data values as in previous chapters. \\
+    $n$                                     & Number of components in a data point. \\
+    $\mX$                                   & Defined as $(n, \rvx)$, a representation of both the data values and dimensionality. \\
+    $\pdata(\mX)$                                   & The (potentially trans-dimensional) data distribution.  \\
+    $\rvx_t$                                & Data values at time $t$. May now be lower-dimensional than $\rvx$. \\
+    $n_t$                                   & Number of components in $\rvx_t$. \\
+    $\mX_t$                                 & Defined as $(n_t, \rvx_t)$. \\
+    $q_{0,t_1,\ldots,t_n}(\mX,\mX_{t_1},\ldots)$   & Joint distribution over both data values and dimensionality at various times, defined by combination of data distribution and forward process.  \\
+    $q_{0,t_1,\ldots,t_n}(\rvx,n,\rvx_{t_1},n_{t_1},\ldots)$    & Joint distribution over both data values and dimensionality at various times, defined by combination of data distribution and forward process.  \\
+    $K_t(\mV | \mX_t)$  & Transition kernel is stochastically applied during the a jump diffusion process. \\
+    $ \lambda(\mX_t, t) $                    &  Rate at which jumps occur during a jump diffusion process.  \\
+    $\ftk_t( \mV |\mX_t)$                    & Transition kernel for the forward process. \\
+    $\forwardrate(\mX_t, t)$                 &  Rate at which jumps occur during the forward process.  \\
+    $\delidxdist(i | n_t)$                 & Distribution over the index of the component to delete in a jump in the forward process. Used to parameterise $\ftk_t(\mV|\mX_t)$. \\
+    $\text{del}(\mX_t, i)$                 & Operator which deletes component $i$ in $\mX_t$. \\
+    $\pref(\mX_T)$                 & Reference distribution $\mathbb{I} \{ n_T = 1\} \mathcal{N}(\rvx_T; 0, I_{d}) \approx q_T(\mX_T)$. \\
+    $\btk_t( \mV |\mX_t)$                    & Transition kernel for the reverse process. \\
+    $\backwardrate(\mX_t, t)$                & Rate at which jumps occur during the reverse process. \\
+    $\text{ins}(\mX_t, \yadd, i)$                             & Insertion operator which adds component $\yadd$ to $\mX_t$ in index $i$.   \\
+    $\autonet_t(\yadd, i | \mX_t)$           & Distribution over component value and index to add at a jump in the reverse process.    \\
+    $\backwarddrift(\rvx_t, t)$              & Drift term for the reverse process. \\
+    $\backwarddiffcoeff(t)$                  & Scaling factor for Wiener process noise added in the reverse process. \\
+    $^*$             & Denotes the ``optimal'' form of a term in the reverse process which is required to ensure that the reverse process is the time-reversal of the forward process. \\
+    $\backwarddrift_\theta(\mX_t, t)$ & Neural network's parameterisation of reverse process drift. Parameterised via $\predx_\theta$ or $\preds_\theta$ as in earlier sections. \\
+    $\backwardrate_\theta(\mX_t, t) $ & Neural network's parameterisation of reverse process rate. \\
+    $\autonet_t^\theta(\yadd, i | \mX_t)$ & Neural network's parameterisation of distribution over value and index to add in reverse process. \\
+    $\gL_\text{TDDM}(\theta)$                      & The trans-dimensional diffusion model loss. \\
+     % &  \\
+     % &  \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+
+\begin{table*}
+  % \caption{Definitions for symbols used in \cref{ch:cigcvae}.}
+  % \label{tab:cigcvae-notation}
+  % \centering
+  % \begin{tabular}{rp{10cm}}
+  \caption{Symbols defined in \cref{ch:cigcvae}.}
+  \label{tab:notation-appendix-cigcvae}
+  \centering
+  \footnotesize
+  \begin{tabular}{rp{9cm}}
+    \toprule
+    Symbol    & Definition   \\
+    \midrule
+    $\rvz$                                   & VAE's latent variables. \\
+    $\rvx$                                & Data we learn a generative model of. \\
+    $\rvy$                            & Data on which our generative model is conditioned. \\
+    $\tildeI{}$                           & The part of $\rvx$ which the conditional VAE models, defined as all pixels not in $\rvy$ for image completion, or simply $\tildeI := \rvx$ for other conditional generation tasks. \\
+    $\theta$                              & Parameters for VAE's prior and decoder. \\
+    $\phi$                                & Parameters for VAE's encoder. \\
+    % $\pdata (\rvx, \rvy)$            & Distribution from which we assume training/test instances are i.i.d.~samples. \\
+    $p_\theta(\rvz)$                        & Learned prior of VAE. \\
+    $p_\theta(\rvx|\rvz)$                   & Distribution output by VAE's decoder given $\rvz$. \\
+    $q_\phi(\rvz|\rvx)$                           & Distribution output by VAE's encoder given $\rvx$. \\
+    $p_\theta(\rvz, \rvx, \rvy)$        & Joint distribution defined as $p_\theta(\rvz)p_\theta(\rvx|\rvz)\pdata (\rvy|\rvx)$. \\
+    $q_\phi(\rvz,\rvx, \rvy)$                 & Joint distribution defined as $\pdata (\rvx, \rvy)q_\phi(\rvz|\rvx)$. \\
+    $\psi$                            & Partial encoder parameters. \\
+    $p_\psi(\rvz|\rvy)$                 & Distribution output by partial encoder. \\
+    $p_{\theta,\psi}(\rvx|\rvy)$             & Distribution over from which images are sampled given a conditioning input. Defined as $\int p_\theta(\rvx|\rvz)p_\psi(\rvz|\rvy) \mathrm{d}\rvz$. \\
+    $\unp{}(\rvz, \rvx, \rvy)$           & Distribution with parameters $\optimal{\theta}$ and $\optimal{\phi}$ that are optimal as defined in \cref{proof:joint-training}. Defined equivalently as $p_{\optimal{\theta}}(\rvz, \rvx, \rvy)$ or $q_{\optimal{\phi}}(\rvz,\rvx,\rvy)$.  \\
+    \midrule
+    \multicolumn{2}{l}{Symbols for Bayesian optimal experimental design:} \\
+    $\coord{}_t$                                 & The location scanned at time $t$. \\
+    $v$                                   & Variable we wish to infer. \\
+    $\rvy_{\coord{}_1,\ldots,\coord{}_t}$             & Image in which all pixel values are missing except for those observed by scans at locations $\coord{}_1,\ldots,\coord{}_t$. \\
+    $f_{\coord{}_1,\ldots,\coord{}_t}$                    & Function mapping from an image $\rvx$ to $\rvy_{\coord{}_1,\ldots,\coord{}_t}$. \\
+    $g(v|\rvy)$                       & Classification distribution for $v$ given partially observed image $\rvy$. \\
+    $\gO_\text{VAE}(\theta)$                      & The VAE objective. \\   
+    $\gO_\text{CVAE}(\theta)$                      & The conditional VAE objective. \\   
+    \bottomrule
+  \end{tabular}
+  \vspace{-1em}
 \end{table*}
