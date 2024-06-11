@@ -1,0 +1,111 @@
+\chapter{Notation}
+
+\Cref{tab:diffusion-notation-appendix,tab:notation-appendix-conditional-diffusion} provide a concise reference for notation introduced in our background material, \cref{ch:diffusion,ch:conditional-diffusion,ch:flexible-diffusion}. Note that we exclude some symbols that are referenced in only a single section.
+
+\begin{table*}
+  \caption{Symbols defined in \cref{ch:diffusion}. 
+  % Together with \cref{tab:diffusion-notation-appendix-more}, this covers all symbols referred to in more than one part of \cref{ch:diffusion}.
+  }
+  \label{tab:diffusion-notation-appendix}
+  \centering
+  \footnotesize
+  \begin{tabular}{rp{9cm}}
+    \toprule
+    Symbol    & Definition   \\
+    \midrule
+    $\rvx$                                  & Data which we are learning to generate. \\ %wish to learn a generative model of. \\
+    % $\rvy$                                  & Data on which the generative model should be conditioned. \\
+    $\pdata(\rvx)$                          & Data distribution. \\
+    $p_\theta(\rvx)$                        & A distribution over data parameterised by a deep generative model with parameters $\theta$. \\
+    $t$                                     & Time in relation to the diffusion SDE and ODE.  \\
+    $\rvx_t$                                & ``Noisy'' data at time $t \geq 0$ in the diffusion process.  \\
+    $\rvw$, $\bar{\rvw}$                    & Standard and reverse-time Wiener processes. \\
+    $g(t)$                                  & Scaling factor for Wiener process noise added in the forward SDE at time $t$. Defined to be positive for all $t > 0$. \\
+    $\rvb(\rvx_t, t)$                       & Drift term in our forward diffusion SDE. Zero for variance-exploding diffusion processes (all processes introduced before \cref{sec:more-general-diffusion-processes}) and $-\frac{1}{2}g(t)^2 \rvx_t$ for variance-preserving processes. \\
+    $\alpha(t)$                             & Factor by which signal $\rvx$ has been scaled by time $t$ during a diffusion process. One for variance-exploding processes; $\text{exp}(-\int_0^t g(s)^2 \mathrm{d}s)$ for variance-preserving processes. \\
+    $\sigma(t)^2$                           & Variance of noise added by time $t$. Given by $\sigma(t)^2 = \int g(t)^2 \mathrm{d}t$ for variance-exploding processes; $1-\alpha(t)^2$ for variance-preserving processes. \\
+    % $\sigma$                                & Equivalent to $\sigma(t)$. When it simplifies results, we will define the process explicitly in terms of $\sigma$ instead of using $t$. \\
+    $\rvx_\sigma$                           & ``Noisy'' data, equivalent to $\rvx_t$ for $t$ satisfying $\sigma = \sigma(t)$. \\
+    $\text{SNR}(\sigma)$                    & The signal-to-noise ratio. Given by $1/\sigma(t)^2$ in a variance-exploding process or $\alpha(t)^2 / \sigma(t)^2$ in a variance-preserving process. \\
+    $q(\rvx,\rvx_{t_1},\ldots,\rvx_{t_n})$   & Joint distribution defined by the data distribution and forward SDE for any $t_1,\ldots,t_n \geq 0$. We will also use $q$ to denote any conditional or marginal of such a distribution.  \\
+    $q(\rvx,\rvx_{\sigma_1},\ldots,\rvx_{\sigma_n})$   & Equivalent to $q(\rvx,\rvx_{t_1},\ldots,\rvx_{t_n})$ if each $\sigma_i = \sigma(t_i)$. This distribution is agnostic to $g(t)$. \\
+%     % $\Sigma$ ?
+%     % p_\theta from DDPM ?
+%     % Losses?
+%     \bottomrule
+%   \end{tabular}
+% \end{table*}
+% \begin{table*}
+%   \caption{Symbols defined in \cref{ch:diffusion} building on \cref{tab:diffusion-notation-appendix}. }
+%   \label{tab:diffusion-notation-appendix-more}
+%   \centering
+%   \begin{tabular}{rp{8.5cm}}
+%     \toprule
+%     Symbol    & Definition   \\
+%     \midrule
+    $\epsilon$                               & Defined as $\frac{\rvx_t-\alpha(t)\rvx}{\sigma(t)}$. \\
+    $\preds_\theta(\rvx_t, t)$  & Diffusion model's prediction of the score $\nabla_{\rvx_t} \log q(\rvx_t)$. \\
+    $\predx_\theta(\rvx_t, t)$  & Diffusion model's prediction of clean data $\rvx$ given $\rvx_t$. \\
+    $\prede_\theta(\rvx_t, t)$                      & Diffusion model's prediction of $\epsilon$. \\
+    $\lambda^\rvs, \lambda^\rvx, \lambda^\epsilon$  & Per-timestep weighting factors for diffusion training objective when computed with mean-squared error loss to score function, $\rvx$, or $\epsilon$ respectively. \\
+    $\beta(t)$                               & Hyperparameter controlling amount of stochasticity injected in the reverse SDE described in \cref{sec:other-sdes}. \\
+    $u(t)$ or $u(\sigma)$                    & Distribution from which $t$ (or $\sigma$) is sampled during training. \\ 
+    $\Sigma[0],\ldots,\Sigma[N]$             & An increasing sequence of standard deviations describing where the diffusion SDE is discretised when discussing training or sampling in discrete-time. \\
+    $p_\theta(\rvx_{t-1} | \rvx_t)$          & The transition distribution used in DDPM sampling, defined in \cref{eq:ddpm-transition}.  \\
+    $\gL_\text{ISM}(\theta, \sigma)$         &  Implicit score-matching objective defined in \cref{eq:ism-loss} for a given $\sigma$.  \\
+    $\gL_\text{DM}(\theta)$                  & Diffusion objective; weighted integral of $\gL_\text{ISM}(\theta, \sigma)$ over $\sigma$. \\
+    % $\gL()$  &  \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+
+\begin{table*}
+  \caption{Symbols defined in \cref{ch:conditional-diffusion,ch:flexible-diffusion}.}
+  \label{tab:notation-appendix-conditional-diffusion}
+  \centering
+  \footnotesize
+  \begin{tabular}{rp{9cm}}
+    \toprule
+    Symbol    & Definition   \\
+    \midrule
+    $\rvy$                                  & Data which we wish to condition on. \\
+    $\pdata(\rvx, \rvy)$                    & Data which we wish to condition on. \\
+    $q(\rvx,\rvy,\rvx_{t_1},\ldots)$        & Integration of $q(\rvx,\rvx_{t_1},\ldots)$ from above with conditioning information $\rvy$. Defined as $q(\rvx,\rvx_{t_1},\ldots)\pdata(\rvy|\rvx)$.   \\
+    $q(\rvx,\rvy,\rvx_{\sigma_1},\ldots)$   & Integration of $q(\rvx,\rvx_{\sigma_1},\ldots)$ from above with conditioning information $\rvy$. Defined as $q(\rvx,\rvx_{\sigma_1},\ldots)\pdata(\rvy|\rvx)$.   \\
+    $\preds(\rvx_t, \rvy, t)$                     & Conditional version of $\preds(\rvx_t, t)$. \\
+    $\predx(\rvx_t, \rvy, t)$                     & Conditional version of $\predx(\rvx_t, t)$. \\
+    $\prede(\rvx_t, \rvy, t)$                     & Conditional version of $\prede(\rvx_t, t)$. \\
+    $\rva$  & Data which we wish to condition 2SDM on (when $\rvy$ is overloaded to mean an embedding vector). \\
+    $p_\theta(\rvx|\rvy,\rva)$                    & Distribution parameterised by 2SDM's conditional image model. \\
+    $p_\phi(\rvy|\rva)$                           & Distribution over $\rvy$ parameterised by 2SDM's auxiliary model. \\
+    $\alpha(t)$ or $\alpha$                       & ''Strength'' with which we condition on $\rvy$ in reconstruction guidance, classifier guidance, or classifier-free guidance.  \\
+    $\gY$                                         &   Set of indices of $n$ data components on which we wish to condition, $\{y_1, \ldots, y_n\}$. When used in conjunction with $\rvy$ we have that $\rvy = [\rvx[y_1], \ldots, \rvx[y_n]] = \rvx[\gY]$. \\
+    $\gL_\text{CDM}(\theta)$                      & The conditional diffusion loss. \\
+    $\gL_\text{FCDM}(\theta)$                      & The flexibly-conditional diffusion loss. \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+
+\begin{table*}
+  \caption{Symbols defined in \cref{ch:fdm}.}
+  \label{tab:notation-appendix-fdm}
+  \centering
+  \footnotesize
+  \begin{tabular}{rp{9cm}}
+    \toprule
+    Symbol    & Definition   \\
+    \midrule
+    $\rvv$                                  & Full video, typically with more frames than can be diffused over jointly by a diffusion model under memory constraints. \\
+    $\gX$                                  & Indices of frames we wish to generate. \\
+    $\gY$                                  & Indices of frames we wish to condition on. \\
+    $\rvx$                                 & Values for frames indexed by $\gX$. May be extracted from $\rvv$ as $\rvv[\gX]$. \\
+    $\rvy$                                 & Values for frames indexed by $\gY$. May be extracted from $\rvv$ as $\rvv[\gY]$. \\
+    $K$                                    & Upper bound on number of frames that the diffusion model can generate/condition on simultaneously. \\
+    $N$                                    & Number of frames in a video. \\
+    $S$                                    & Number of stages in a sampling scheme. \\
+    $[ (\gX_s, \gY_s)_{s=1}^S ]$           & A sampling scheme consisting of a sequence of indices of frames to generate and condition on. \\
+    \bottomrule
+  \end{tabular}
+\end{table*}

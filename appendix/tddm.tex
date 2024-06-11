@@ -1,4 +1,4 @@
-\chapter{Supporting materials for flexible diffusion on varying dimensionality data}
+\chapter{Supporting materials for flexibly-conditional diffusion on varying dimensionality data}
 
 \section{Training objective}
 \label{sec:tddm-ApdxTrainingObjective}
@@ -131,7 +131,7 @@ For our interpolations experiments, we follow the set up of \citet{hoogeboom2022
 
 \begin{table}[ht]
      \centering
-   \caption{The 10 conditional molecule generation tasks used for evaluation in \cref{ch:tddm}. The number of each atom type required for the task is given in columns $2-5$ whilst the average number of atoms in molecules that meet this condition in the training dataset is given in the $6$th column.}
+   \caption{The 10 conditional molecule generation tasks used for evaluation in \cref{ch:tddm}. The number of each atom type required for the task is given in columns $2-5$ while the average number of atoms in molecules that meet this condition in the training dataset is given in the $6$th column.}
    \begin{tabular}{@{}lccccc@{}}
      \toprule
      Task & Carbon & Nitrogen & Oxygen & Fluorine & \shortstack{Mean Number \\ of Atoms} \\ \midrule
@@ -189,7 +189,7 @@ $ \forwardrate_{t < 0.3T} = 0$ & $0.266 {\scriptstyle \pm 0.11}$ & $92.0 {\scrip
 \end{table}
 
 \subsubsection{Uniqueness and novelty metrics}
-We here investigate sample diversity and novelty of our unconditional generative models. We measure uniqueness by computing the chemical graph corresponding to each generated sample and measure what proportion of the 10000 produced samples have a unique chemical graph amongst this set of 10000 as is done by \citet{hoogeboom2022equivariant}. We show our results in \cref{tab:uniqueness_and_novelty} and find our TDDM method to have slightly lower levels of uniqueness when compared to the fixed dimension diffusion model baseline. Measuring novelty on generative models trained on the QM9 dataset is challenging because the QM9 dataset contains an exhaustive enumeration of all molecules that satisfy certain predefined constraints~\citep{vignac2021top,hoogeboom2022equivariant}. Therefore, if a novel molecule is produced it means the generative model has failed to capture some of the physical properties of the dataset and indeed it was found by \citet{hoogeboom2022equivariant} that during training, as the model improved, novelty decreased. Novelty is therefore not typically included in evaluating molecular diffusion models. For completeness, we include the novelty scores in \cref{tab:uniqueness_and_novelty} as a comparison to the results presented in Appendix C of \citet{hoogeboom2022equivariant}. We find that our samples are closer to the statistics of the training dataset whilst still producing ‘novel’ samples at a consistent rate.
+We here investigate sample diversity and novelty of our unconditional generative models. We measure uniqueness by computing the chemical graph corresponding to each generated sample and measure what proportion of the 10000 produced samples have a unique chemical graph amongst this set of 10000 as is done by \citet{hoogeboom2022equivariant}. We show our results in \cref{tab:uniqueness_and_novelty} and find our TDDM method to have slightly lower levels of uniqueness when compared to the fixed dimension diffusion model baseline. Measuring novelty on generative models trained on the QM9 dataset is challenging because the QM9 dataset contains an exhaustive enumeration of all molecules that satisfy certain predefined constraints~\citep{vignac2021top,hoogeboom2022equivariant}. Therefore, if a novel molecule is produced it means the generative model has failed to capture some of the physical properties of the dataset and indeed it was found by \citet{hoogeboom2022equivariant} that during training, as the model improved, novelty decreased. Novelty is therefore not typically included in evaluating molecular diffusion models. For completeness, we include the novelty scores in \cref{tab:uniqueness_and_novelty} as a comparison to the results presented in Appendix C of \citet{hoogeboom2022equivariant}. We find that our samples are closer to the statistics of the training dataset while still producing ‘novel’ samples at a consistent rate.
 \begin{table}[ht]
      \centering
    \caption{Uniqueness and novelty metrics on unconditional molecule generation. We produce 10000 samples for each method and measure validity using RDKit. Uniqueness is judged as whether the chemical graph is unique amongst the 10000 produced samples. Amongst the valid and unique molecules, we then find the percentage that have a chemical graph not present in the training dataset.}

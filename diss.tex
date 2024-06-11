@@ -366,6 +366,7 @@
   \titlespacing*{\chapter}{0pt}{*1}{*1}
 }
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -386,7 +387,12 @@
 %% Document meta-data: be sure to also change the \hypersetup information
 %%
 
-\title{Flexible Generative Models of Images and Video}
+\newcommand{\titletext}{
+    % Flexible Generative Models of Images and Video
+    Flexible Conditioning in Generative Models of Images and Video
+}
+
+\title{\titletext}
 %\subtitle{If you want a subtitle}
 
 \author{William Harvey}
@@ -419,7 +425,7 @@
 %% hyperref package provides support for embedding meta-data in .PDF
 %% files
 \hypersetup{
-  pdftitle={Flexible Generative Models of Images and Video},
+  pdftitle={\titletext},
   pdfauthor={William Harvey},
   pdfkeywords={generative models, diffusion models}
 }
@@ -509,7 +515,6 @@
 \include{chapters/flexible-diffusion}
 \include{chapters/fdm}
 \include{chapters/tddm}
-\include{chapters/vae}
 \include{chapters/cigcvae}
 \include{chapters/conclusions}
 
@@ -529,6 +534,7 @@
 
 \appendix 
 \appendixchapterformat
+\input{appendix/notation}
 \input{appendix/diffusion}
 \input{appendix/conditional-diffusion}
 \input{appendix/fdm}
