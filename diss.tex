@@ -316,6 +316,13 @@
 \(\rightarrow\) pages #2%
 \fi}}
 
+\usepackage{tikz}
+\newcommand{\xmark}{%
+\tikz[scale=0.23] {
+    \draw[line width=0.7,line cap=round] (0,0) to [bend left=6] (1,1);
+    \draw[line width=0.7,line cap=round] (0.2,0.95) to [bend right=3] (0.8,0.05);
+}}
+
 % added cleveref after hyperref
 \usepackage[capitalise]{cleveref}
 

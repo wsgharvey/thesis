@@ -434,6 +434,8 @@ resolution. As well as ensuring diverse coverage of the posterior, using such a
 likelihood-based model enables applications such as out-of-distribution
 detection for inputs $\rvy$, which we demonstrate in \cref{supp:cigcvae-ood}. We are aware of one prior flexibly-conditional VAE~\citep{ivanov2018variational} but it was demonstrated on lower resolution and less diverse image datasets. More recent approaches to inpainting include those of \citet{song2020score} and that of \citet{tian2023control} who use diffusion models.
 
+Finally, the recent work of \citet{xie2023smartbrush} presents an inpainting model that again deviates slightly from the flexible conditioning framework. They incorporate segmentation masks at training time to train a diffusion model that adds/deletes single objects and allows for imprecisely-drawn masks. As such, their method automatically detects which pixels in the input image should be edited. This is in contrast to our flexible conditioning approach, which relies on a user-provided mask specifying which pixels to edit. 
+
 
 
 \begin{table*}
