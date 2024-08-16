@@ -473,7 +473,7 @@ We create an IPA inpainting model based on the VD-VAE unconditional
 architecture~\citep{child2020very}, and evaluate it for inpainting on
 three datasets: CIFAR-10~\citep{krizhevsky2009learning},
 ImageNet-64~\citep{deng2009imagenet}, and FFHQ-256~\citep{karras2019style}. We
-compare against four baselines from the prior literature: Co-Modulated Generative Adversarial Networks
+compare against four baselines from the literature: Co-Modulated Generative Adversarial Networks
 (CoModGAN)~\citep{zhao2021large}; Pluralistic Image Completion
 (PIC)~\citep{zheng2019pluralistic}; Context Encoders
 (CE)~\citep{pathak2016context}; and Attentive Neural Processes
@@ -550,8 +550,8 @@ second to CoModGAN when less is observed and on FFHQ-256.
 
 
 \paragraph{Edges-to-photos}
-We provide an additional demonstration of IPA on the Edges2Shoes and
-Edges2Handbags datasets~\citep{isola2016image}, where the task is to generate an
+We provide an additional demonstration of IPA on two image-to-image translation datasets, Edges2Shoes and
+Edges2Handbags~\citep{isola2016image}, where the task is to generate an
 image conditioned on the output of an edge detector applied to that image. We
 downsample the datasets to $64\times64$ so that we can use unconditional VAEs
 pretrained on ImageNet~\citep{deng2009imagenet} at this resolution by
@@ -650,12 +650,12 @@ location, $\coord{}_t$, to minimise it.
   \hspace{-.75cm}
   \begin{minipage}{.4\textwidth}
     \centering
-    \includegraphics[scale=.77]{figs/cigcvae/boed-auroc-curve-rearranged}
+    \includegraphics[scale=.73]{figs/cigcvae/boed-auroc-curve-rearranged}
   \end{minipage}
   ~
   \begin{minipage}{0.54\textwidth}
     \centering
-    \includegraphics[scale=.77]{figs/cigcvae/shrunk-boed-vis}
+    \includegraphics[scale=.72]{figs/cigcvae/shrunk-boed-vis}
   \end{minipage}
   \caption{Evaluation of our IPA-based system for selecting scan locations. \textbf{Left:} Classification AUROC scores after $1,\ldots,5$ scans
     chosen with each method. Scores for the ``EIG-'' methods more quickly approach the

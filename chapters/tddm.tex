@@ -103,7 +103,7 @@ We present here an equivalent loss to learn all of $\rvs_\theta$, $\smash{\backw
 
 \begin{proposition}
 \label{prop:elbo}
-For the reverse generative jump diffusion process starting at $\pref(\mX_T)$ and finishing at $ q_0^\theta(\mX)$, an evidence lower bound on the model log-likelihood $ \mathbb{E}_{\rvx \sim \pdata(\cdot)} [ \log p_\theta(\rvx) ]$ is given by
+For the reverse generative jump diffusion process which starts at $\pref(\mX_T)$ and finishes at $ q_0^\theta(\mX)$, an evidence lower bound on the model log-likelihood $ \mathbb{E}_{\rvx \sim \pdata(\cdot)} [ \log p_\theta(\rvx) ]$ is given by
 \begin{align}
     \label{eq:tddm-elbo}
     \gL_\text{TDDM}&(\theta) \\ 
@@ -127,7 +127,7 @@ Similarly to a standard diffusion model, we optimise $\gL_\text{TDDM}(\theta)$ u
 
 \subsection{Parameterisation}
 
-We use neural networks to parameterise all of $\rvs_\theta(\mX_t, t)$, $\autonet_t^\theta(\yadd, i | \mX_t)$ and $\backwardrate_\theta(\mX_t, t)$. In practice, we have a single backbone network suited to the problem of interest, e.g., a transformer~\citep{vaswani2017attention}, an EGNN~\citep{satorras2021n}, or a U-Net~\citep{ronneberger2015u}, onto which we add prediction heads for $\rvs_\theta(\mX_t, t)$, $\autonet_t^\theta(\yadd, i | \mX_t)$ and $\backwardrate_\theta(\mX_t, t)$. $\rvs_\theta(\mX_t, t)$ outputs a vector in $\mathbb{R}^{n_t d}$. $\autonet_t^\theta(\yadd, i | \mX_t)$ outputs a distribution over $i$ and mean and standard deviation statistics for a Gaussian distribution over $\yadd$. Finally, having $\backwardrate_\theta(\mX_t, t) \in \mathbb{R}_{\geq 0}$ be the raw output of a neural network can cause optimisation issues due to the optimum $\backwardrate^*$ including a probability ratio which can take on very large values. Instead, we learn a component prediction network $p^\theta_{0|t}(n | \mX_t)$ that predicts the number of components in $\mX$ given $\mX_t$. To convert this into $\backwardrate_\theta(\mX_t, t)$, we show in \cref{prop:backwardrateparam} how the optimum $\backwardrate^*(\mX_t, t)$ is an analytic function of the true $q_{0|t}(n | \mX_t)$. We then plug $q_{0|t}(n | \mX_t)$ into \cref{prop:backwardrateparam} to obtain an approximation of $\backwardrate^*(\mX_t, t)$.
+We use neural networks to parameterise all of the score estimate $\rvs_\theta(\mX_t, t)$, the distribution over each new component's initial state and index $\autonet_t^\theta(\yadd, i | \mX_t)$; and the backwards rate $\backwardrate_\theta(\mX_t, t)$. In practice, we have a single backbone network suited to the problem of interest, e.g., a transformer~\citep{vaswani2017attention}, an EGNN~\citep{satorras2021n}, or a U-Net~\citep{ronneberger2015u}, onto which we add prediction heads for $\rvs_\theta(\mX_t, t)$, $\autonet_t^\theta(\yadd, i | \mX_t)$ and $\backwardrate_\theta(\mX_t, t)$. $\rvs_\theta(\mX_t, t)$ outputs a vector in $\mathbb{R}^{n_t d}$. $\autonet_t^\theta(\yadd, i | \mX_t)$ outputs a distribution over $i$ and mean and standard deviation statistics for a Gaussian distribution over $\yadd$. Finally, having $\backwardrate_\theta(\mX_t, t) \in \mathbb{R}_{\geq 0}$ be the raw output of a neural network can cause optimisation issues due to the optimum $\backwardrate^*$ including a probability ratio which can take on very large values. Instead, we learn a component prediction network $p^\theta_{0|t}(n | \mX_t)$ that predicts the number of components in $\mX$ given $\mX_t$. To convert this into $\backwardrate_\theta(\mX_t, t)$, we show in \cref{prop:backwardrateparam} how the optimum $\backwardrate^*(\mX_t, t)$ is an analytic function of the true $q_{0|t}(n | \mX_t)$. We then plug $q_{0|t}(n | \mX_t)$ into \cref{prop:backwardrateparam} to obtain an approximation of $\backwardrate^*(\mX_t, t)$.
 \begin{proposition} We have
     \label{prop:backwardrateparam}
     \begin{equation}\label{eq:backwardrateparam}
@@ -216,7 +216,7 @@ We visualise sampling from our learned generative process in \cref{fig:tddm-unco
 
 
 \begin{table}[t]
-\caption{Evaluation of molecules generated unconditionally by our method and baselines. An atom is stable if it has the correct valency while a molecule is considered stable if all of its atoms are stable. Molecular validity is measured using RDKit~\citep{rdkit}. All methods use 1000 simulation steps and draw 10000 samples.}
+\caption{Evaluation of molecules generated unconditionally by both our method and baselines. An atom is stable if it has the correct valency while a molecule is considered stable if all of its atoms are stable. Molecular validity is measured using RDKit~\citep{rdkit}. We evaluate all methods with 1000 simulation steps and 10\,000 samples.}
 \label{tab:uncond_mol}
 \centering
 \begin{tabular}{@{}lccc@{}}
@@ -298,7 +298,7 @@ We evaluate our approach on three planning tasks, holding stationary, sliding a 
 
 \begin{table}[t]
      \centering
-   \caption{Evaluation of videos generated conditioned on first and last frame. We report the mean absolute error in the number of frames sampled
+   \caption{Evaluation of videos generated conditioned on the first and last frame. We report the mean absolute error in the number of frames sampled
    for three planning tasks. Standard deviations are estimated over 45 samples.}
    \begin{tabular}{@{}lcccc@{}}
      \toprule

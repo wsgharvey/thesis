@@ -142,8 +142,9 @@ therefore using $\unp{}$ in place of $p_\theta$, $r$ and $q$, we can expand the
 left-hand side of \cref{eq:joint-training}.
 \begin{align}
   \max_{\psi } \gO_\text{CVAE}(\optimal{\theta}, \optimal{\phi}, \psi ) &= \EX_{\unp{}(\rvz,\rvx,\rvy)} \left[ \log \frac{\unp{}(\tildeI{}|\rvz)\unp{}(\rvz|\rvy)}{\unp(\rvz|\rvx)} \right] \\
-                                                                                           &= \EX_{\unp{}(\rvz,\rvx,\rvy)} \left[ \log \frac{\unp{}(\tildeI{}|\rvz,\rvy)\unp{}(\rvz|\rvy)}{\unp(\rvz|\rvx)} \right] - \EX_{\unp{}(\rvz,\tildeI{},\rvy)} \left[ \log\frac{\unp{}(\tildeI{}|\rvz,\rvy)}{\unp{}(\tildeI{}|\rvz)} \right] \\
-                                                                                           &= \EX_{\unp{}(\rvz,\rvx,\rvy)} \left[ \log \frac{\unp{}(\tildeI{}|\rvz,\rvy)\unp{}(\rvz|\rvy)}{\unp(\rvz|\rvx)} \right] - \mutinf{}\\
+                                                   &= \EX_{\unp{}(\rvz,\rvx,\rvy)} \left[ \log \frac{\unp{}(\tildeI{}|\rvz,\rvy)\unp{}(\rvz|\rvy)}{\unp(\rvz|\rvx)} \right] \nonumber \\
+                                                   & \quad - \EX_{\unp{}(\rvz,\tildeI{},\rvy)} \left[ \log\frac{\unp{}(\tildeI{}|\rvz,\rvy)}{\unp{}(\tildeI{}|\rvz)} \right] \\
+                                                   &= \EX_{\unp{}(\rvz,\rvx,\rvy)} \left[ \log \frac{\unp{}(\tildeI{}|\rvz,\rvy)\unp{}(\rvz|\rvy)}{\unp(\rvz|\rvx)} \right] - \mutinf{}\\
                                                                                            &= \EX_{\unp{}(\rvz,\rvx,\rvy)} \left[ \log \frac{\unp{}(\rvz,\tildeI{}|\rvy)}{\unp(\rvz|\rvx)} \right] - \mutinf{}\\
                                                                                            &= \EX_{\unp{}(\rvz,\rvx,\rvy)} \left[ \log \frac{\unp{}(\rvz|\tildeI{},\rvy)\unp{}(\tildeI{}|\rvy)}{\unp(\rvz|\rvx)} \right] - \mutinf{}. \label{eq:pre-mapping}
 \end{align}
@@ -281,9 +282,10 @@ We show this by decomposing the objective:
 \end{align}
 where $D(\theta)$ is not dependent on $\psi$. Therefore, for any $\theta$
 and $\phi$, any values of $\psi\in\Psi$ which maximise
-$\mathcal{O}_\text{rev}(\theta, \phi, \psi )$ will also minimise
+$\mathcal{O}_\text{rev}(\theta, \phi, \psi )$ will equivalently minimise the expression
 $\EX_{\pdata (\rvy)}\Big[ \kl[\big] { p_\psi(\rvz|\rvy) }{
-  p_\theta(\rvz|\rvy) } \Big]$, proving the theorem.
+  p_\theta(\rvz|\rvy) } \Big]$,
+  proving the theorem.
 
 
 \Cref{theorem:reverse-kl} implies that maximising $\mathcal{O}_{\text{rev}}$
@@ -334,8 +336,7 @@ such that $p_\psi(\rvz|\rvy) = p_\theta(\rvz|\rvy)$:
   \max_{\theta, \phi, \psi } \mathcal{O}_\text{rev}(\theta, \phi, \psi ) &= \max_{\theta, \phi} \EX_{\pdata (\rvy)} \left[ \log p_\theta(\rvy) \right] \\
                                                                                    &= - \mathcal{H} \left[ \pdata (\rvy) \right].
 \end{align}
-The right-hand side is therefore equivalent to the left-hand-side as shown in
-\cref{eq:final-lhs-a}, proving the theorem.
+Comparing this result to \cref{eq:final-lhs-a}, we see that the right-hand side and left-hand-side of the targeted equation are equal, proving the theorem.
 
 
 
@@ -438,7 +439,7 @@ to perform Bayesian experimental design and out-of-distribution detection, and
 various pretrained models\footnote{\url{https://github.com/plai-group/ipa}}.
 
 \paragraph{Architectures}
-The encoder and decoder architectures we used for CIFAR-10, ImageNet-64, and
+The encoder and decoder architectures we used for each of CIFAR-10, ImageNet-64, and
 FFHQ-256 were the same as those used by \citet{child2020very} for the same
 datasets, with 45, 75, and 62 groups of latent variables respectively. The
 encoder and decoder had 39 million parameters for CIFAR-10, 125 million for
@@ -741,7 +742,8 @@ conditioning on $\rvy_{\coord{}_1,\ldots,\coord{}_{t-1}}$) instead of from IPA
 (conditioned on $\rvy_{\coord{}_1,\ldots,\coord{}_{t-1}}$). That is, we use:
 \begin{align}
   \label{eq:uncond}
-  \text{U}^{\text{uncond}}(\coord{}_t; \coord{}_1,&\ldots,\coord{}_{t-1}) = \mathcal{H} \left[ \frac{1}{N} \sum_{n=1}^N g(\cdot|f_{\coord{}_1,\ldots,\coord{}_t}(\rvx^{(n)})) \right] - \frac{1}{N} \sum_{n=1}^N  \mathcal{H} \left[ g(\cdot|f_{\coord{}_1,\ldots,\coord{}_t}(\rvx^{(n)})) \right]
+  & \text{U}^{\text{uncond}}(\coord{}_t; \coord{}_1,\ldots,\coord{}_{t-1}) \\
+  \nonumber & = \mathcal{H} \left[ \frac{1}{N} \sum_{n=1}^N g(\cdot|f_{\coord{}_1,\ldots,\coord{}_t}(\rvx^{(n)})) \right] - \frac{1}{N} \sum_{n=1}^N  \mathcal{H} \left[ g(\cdot|f_{\coord{}_1,\ldots,\coord{}_t}(\rvx^{(n)})) \right]
 \end{align}
 with $\rvx^{(1)},\ldots,\rvx^{(N)} \sim p(\rvx)$. The resulting choice of scan
 location $\coord{}_t$ at each time step $t$ has no dependence on previous
@@ -787,7 +789,7 @@ randomly sampling a set of such sequences, and choosing the best from this set.
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{figs/cigcvae/boed-visualisation-4980-compressed.pdf}
-  \caption{Another visualisation of the selection of scan locations with BOED similar to \cref{fig:cigcvae-extra-xray-boed}, where the task is to detect `Infiltration'.}
+  \caption{Another visualisation of the selection of scan locations with BOED similar to \cref{fig:cigcvae-extra-xray-boed}, where the task is to detect the presence of `Infiltration'.}
 \label{fig:cigcvae-extra-xray-boed-extra}
 \end{figure*}
 
@@ -805,7 +807,7 @@ indicating that the classifier used is not perfectly trained.
 % baselines, this issue is not observed.
 
 To illustrate that the scan locations chosen by BOED are task-dependent,
-\cref{fig:cigcvae-boed-correlations} shows the results from using scan locations chosen
+in \cref{fig:cigcvae-boed-correlations} we show the results from using scan locations chosen
 for one classification task (i.e.~diagnosing a particular disease) to perform a
 different classification task. Each row shows the results for a particular task,
 with each column showing results when scan locations are chosen based on a
@@ -938,7 +940,7 @@ metrics~\citep{xiao2020likelihood,havtorn2021hierarchical}, we found that
 \begin{figure}[t]
   \centering
   \includegraphics[scale=1]{figs/cigcvae/ood-supplementary}
-  \caption{Evaluation of out-of-distribution detection for partially-observed images. We show the AUROC as a function of the proportion of image which is observed. The model is trained on CIFAR-10 and we plot performance for a variety of types of out-of-distribution image.. }
+  \caption{An evaluation of our method for out-of-distribution detection on partially-observed images. We show the AUROC as a function of the proportion of image which is observed. The model is trained on CIFAR-10 and we plot performance for a variety of types of out-of-distribution image.. }
   \label{fig:cigcvae-ood-supplementary}
 \end{figure}
 improved performance could be obtained (for OOD-detection of both partially- and
